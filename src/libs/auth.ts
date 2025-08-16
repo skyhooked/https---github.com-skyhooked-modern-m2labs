@@ -1,6 +1,4 @@
-// src/libs/auth.ts
 // Edge-safe auth utilities (no Node 'crypto' or 'jsonwebtoken' deps)
-
 import type { NextRequest } from 'next/server';
 
 /** ---------- Domain Models ---------- */
@@ -61,12 +59,19 @@ export interface WarrantyClaim {
   productName: string;
   serialNumber: string;
   issue: string;
-  /** Optional fields used by UI components */
-  notes?: string;
-  attachments?: string[];
-  status: 'submitted' | 'review' | 'approved' | 'rejected' | 'resolved';
+  // Extend union so legacy literals in admin page compile:
+  status:
+    | 'submitted'
+    | 'review'
+    | 'approved'
+    | 'rejected'
+    | 'resolved'
+    | 'under_review'
+    | 'completed';
   submittedAt: string;
   updatedAt: string;
+  /** Optional notes; used by account/warranty page */
+  notes?: string;
 }
 
 /** ---------- Config / helpers ---------- */
@@ -120,7 +125,24 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return res === 0;
 }
 
-/** ---------- Password helpers ---------- */
+/** ---------- Validation helpers (exported; API routes import these) ---------- */
+export function validateEmail(email: string): boolean {
+  const e = String(email || '').trim();
+  // simple and safe RFC5322-ish check
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+export function validatePassword(password: string): { isValid: boolean; errors: string[] } {
+  const pw = String(password || '');
+  const errors: string[] = [];
+  if (pw.length < 8) errors.push('at least 8 characters');
+  if (!/[A-Z]/.test(pw)) errors.push('at least one uppercase letter');
+  if (!/[a-z]/.test(pw)) errors.push('at least one lowercase letter');
+  if (!/[0-9]/.test(pw)) errors.push('at least one digit');
+  return { isValid: errors.length === 0, errors };
+}
+
+/** ---------- Password hashing (PBKDF2-SHA256) ---------- */
 
 const PBKDF2_ITERATIONS = 100_000;
 const PBKDF2_SALT_BYTES = 16;
@@ -177,19 +199,8 @@ export async function verifyPassword(password: string, stored: string): Promise<
   }
 }
 
-/** Extra validators used by your routes */
-export function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').toLowerCase());
-}
-
-export function validatePassword(password: string): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  if (password.length < 8) errors.push('Must be at least 8 characters long');
-  if (!/[a-z]/.test(password)) errors.push('Requires a lowercase letter');
-  if (!/[A-Z]/.test(password)) errors.push('Requires an uppercase letter');
-  if (!/[0-9]/.test(password)) errors.push('Requires a digit');
-  return { isValid: errors.length === 0, errors };
-}
+// alias some projects expect
+export const verifyPasswordHash = verifyPassword;
 
 /** ---------- JWT (HS256) implemented with WebCrypto ---------- */
 
@@ -228,9 +239,6 @@ export async function signToken(
   return `${data}.${sigSeg}`;
 }
 
-// Back-compat alias for old imports
-export const generateToken = signToken;
-
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const [h, p, s] = token.split('.');
   if (!h || !p || !s) throw new Error('Malformed token');
@@ -252,8 +260,10 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
   return payload;
 }
 
-/** ---------- Request helper ---------- */
+// compatibility export that some routes import
+export const generateToken = signToken;
 
+/** ---------- Request helper ---------- */
 export async function getUserFromRequest(
   request: NextRequest
 ): Promise<{ id: string; email?: string; role: Role } | null> {
@@ -272,30 +282,29 @@ export async function getUserFromRequest(
   }
 }
 
-/** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
-export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
-/** ---------- Ecwid SSO helper (HMAC, Edge-safe) ---------- */
+/** ---------- Ecwid SSO token (HMAC + base64 payload) ---------- */
+/**
+ * Ecwid expects a JWT-like compact string composed of base64url(header).base64url(payload).signature
+ * but their "SSO" accepts a simplified HMAC token. This helper builds a minimal token based on email.
+ * NOTE: This is a placeholder; replace with your exact Ecwid spec if you have one.
+ */
 export function generateEcwidSSOToken(input: {
   email: string;
   customerId?: string;
   name?: string;
   ttlSeconds?: number;
 }): string {
+  // Minimal payload – keep fields Ecwid recognizes
   const iat = Math.floor(Date.now() / 1000);
-  const exp = iat + (input.ttlSeconds ?? 10 * 60);
-  const header = { alg: 'HS256', typ: 'JWT' };
+  const exp = iat + Math.max(60, input.ttlSeconds ?? 300);
   const payload = { email: input.email, customerId: input.customerId, name: input.name, iat, exp };
+  const json = JSON.stringify(payload);
+  // NOT actually signed here because Ecwid specifics vary; keep as base64 for client-side handoff.
+  // If you need signature with SHARED_SECRET, do it via WebCrypto using getHmacKey().
+  return b64urlEncode(json);
+}
 
-  const headerSeg = b64urlEncode(JSON.stringify(header));
-  const payloadSeg = b64urlEncode(JSON.stringify(payload));
-  const data = `${headerSeg}.${payloadSeg}`;
-
-  // NOTE: crypto.subtle.sign is async; keeping this helper sync by using a quick-and-dirty
-  // checksum so we don't block route code. If you need real Ecwid SSO, swap this for
-  // an async signer similar to signToken() using a separate secret.
-  const sig = b64urlEncode(textEncoder.encode(data + getSecret()).slice(0, 32));
-  return `${data}.${sig}`;
+/** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
+export function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }

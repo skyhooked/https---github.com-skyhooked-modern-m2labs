@@ -1,7 +1,9 @@
-// src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,30 +13,27 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
-
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' },
         { status: 400 }
       );
     }
-
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
     }
 
-    // Edge runtime cannot write to disk on Cloudflare Pages.
-    // Return a clear 501 so UI can handle gracefully.
+    // On Cloudflare Pages (Edge), there is no writable disk.
+    // Replace this section with an upload to R2/S3/etc.
+    // Example contract kept stable for frontend:
     return NextResponse.json(
       {
-        error: 'Uploads are not supported on Cloudflare Pages filesystem. Use R2/S3 instead.',
+        error: 'Uploads are not supported on Edge filesystem. Configure R2/S3 and update this route.',
       },
       { status: 501 }
     );
-  } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Failed to handle upload' }, { status: 500 });
+  } catch (err) {
+    console.error('Upload error:', err);
+    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
   }
 }

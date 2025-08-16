@@ -1,35 +1,35 @@
-// src/app/api/ecwid/sso/route.ts
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
-import { getUserById } from '@/libs/database';
+import { ensureUserForEmail } from '@/libs/database';
 
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
-    const authUser = await getUserFromRequest(request);
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Auth: read from Authorization Bearer or 'auth_token' cookie
+    const me = await getUserFromRequest(request);
+    if (!me?.email) {
+      return NextResponse.json({ error: 'Unauthorized or missing email' }, { status: 401 });
     }
 
-    // Load full user to get a name (optional)
-    const full = await getUserById(authUser.id);
-    const email = authUser.email || full?.email;
-    if (!email) {
-      return NextResponse.json({ error: 'User email is required for Ecwid SSO' }, { status: 400 });
-    }
+    // Make sure the user exists locally
+    const user = await ensureUserForEmail(me.email);
 
-    const name =
-      (full?.firstName || '') + (full?.lastName ? ` ${full.lastName}` : '');
-
+    // Build SSO token payload explicitly with required email
     const ssoToken = generateEcwidSSOToken({
-      email,
-      customerId: authUser.id,
-      name: name.trim() || undefined,
-      ttlSeconds: 10 * 60,
+      email: user.email,
+      customerId: user.id,
+      name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+      ttlSeconds: 300,
     });
 
-    return NextResponse.json({ sso: { token: ssoToken } });
+    return NextResponse.json({
+      sso: {
+        token: ssoToken,
+        email: user.email,
+        customerId: user.id,
+      },
+    });
   } catch (err) {
     console.error('Ecwid SSO error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

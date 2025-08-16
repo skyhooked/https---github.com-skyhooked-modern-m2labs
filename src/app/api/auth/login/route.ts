@@ -1,4 +1,3 @@
-// src/app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithPassword } from '@/libs/database';
 import { verifyPassword, validateEmail, signToken } from '@/libs/auth';
@@ -8,12 +7,11 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body || {};
+    const { email, password } = body ?? {};
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
-
     if (!validateEmail(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
@@ -23,12 +21,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const isPasswordValid = await verifyPassword(password, user.password);
-    if (!isPasswordValid) {
+    const ok = await verifyPassword(password, user.password);
+    if (!ok) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = await signToken({ sub: user.id, role: user.role, email: user.email });
+    // Build JWT payload explicitly (JwtInput)
+    const token = await signToken({
+      sub: user.id,
+      role: user.role,
+      email: user.email,
+    });
 
     const response = NextResponse.json({
       message: 'Login successful',
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // IMPORTANT: cookie name matches getUserFromRequest()
+    // Set HTTP-only cookie (name aligns with getUserFromRequest)
     response.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -52,8 +55,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch (err) {
+    console.error('Login error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

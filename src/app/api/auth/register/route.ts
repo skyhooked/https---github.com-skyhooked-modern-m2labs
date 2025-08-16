@@ -1,4 +1,3 @@
-// src/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/libs/database';
 import { validateEmail, validatePassword, signToken } from '@/libs/auth';
@@ -8,7 +7,7 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, phone, dateOfBirth } = body || {};
+    const { email, password, firstName, lastName, phone, dateOfBirth } = body ?? {};
 
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json(
@@ -16,23 +15,33 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     if (!validateEmail(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
-    const pwd = validatePassword(password);
-    if (!pwd.isValid) {
+    const pw = validatePassword(password);
+    if (!pw.isValid) {
       return NextResponse.json(
-        { error: 'Password requirements not met', details: pwd.errors },
+        { error: 'Password requirements not met', details: pw.errors },
         { status: 400 }
       );
     }
 
     try {
-      const user = await createUser({ email, password, firstName, lastName, phone, dateOfBirth });
+      const user = await createUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        dateOfBirth,
+      });
 
-      const token = await signToken({ sub: user.id, role: user.role, email: user.email });
+      const token = await signToken({
+        sub: user.id,
+        role: user.role,
+        email: user.email,
+      });
 
       const response = NextResponse.json(
         {
@@ -67,8 +76,8 @@ export async function POST(request: NextRequest) {
       }
       throw error;
     }
-  } catch (error) {
-    console.error('Registration error:', error);
+  } catch (err) {
+    console.error('Registration error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
