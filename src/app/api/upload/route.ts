@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer();
-    // @ts-expect-error Node's Buffer exists in nodejs runtime
+    // @ts-ignore Node's Buffer exists in nodejs runtime
     const buffer: Buffer = Buffer.from(bytes as ArrayBuffer);
 
     // Create unique filename
