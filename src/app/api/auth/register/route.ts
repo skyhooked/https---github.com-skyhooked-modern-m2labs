@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/libs/database';
 import { validateEmail, validatePassword, generateToken } from '@/libs/auth';
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {

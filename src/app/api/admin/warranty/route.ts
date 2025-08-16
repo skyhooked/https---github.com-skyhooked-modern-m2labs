@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
 import { getWarrantyClaims, updateWarrantyClaim } from '@/libs/database';
+export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {

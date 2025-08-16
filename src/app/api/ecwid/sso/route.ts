@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
+export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {

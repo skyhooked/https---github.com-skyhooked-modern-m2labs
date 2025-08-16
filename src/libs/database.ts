@@ -2,8 +2,6 @@ import { User, Order, WarrantyClaim, UserRegistration } from './auth';
 import { hashPassword } from './auth';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-import { randomBytes } from 'crypto';
 
 // Simple JSON file-based database (replace with real database in production)
 const DATA_DIR = join(process.cwd(), 'data');
@@ -12,6 +10,7 @@ const ORDERS_FILE = join(DATA_DIR, 'orders.json');
 const WARRANTY_CLAIMS_FILE = join(DATA_DIR, 'warranty-claims.json');
 
 // Ensure data directory exists
+import { existsSync, mkdirSync } from 'fs';
 if (!existsSync(DATA_DIR)) {
   mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -44,7 +43,7 @@ export const createUser = async (userData: UserRegistration): Promise<User> => {
   const users = await getUsers();
 
   // Check if user already exists
-  const existingUser = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+  const existingUser = users.find(user => user.email.toLowerCase() === userData.email.toLowerCase());
   if (existingUser) {
     throw new Error('User with this email already exists');
   }
@@ -64,50 +63,30 @@ export const createUser = async (userData: UserRegistration): Promise<User> => {
     role: 'customer',
   };
 
-  (users as Array<User & { password?: string }>).push(newUser);
+  // persist
+  users.push(newUser as any);
   await saveUsers(users);
 
+  // Return user without password
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...userWithoutPassword } = newUser;
   return userWithoutPassword;
 };
 
 export const updateUser = async (id: string, updates: Partial<User>): Promise<User | null> => {
   const users = await getUsers();
-  const idx = users.findIndex(u => u.id === id);
-  if (idx === -1) return null;
+  const userIndex = users.findIndex(user => user.id === id);
 
-  users[idx] = {
-    ...users[idx],
+  if (userIndex === -1) return null;
+
+  users[userIndex] = {
+    ...users[userIndex],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
 
   await saveUsers(users);
-  return users[idx];
-};
-
-/**
- * Option B: ensure a real local user exists for the given email.
- * Returns existing user or creates a minimal one.
- */
-export const ensureUserForEmail = async (email: string): Promise<User> => {
-  const normalized = email.toLowerCase().trim();
-  if (!normalized) throw new Error('ensureUserForEmail: email is required');
-
-  const existing = await getUserByEmail(normalized);
-  if (existing) return existing;
-
-  const registration: UserRegistration = {
-    email: normalized,
-    password: generateRandomPassword(),
-    firstName: '',
-    lastName: '',
-    phone: '',
-    dateOfBirth: '',
-  };
-
-  const created = await createUser(registration);
-  return created;
+  return users[userIndex];
 };
 
 // Order management
@@ -126,7 +105,7 @@ export const saveOrders = async (orders: Order[]): Promise<void> => {
 
 export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
   const orders = await getOrders();
-  return orders.filter(o => o.userId === userId);
+  return orders.filter(order => order.userId === userId);
 };
 
 export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> => {
@@ -161,10 +140,12 @@ export const saveWarrantyClaims = async (claims: WarrantyClaim[]): Promise<void>
 
 export const getWarrantyClaimsByUserId = async (userId: string): Promise<WarrantyClaim[]> => {
   const claims = await getWarrantyClaims();
-  return claims.filter(c => c.userId === userId);
+  return claims.filter(claim => claim.userId === userId);
 };
 
-export const createWarrantyClaim = async (claimData: Omit<WarrantyClaim, 'id' | 'submittedAt' | 'updatedAt'>): Promise<WarrantyClaim> => {
+export const createWarrantyClaim = async (
+  claimData: Omit<WarrantyClaim, 'id' | 'submittedAt' | 'updatedAt'>
+): Promise<WarrantyClaim> => {
   const claims = await getWarrantyClaims();
 
   const newClaim: WarrantyClaim = {
@@ -180,19 +161,23 @@ export const createWarrantyClaim = async (claimData: Omit<WarrantyClaim, 'id' | 
   return newClaim;
 };
 
-export const updateWarrantyClaim = async (id: string, updates: Partial<WarrantyClaim>): Promise<WarrantyClaim | null> => {
+export const updateWarrantyClaim = async (
+  id: string,
+  updates: Partial<WarrantyClaim>
+): Promise<WarrantyClaim | null> => {
   const claims = await getWarrantyClaims();
-  const idx = claims.findIndex(c => c.id === id);
-  if (idx === -1) return null;
+  const claimIndex = claims.findIndex(claim => claim.id === id);
 
-  claims[idx] = {
-    ...claims[idx],
+  if (claimIndex === -1) return null;
+
+  claims[claimIndex] = {
+    ...claims[claimIndex],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
 
   await saveWarrantyClaims(claims);
-  return claims[idx];
+  return claims[claimIndex];
 };
 
 // Helper function to generate IDs
@@ -200,18 +185,48 @@ const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
-// Generate a random password for auto-created users
-const generateRandomPassword = (length = 24): string => {
-  return randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
-};
-
 // Get user with password for authentication
-export const getUserWithPassword = async (email: string): Promise<(User & { password: string }) | null> => {
+export const getUserWithPassword = async (
+  email: string
+): Promise<(User & { password: string }) | null> => {
   try {
     const data = await readFile(USERS_FILE, 'utf-8');
     const users = JSON.parse(data);
-    return users.find((u: any) => u.email.toLowerCase() === email.toLowerCase()) || null;
+    return users.find((user: any) => user.email.toLowerCase() === email.toLowerCase()) || null;
   } catch {
     return null;
   }
 };
+
+/**
+ * 🔹 Ensure a local user exists for the given email.
+ * If not found, creates a minimal user with a random password.
+ */
+export const ensureUserForEmail = async (rawEmail: string): Promise<User> => {
+  const email = String(rawEmail || '').toLowerCase().trim();
+  if (!email) throw new Error('Email is required');
+
+  const existing = await getUserByEmail(email);
+  if (existing) return existing;
+
+  // Derive a simple name from the email local-part
+  const local = email.split('@')[0] || 'User';
+  const firstName = local.replace(/[._-]+/g, ' ').split(' ')[0] || 'User';
+
+  // Minimal user registration payload
+  const registration: UserRegistration = {
+    email,
+    password: randomPassword(32),
+    firstName,
+    lastName: '',
+    phone: '',
+    dateOfBirth: '',
+  };
+
+  // Reuse createUser so password gets hashed consistently
+  return await createUser(registration);
+};
+
+// Simple random password generator (no crypto dependency needed here)
+const randomPassword = (len = 24): string =>
+  Array.from({ length: len }, () => Math.random().toString(36)[2] || 'x').join('');

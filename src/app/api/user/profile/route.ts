@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
 import { getUserById, updateUser } from '@/libs/database';
@@ -27,8 +29,8 @@ export async function GET(request: NextRequest) {
         createdAt: fresh.createdAt,
       },
     });
-  } catch (error) {
-    console.error('Get profile error:', error);
+  } catch (err: unknown) {
+    console.error('Get profile error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -78,8 +80,8 @@ async function handleUpdate(request: NextRequest) {
         createdAt: updated.createdAt,
       },
     });
-  } catch (error) {
-    console.error('Update profile error:', error);
+  } catch (err: unknown) {
+    console.error('Update profile error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

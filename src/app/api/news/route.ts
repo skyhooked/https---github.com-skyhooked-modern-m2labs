@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { NewsPost, newsData as defaultNewsData } from '@/data/newsData';
+export const runtime = 'edge';
 
 const NEWS_DATA_PATH = join(process.cwd(), 'data', 'news.json');
 

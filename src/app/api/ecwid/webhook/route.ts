@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { ensureUserForEmail, createOrder } from '@/libs/database';
 import type { Order } from '@/libs/auth';
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     await createOrder(order);
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Ecwid webhook error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
