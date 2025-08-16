@@ -227,3 +227,4 @@ export const updateWarrantyClaim = async (
 // Simple random password generator (no crypto dependency needed here)
 const randomPassword = (len = 24): string =>
   Array.from({ length: len }, () => Math.random().toString(36)[2] || 'x').join('');
+ 
