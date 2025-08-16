@@ -219,6 +219,13 @@ export interface JwtInput {
   [key: string]: unknown;
 }
 
+/** Normalize inputs coming from routes (some pass a full User instead of JwtInput). */
+function toJwtInput(payload: JwtInput | User): JwtInput {
+  if ('sub' in payload) return payload as JwtInput;
+  const user = payload as User;
+  return { sub: user.id, role: user.role, email: user.email };
+}
+
 export async function signToken(
   payload: JwtInput,
   opts?: { expiresInSeconds?: number }
@@ -238,9 +245,13 @@ export async function signToken(
   return `${data}.${sigSeg}`;
 }
 
-/** Keep compatibility with routes expecting `generateToken` */
-export const generateToken = (payload: JwtInput, opts?: { expiresInSeconds?: number }) =>
-  signToken(payload, opts);
+/** Keep compatibility with routes expecting `generateToken(user)` or `generateToken(jwtPayload)` */
+export function generateToken(
+  payload: JwtInput | User,
+  opts?: { expiresInSeconds?: number }
+): Promise<string> {
+  return signToken(toJwtInput(payload), opts);
+}
 
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const [h, p, s] = token.split('.');
