@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars for local-only dev. Do NOT commit .dev.vars
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+# add real secrets here for local dev only, for example:
+JWT_SECRET="change-me"

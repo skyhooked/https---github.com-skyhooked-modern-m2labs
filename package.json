@@ -2,14 +2,28 @@
   "name": "modern-m2labs",
   "version": "0.1.0",
   "private": true,
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
     "pages:build": "npx @cloudflare/next-on-pages",
     "preview": "npm run pages:build && wrangler pages dev",
     "deploy": "npm run pages:build && wrangler pages deploy"
+  },
+  "overrides": {
+    "cookie": "0.7.0",
+    "path-to-regexp": "6.3.0",
+    "undici": "5.28.5",
+
+    "@cloudflare/next-on-pages": {
+      "cookie": "0.7.0"
+    },
+    "@vercel/node": {
+      "undici": "5.28.5"
+    },
+    "wrangler": {
+      "path-to-regexp": "6.3.0"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
