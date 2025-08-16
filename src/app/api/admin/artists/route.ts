@@ -1,34 +1,43 @@
-import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
+
 export const runtime = 'edge';
 
-const DATA_PATH = path.join(process.cwd(), 'data', 'artists.json');
+type Artist = {
+  id: string;
+  name: string;
+  bio?: string;
+  imageUrl?: string;
+  [key: string]: unknown;
+};
 
-export async function GET() {
-  try {
-    const json = await fs.readFile(DATA_PATH, 'utf8');
-    const data = JSON.parse(json);
-    return NextResponse.json(Array.isArray(data) ? data : []);
-  } catch {
-    // File not found yet => return empty list
-    return NextResponse.json([]);
-  }
+// Seed can be empty or you can paste some initial artists here.
+const initialArtists: Artist[] = [];
+
+// global (per-isolate) store
+const g = globalThis as unknown as { __artistsStore?: { items: Artist[] } };
+function store() {
+  if (!g.__artistsStore) g.__artistsStore = { items: [...initialArtists] };
+  return g.__artistsStore;
 }
 
-export async function POST(req: Request) {
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+export async function GET() {
+  return NextResponse.json(store().items);
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json();
-    if (!Array.isArray(payload)) {
-      return new NextResponse('Invalid payload (expected array)', { status: 400 });
+    const data = (await req.json()) as Partial<Artist>;
+    if (!data.name) {
+      return NextResponse.json({ error: 'name is required' }, { status: 400 });
     }
-    
-    // Save artist data
-    await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-    await fs.writeFile(DATA_PATH, JSON.stringify(payload, null, 2), 'utf8');
-    
-    return new NextResponse(null, { status: 204 });
+    const artist: Artist = { id: genId(), name: data.name, ...data };
+    store().items.push(artist);
+    return NextResponse.json(artist, { status: 201 });
   } catch (e) {
-    return new NextResponse('Failed to save', { status: 500 });
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 }

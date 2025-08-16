@@ -1,38 +1,43 @@
+// src/app/api/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, readFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { NewsPost, newsData as defaultNewsData } from '@/data/newsData';
+
 export const runtime = 'edge';
 
-const NEWS_DATA_PATH = join(process.cwd(), 'data', 'news.json');
+/**
+ * Edge-safe in-memory store (per isolate). If you need persistence,
+ * swap these helpers to use KV/D1/R2/etc.
+ */
+type Store = { posts: NewsPost[] };
+const g = globalThis as unknown as { __newsStore?: Store };
 
-// Helper function to read current news data
-async function readNewsData(): Promise<NewsPost[]> {
-  try {
-    const fileContent = await readFile(NEWS_DATA_PATH, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    // If file doesn't exist, return default data and create the file
-    console.log('News JSON file not found, creating with default data');
-    try {
-      await writeNewsData(defaultNewsData);
-      return defaultNewsData;
-    } catch (writeError) {
-      console.error('Error creating news data file:', writeError);
-      return defaultNewsData;
-    }
-  }
+function getStore(): Store {
+  if (!g.__newsStore) g.__newsStore = { posts: [...defaultNewsData] };
+  return g.__newsStore;
 }
 
-// Helper function to write news data back to file
+async function readNewsData(): Promise<NewsPost[]> {
+  return getStore().posts;
+}
+
 async function writeNewsData(newsData: NewsPost[]): Promise<void> {
-  try {
-    await mkdir(join(process.cwd(), 'data'), { recursive: true });
-    await writeFile(NEWS_DATA_PATH, JSON.stringify(newsData, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error writing news data:', error);
-    throw error;
-  }
+  getStore().posts = newsData;
+}
+
+// Make a slug id from a title; guarantees uniqueness within the store
+function makeIdFromTitle(title: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 50)
+    .replace(/^-+|-+$/g, '');
+
+  let id = base || `news-${Date.now().toString(36)}`;
+  const posts = getStore().posts;
+  let i = 1;
+  while (posts.some(p => p.id === id)) id = `${base}-${i++}`;
+  return id;
 }
 
 // GET - Fetch all news posts
@@ -49,22 +54,22 @@ export async function GET() {
 // POST - Create new news post
 export async function POST(request: NextRequest) {
   try {
-    const newPost: Omit<NewsPost, 'id'> = await request.json();
-    
-    // Generate ID from title
-    const id = newPost.title.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 50);
-    
+    // Accept whatever fields your NewsPost actually has; we won't assume keys.
+    const body = (await request.json()) as Partial<NewsPost> & Record<string, unknown>;
+
+    // Try to derive an id from a "title" field if present; otherwise use timestamp.
+    const maybeTitle =
+      typeof body['title'] === 'string' ? (body['title'] as string) : '';
+
+    const id = makeIdFromTitle(maybeTitle || `news-${Date.now().toString(36)}`);
+
     const newsData = await readNewsData();
-    const postWithId: NewsPost = { ...newPost, id };
-    
+    const postWithId = { ...(body as any), id } as NewsPost;
+
     // Add to beginning of array (newest first)
     newsData.unshift(postWithId);
-    
     await writeNewsData(newsData);
-    
+
     return NextResponse.json(postWithId, { status: 201 });
   } catch (error) {
     console.error('Error creating news post:', error);
@@ -75,18 +80,24 @@ export async function POST(request: NextRequest) {
 // PUT - Update existing news post
 export async function PUT(request: NextRequest) {
   try {
-    const updatedPost: NewsPost = await request.json();
+    const updated = (await request.json()) as Partial<NewsPost> & { id?: string };
+
+    if (!updated?.id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
     const newsData = await readNewsData();
-    
-    const index = newsData.findIndex(post => post.id === updatedPost.id);
+    const index = newsData.findIndex(post => post.id === updated.id);
+
     if (index === -1) {
       return NextResponse.json({ error: 'News post not found' }, { status: 404 });
     }
-    
-    newsData[index] = updatedPost;
+
+    // Merge existing post with provided fields
+    newsData[index] = { ...(newsData[index] as any), ...(updated as any) } as NewsPost;
     await writeNewsData(newsData);
-    
-    return NextResponse.json(updatedPost);
+
+    return NextResponse.json(newsData[index]);
   } catch (error) {
     console.error('Error updating news post:', error);
     return NextResponse.json({ error: 'Failed to update news post' }, { status: 500 });
@@ -98,24 +109,22 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Post ID required' }, { status: 400 });
     }
-    
+
     const newsData = await readNewsData();
     const filteredData = newsData.filter(post => post.id !== id);
-    
+
     if (filteredData.length === newsData.length) {
       return NextResponse.json({ error: 'News post not found' }, { status: 404 });
     }
-    
+
     await writeNewsData(filteredData);
-    
     return NextResponse.json({ message: 'News post deleted successfully' });
   } catch (error) {
     console.error('Error deleting news post:', error);
     return NextResponse.json({ error: 'Failed to delete news post' }, { status: 500 });
   }
 }
-
