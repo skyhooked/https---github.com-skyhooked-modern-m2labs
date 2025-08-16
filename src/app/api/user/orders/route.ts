@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use the strict User shape (id only)
+    // Strict User shape uses id
     const orders = await getOrdersByUserId(user.id);
 
     return NextResponse.json({

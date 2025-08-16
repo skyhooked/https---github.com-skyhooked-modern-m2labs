@@ -1,62 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
-import { updateUser, getUserById } from '@/libs/database';
+import { getUserById, updateUser } from '@/libs/database';
 
-export async function PUT(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    const sessionUser = await getUserFromRequest(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { firstName, lastName, phone, dateOfBirth } = body;
-
-    // Validate required fields
-    if (!firstName || !lastName) {
-      return NextResponse.json(
-        { error: 'First name and last name are required' },
-        { status: 400 }
-      );
-    }
-
-    // Update user profile
-    const updatedUser = await updateUser(user.userId || user.id, {
-      firstName,
-      lastName,
-      phone,
-      dateOfBirth
-    });
-
-    if (!updatedUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+    const fresh = await getUserById(sessionUser.id);
+    if (!fresh) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({
-      message: 'Profile updated successfully',
       user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        phone: updatedUser.phone,
-        dateOfBirth: updatedUser.dateOfBirth,
-        isVerified: updatedUser.isVerified,
-        role: updatedUser.role
-      }
+        id: fresh.id,
+        email: fresh.email,
+        firstName: fresh.firstName,
+        lastName: fresh.lastName,
+        phone: fresh.phone,
+        dateOfBirth: fresh.dateOfBirth,
+        isVerified: fresh.isVerified,
+        role: fresh.role,
+        createdAt: fresh.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Support both PUT and POST for profile updates
+export async function PUT(request: NextRequest) {
+  return handleUpdate(request);
+}
+export async function POST(request: NextRequest) {
+  return handleUpdate(request);
+}
+
+async function handleUpdate(request: NextRequest) {
+  try {
+    const sessionUser = await getUserFromRequest(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const firstName = typeof body.firstName === 'string' ? body.firstName : undefined;
+    const lastName = typeof body.lastName === 'string' ? body.lastName : undefined;
+    const phone = typeof body.phone === 'string' ? body.phone : undefined;
+    const dateOfBirth = typeof body.dateOfBirth === 'string' ? body.dateOfBirth : undefined;
+
+    const updated = await updateUser(sessionUser.id, {
+      ...(firstName !== undefined ? { firstName } : {}),
+      ...(lastName !== undefined ? { lastName } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+      ...(dateOfBirth !== undefined ? { dateOfBirth } : {}),
+    });
+
+    if (!updated) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      user: {
+        id: updated.id,
+        email: updated.email,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        phone: updated.phone,
+        dateOfBirth: updated.dateOfBirth,
+        isVerified: updated.isVerified,
+        role: updated.role,
+        createdAt: updated.createdAt,
+      },
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
