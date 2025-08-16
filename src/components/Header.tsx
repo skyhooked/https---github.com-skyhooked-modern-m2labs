@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, type TargetAndTransition } from 'framer-motion';
 import logoSrc from '../assets/logos/H-Logo-white.svg';
 import SearchModal from './SearchModal';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,9 +36,15 @@ export default function Header() {
     return () => clearInterval(interval);
   }, []);
 
-  const wiggleAnimation = {
+  const wiggleAnimation: TargetAndTransition = {
     rotate: [0, -10, 10, -10, 10, 0],
-    transition: { repeat: Infinity, repeatDelay: 6, duration: 0.6, ease: 'easeInOut' },
+    transition: {
+      repeat: Infinity,
+      repeatDelay: 6,
+      duration: 0.6,
+      // Use cubic-bezier tuple instead of string to satisfy Framer Motion types
+      ease: [0.42, 0, 0.58, 1],
+    },
   };
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -113,7 +119,7 @@ export default function Header() {
                       <Link
                         key={artist.id}
                         href={`/artists/${artist.id}`}
-                        className="block px-4 py-2 text-[#F5F5F5] text-sm hover:bg-white/5 hover:text-[#FF8A3D] font-bold transition-colors"
+                        className="block px-4 py-2 text-[#F5F5F5] text-sm hover:bg:white/5 hover:text-[#FF8A3D] font-bold transition-colors"
                       >
                         {artist.name.toUpperCase()}
                       </Link>
