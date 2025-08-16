@@ -1,54 +1,50 @@
+// src/libs/database.ts
+// Edge-safe in-memory "database" (no fs/path). Data is ephemeral per worker instance.
+
 import { User, Order, WarrantyClaim, UserRegistration } from './auth';
 import { hashPassword } from './auth';
-import { readFile, writeFile } from 'fs/promises';
-import { join } from 'path';
 
-// Simple JSON file-based database (replace with real database in production)
-const DATA_DIR = join(process.cwd(), 'data');
-const USERS_FILE = join(DATA_DIR, 'users.json');
-const ORDERS_FILE = join(DATA_DIR, 'orders.json');
-const WARRANTY_CLAIMS_FILE = join(DATA_DIR, 'warranty-claims.json');
+// Internal store. We keep `any` for users so hashed passwords can live alongside `User` fields.
+const DB = {
+  users: [] as any[], // (User & { password: string })[]
+  orders: [] as Order[],
+  warrantyClaims: [] as WarrantyClaim[],
+};
 
-// Ensure data directory exists
-import { existsSync, mkdirSync } from 'fs';
-if (!existsSync(DATA_DIR)) {
-  mkdirSync(DATA_DIR, { recursive: true });
-}
+// Simple deep clone to avoid leaking references across callers
+const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
-// User management
+// -------------------- Users --------------------
 export const getUsers = async (): Promise<User[]> => {
-  try {
-    const data = await readFile(USERS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+  return clone(DB.users) as User[];
 };
 
 export const saveUsers = async (users: User[]): Promise<void> => {
-  await writeFile(USERS_FILE, JSON.stringify(users, null, 2));
+  // Replace in-place to preserve module identity
+  DB.users.length = 0;
+  DB.users.push(...clone(users as any[]));
 };
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
-  const users = await getUsers();
-  return users.find(user => user.email.toLowerCase() === email.toLowerCase()) || null;
+  const e = email.toLowerCase();
+  const u = (DB.users as any[]).find((u) => String(u.email).toLowerCase() === e);
+  return u ? (clone(u) as User) : null;
 };
 
 export const getUserById = async (id: string): Promise<User | null> => {
-  const users = await getUsers();
-  return users.find(user => user.id === id) || null;
+  const u = (DB.users as any[]).find((u) => u.id === id);
+  return u ? (clone(u) as User) : null;
 };
 
 export const createUser = async (userData: UserRegistration): Promise<User> => {
-  const users = await getUsers();
-
   // Check if user already exists
-  const existingUser = users.find(user => user.email.toLowerCase() === userData.email.toLowerCase());
-  if (existingUser) {
-    throw new Error('User with this email already exists');
-  }
+  const exists = (DB.users as any[]).some(
+    (u) => String(u.email).toLowerCase() === String(userData.email).toLowerCase(),
+  );
+  if (exists) throw new Error('User with this email already exists');
 
   const hashedPassword = await hashPassword(userData.password);
+
   const newUser: User & { password: string } = {
     id: generateId(),
     email: userData.email.toLowerCase(),
@@ -63,143 +59,42 @@ export const createUser = async (userData: UserRegistration): Promise<User> => {
     role: 'customer',
   };
 
-  // persist
+  // Persist in memory
+  const users = await getUsers();
   users.push(newUser as any);
   await saveUsers(users);
 
-  // Return user without password
+  // Return without password
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...userWithoutPassword } = newUser;
   return userWithoutPassword;
 };
 
 export const updateUser = async (id: string, updates: Partial<User>): Promise<User | null> => {
-  const users = await getUsers();
-  const userIndex = users.findIndex(user => user.id === id);
+  // Work on the internal array directly so we don't drop passwords
+  const idx = (DB.users as any[]).findIndex((u) => u.id === id);
+  if (idx === -1) return null;
 
-  if (userIndex === -1) return null;
-
-  users[userIndex] = {
-    ...users[userIndex],
+  (DB.users as any[])[idx] = {
+    ...(DB.users as any[])[idx],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
 
-  await saveUsers(users);
-  return users[userIndex];
+  return clone((DB.users as any[])[idx]) as User;
 };
 
-// Order management
-export const getOrders = async (): Promise<Order[]> => {
-  try {
-    const data = await readFile(ORDERS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-};
-
-export const saveOrders = async (orders: Order[]): Promise<void> => {
-  await writeFile(ORDERS_FILE, JSON.stringify(orders, null, 2));
-};
-
-export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
-  const orders = await getOrders();
-  return orders.filter(order => order.userId === userId);
-};
-
-export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> => {
-  const orders = await getOrders();
-
-  const newOrder: Order = {
-    ...orderData,
-    id: generateId(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  orders.push(newOrder);
-  await saveOrders(orders);
-
-  return newOrder;
-};
-
-// Warranty claim management
-export const getWarrantyClaims = async (): Promise<WarrantyClaim[]> => {
-  try {
-    const data = await readFile(WARRANTY_CLAIMS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-};
-
-export const saveWarrantyClaims = async (claims: WarrantyClaim[]): Promise<void> => {
-  await writeFile(WARRANTY_CLAIMS_FILE, JSON.stringify(claims, null, 2));
-};
-
-export const getWarrantyClaimsByUserId = async (userId: string): Promise<WarrantyClaim[]> => {
-  const claims = await getWarrantyClaims();
-  return claims.filter(claim => claim.userId === userId);
-};
-
-export const createWarrantyClaim = async (
-  claimData: Omit<WarrantyClaim, 'id' | 'submittedAt' | 'updatedAt'>
-): Promise<WarrantyClaim> => {
-  const claims = await getWarrantyClaims();
-
-  const newClaim: WarrantyClaim = {
-    ...claimData,
-    id: generateId(),
-    submittedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  claims.push(newClaim);
-  await saveWarrantyClaims(claims);
-
-  return newClaim;
-};
-
-export const updateWarrantyClaim = async (
-  id: string,
-  updates: Partial<WarrantyClaim>
-): Promise<WarrantyClaim | null> => {
-  const claims = await getWarrantyClaims();
-  const claimIndex = claims.findIndex(claim => claim.id === id);
-
-  if (claimIndex === -1) return null;
-
-  claims[claimIndex] = {
-    ...claims[claimIndex],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-
-  await saveWarrantyClaims(claims);
-  return claims[claimIndex];
-};
-
-// Helper function to generate IDs
-const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
-
-// Get user with password for authentication
+// Include password for auth flows
 export const getUserWithPassword = async (
-  email: string
+  email: string,
 ): Promise<(User & { password: string }) | null> => {
-  try {
-    const data = await readFile(USERS_FILE, 'utf-8');
-    const users = JSON.parse(data);
-    return users.find((user: any) => user.email.toLowerCase() === email.toLowerCase()) || null;
-  } catch {
-    return null;
-  }
+  const e = email.toLowerCase();
+  const u = (DB.users as any[]).find((u) => String(u.email).toLowerCase() === e);
+  return u ? (clone(u) as User & { password: string }) : null;
 };
 
 /**
- * 🔹 Ensure a local user exists for the given email.
+ * Ensure a local user exists for the given email.
  * If not found, creates a minimal user with a random password.
  */
 export const ensureUserForEmail = async (rawEmail: string): Promise<User> => {
@@ -209,11 +104,9 @@ export const ensureUserForEmail = async (rawEmail: string): Promise<User> => {
   const existing = await getUserByEmail(email);
   if (existing) return existing;
 
-  // Derive a simple name from the email local-part
   const local = email.split('@')[0] || 'User';
   const firstName = local.replace(/[._-]+/g, ' ').split(' ')[0] || 'User';
 
-  // Minimal user registration payload
   const registration: UserRegistration = {
     email,
     password: randomPassword(32),
@@ -223,10 +116,85 @@ export const ensureUserForEmail = async (rawEmail: string): Promise<User> => {
     dateOfBirth: '',
   };
 
-  // Reuse createUser so password gets hashed consistently
   return await createUser(registration);
 };
 
-// Simple random password generator (no crypto dependency needed here)
+// -------------------- Orders --------------------
+export const getOrders = async (): Promise<Order[]> => {
+  return clone(DB.orders);
+};
+
+export const saveOrders = async (orders: Order[]): Promise<void> => {
+  DB.orders.length = 0;
+  DB.orders.push(...clone(orders));
+};
+
+export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
+  return clone(DB.orders.filter((o) => o.userId === userId));
+};
+
+export const createOrder = async (
+  orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>,
+): Promise<Order> => {
+  const newOrder: Order = {
+    ...orderData,
+    id: generateId(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  DB.orders.push(clone(newOrder));
+  return clone(newOrder);
+};
+
+// -------------------- Warranty Claims --------------------
+export const getWarrantyClaims = async (): Promise<WarrantyClaim[]> => {
+  return clone(DB.warrantyClaims);
+};
+
+export const saveWarrantyClaims = async (claims: WarrantyClaim[]): Promise<void> => {
+  DB.warrantyClaims.length = 0;
+  DB.warrantyClaims.push(...clone(claims));
+};
+
+export const getWarrantyClaimsByUserId = async (userId: string): Promise<WarrantyClaim[]> => {
+  return clone(DB.warrantyClaims.filter((c) => c.userId === userId));
+};
+
+export const createWarrantyClaim = async (
+  claimData: Omit<WarrantyClaim, 'id' | 'submittedAt' | 'updatedAt'>,
+): Promise<WarrantyClaim> => {
+  const newClaim: WarrantyClaim = {
+    ...claimData,
+    id: generateId(),
+    submittedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  DB.warrantyClaims.push(clone(newClaim));
+  return clone(newClaim);
+};
+
+export const updateWarrantyClaim = async (
+  id: string,
+  updates: Partial<WarrantyClaim>,
+): Promise<WarrantyClaim | null> => {
+  const idx = DB.warrantyClaims.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+
+  DB.warrantyClaims[idx] = {
+    ...DB.warrantyClaims[idx],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return clone(DB.warrantyClaims[idx]);
+};
+
+// -------------------- Helpers --------------------
+const generateId = (): string =>
+  Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+// Simple random password generator
 const randomPassword = (len = 24): string =>
   Array.from({ length: len }, () => Math.random().toString(36)[2] || 'x').join('');
