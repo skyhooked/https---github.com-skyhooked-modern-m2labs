@@ -46,13 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Add timeout to prevent hanging
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
+
       const response = await fetch('/api/auth/me', {
-        signal: controller.signal
+        signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
@@ -60,12 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 401 is expected for unauthenticated users, don't log as error
         setUser(null);
       }
-    } catch (error) {
+    } catch (err: unknown) {
       // Handle aborted requests and other errors gracefully
-      if (error.name === 'AbortError') {
+      if (err instanceof DOMException && err.name === 'AbortError') {
         console.warn('Auth check timed out');
-      } else if (error instanceof TypeError) {
-        console.error('Auth check network error:', error);
+      } else if (err instanceof TypeError) {
+        console.error('Auth check network error:', err);
+      } else {
+        console.error('Auth check failed:', err);
       }
       setUser(null);
     } finally {
