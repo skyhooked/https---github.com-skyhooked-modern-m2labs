@@ -63,6 +63,8 @@ export interface WarrantyClaim {
   status: 'submitted' | 'review' | 'approved' | 'rejected' | 'resolved';
   submittedAt: string;
   updatedAt: string;
+  /** Optional field used by /account/warranty/page.tsx */
+  notes?: string;
 }
 
 /** ---------- Config / helpers ---------- */
@@ -115,6 +117,17 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   for (let i = 0; i < a.length; i++) res |= a[i] ^ b[i];
   return res === 0;
 }
+
+/** ---------- Validation (added) ---------- */
+
+export const validateEmail = (email: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+};
+
+export const validatePassword = (password: string): boolean => {
+  const p = String(password || '');
+  return p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
+};
 
 /** ---------- Password hashing (PBKDF2-SHA256) ---------- */
 
@@ -213,6 +226,10 @@ export async function signToken(
   return `${data}.${sigSeg}`;
 }
 
+/** Keep compatibility with routes expecting `generateToken` */
+export const generateToken = (payload: JwtInput, opts?: { expiresInSeconds?: number }) =>
+  signToken(payload, opts);
+
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const [h, p, s] = token.split('.');
   if (!h || !p || !s) throw new Error('Malformed token');
@@ -234,6 +251,39 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
   return payload;
 }
 
+/** ---------- Ecwid SSO token (HMAC-SHA256) ---------- */
+
+function getEcwidSecret(): string {
+  return (
+    process.env.ECWID_SSO_SECRET ||
+    process.env.AUTH_SECRET || // fallback if ECWID_SSO_SECRET not provided
+    'dev-ecwid-secret-please-set-ECWID_SSO_SECRET'
+  ).toString();
+}
+
+export async function generateEcwidSSOToken(
+  data: Record<string, any>,
+  overrideSecret?: string
+): Promise<string> {
+  const payload = { ...data, iat: Math.floor(Date.now() / 1000) };
+  const body = JSON.stringify(payload);
+
+  const secret = overrideSecret ?? getEcwidSecret();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(textEncoder.encode(secret)),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const sigBuf = await crypto.subtle.sign('HMAC', key, toArrayBuffer(textEncoder.encode(body)));
+  const signature = b64urlEncode(new Uint8Array(sigBuf));
+
+  // Common compact form: base64url(body) + "." + base64url(signature)
+  return `${b64urlEncode(body)}.${signature}`;
+}
+
 /** ---------- Request helper ---------- */
 
 export async function getUserFromRequest(
@@ -243,7 +293,7 @@ export async function getUserFromRequest(
     // Prefer Authorization header; fallback to cookie 'auth_token'
     const authz = request.headers.get('authorization') || '';
     const bearer = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7).trim() : null;
-    const cookie = request.cookies?.get?.('auth_token')?.value ?? null;
+    const cookie = (request as any).cookies?.get?.('auth_token')?.value ?? null;
     const token = bearer || cookie;
     if (!token) return null;
 
