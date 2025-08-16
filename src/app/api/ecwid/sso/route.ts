@@ -1,36 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
+// src/app/api/ecwid/sso/route.ts
+import { NextResponse, NextRequest } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
 import { getUserById } from '@/libs/database';
 
 export const runtime = 'edge';
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const authUser = await getUserFromRequest(request);
     if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure we have a non-null email for Ecwid SSO
-    let email = authUser.email;
+    // Load full user to get a name (optional)
+    const full = await getUserById(authUser.id);
+    const email = authUser.email || full?.email;
     if (!email) {
-      const fullUser = await getUserById(authUser.id);
-      email = fullUser?.email;
-    }
-    if (!email) {
-      return NextResponse.json({ error: 'User email not found' }, { status: 400 });
+      return NextResponse.json({ error: 'User email is required for Ecwid SSO' }, { status: 400 });
     }
 
-    const ssoToken = await generateEcwidSSOToken({
+    const name =
+      (full?.firstName || '') + (full?.lastName ? ` ${full.lastName}` : '');
+
+    const ssoToken = generateEcwidSSOToken({
       email,
       customerId: authUser.id,
-      name: undefined, // optionally pass `${fullUser?.firstName} ${fullUser?.lastName}` if desired
-      ttlSeconds: 300,
+      name: name.trim() || undefined,
+      ttlSeconds: 10 * 60,
     });
 
     return NextResponse.json({ sso: { token: ssoToken } });
-  } catch (error) {
-    console.error('Ecwid SSO error:', error);
+  } catch (err) {
+    console.error('Ecwid SSO error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

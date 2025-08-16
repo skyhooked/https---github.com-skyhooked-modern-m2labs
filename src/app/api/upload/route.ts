@@ -1,3 +1,4 @@
+// src/app/api/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
@@ -5,42 +6,35 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file');
+    const file = formData.get('file') as File | null;
 
-    if (!(file instanceof File)) {
+    if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
       return NextResponse.json(
         { error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' },
         { status: 400 }
       );
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 50MB.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
     }
 
-    // Edge runtime on Cloudflare Pages has no writable filesystem.
-    // If you want uploads to work, bind an R2 bucket named "R2_BUCKET"
-    // and switch to the R2-enabled version (instructions below).
+    // Edge runtime cannot write to disk on Cloudflare Pages.
+    // Return a clear 501 so UI can handle gracefully.
     return NextResponse.json(
       {
-        error:
-          'Uploads are not configured for Edge runtime. Bind an R2 bucket named "R2_BUCKET" and set "R2_PUBLIC_URL", then switch this route to the R2 implementation.',
+        error: 'Uploads are not supported on Cloudflare Pages filesystem. Use R2/S3 instead.',
       },
       { status: 501 }
     );
   } catch (error) {
-    console.error('Error uploading file:', error);
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: 'Failed to handle upload' }, { status: 500 });
   }
 }

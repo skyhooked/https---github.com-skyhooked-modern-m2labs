@@ -1,21 +1,22 @@
+// src/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/libs/database';
-import { validateEmail, validatePassword, generateToken } from '@/libs/auth';
+import { validateEmail, validatePassword, signToken } from '@/libs/auth';
 
 export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, phone, dateOfBirth } = body ?? {};
+    const { email, password, firstName, lastName, phone, dateOfBirth } = body || {};
 
-    // Validation
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json(
         { error: 'Email, password, first name, and last name are required' },
         { status: 400 }
       );
     }
+
     if (!validateEmail(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
@@ -29,16 +30,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const user = await createUser({
-        email,
-        password,
-        firstName,
-        lastName,
-        phone,
-        dateOfBirth,
-      });
+      const user = await createUser({ email, password, firstName, lastName, phone, dateOfBirth });
 
-      const token = await generateToken({ id: user.id, role: user.role, email: user.email });
+      const token = await signToken({ sub: user.id, role: user.role, email: user.email });
 
       const response = NextResponse.json(
         {
@@ -55,22 +49,23 @@ export async function POST(request: NextRequest) {
         { status: 201 }
       );
 
-      response.cookies.set('auth-token', token, {
+      response.cookies.set('auth_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
       });
 
       return response;
-    } catch (err: any) {
-      if (err?.message === 'User with this email already exists') {
+    } catch (error: any) {
+      if (error?.message === 'User with this email already exists') {
         return NextResponse.json(
           { error: 'An account with this email already exists' },
           { status: 409 }
         );
       }
-      throw err;
+      throw error;
     }
   } catch (error) {
     console.error('Registration error:', error);
