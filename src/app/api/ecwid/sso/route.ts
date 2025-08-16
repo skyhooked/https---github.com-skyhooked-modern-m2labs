@@ -1,40 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
+import { getUserById } from '@/libs/database';
 
 export const runtime = 'edge';
 
-// Support both GET and POST in case your frontend calls either
-export async function GET(request: NextRequest) {
-  return handle(request);
-}
 export async function POST(request: NextRequest) {
-  return handle(request);
-}
-
-async function handle(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user || !user.email) {
+    const authUser = await getUserFromRequest(request);
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Ensure we have a non-null email for Ecwid SSO
+    let email = authUser.email;
+    if (!email) {
+      const fullUser = await getUserById(authUser.id);
+      email = fullUser?.email;
+    }
+    if (!email) {
+      return NextResponse.json({ error: 'User email not found' }, { status: 400 });
+    }
+
     const ssoToken = await generateEcwidSSOToken({
-      email: user.email,          // required by the helper
-      customerId: user.id,        // optional, but useful for mapping
-      // name: you can add a name string here if you have it on hand
-      ttlSeconds: 300,            // 5 minutes
+      email,
+      customerId: authUser.id,
+      name: undefined, // optionally pass `${fullUser?.firstName} ${fullUser?.lastName}` if desired
+      ttlSeconds: 300,
     });
 
-    return NextResponse.json({
-      sso: {
-        token: ssoToken,
-        email: user.email,
-        customerId: user.id,
-        expiresIn: 300,
-      },
-    });
-  } catch (err) {
-    console.error('Ecwid SSO error:', err);
-    return NextResponse.json({ error: 'Failed to generate SSO token' }, { status: 500 });
+    return NextResponse.json({ sso: { token: ssoToken } });
+  } catch (error) {
+    console.error('Ecwid SSO error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

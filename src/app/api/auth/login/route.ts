@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithPassword } from '@/libs/database';
-import { verifyPassword, signToken } from '@/libs/auth';
+import { verifyPassword, generateToken, validateEmail } from '@/libs/auth';
 
 export const runtime = 'edge';
 
-const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body ?? {};
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
-    if (!isValidEmail(email)) {
+    if (!validateEmail(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
@@ -27,11 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Create JWT (JwtInput shape: sub, role, email)
-    const token = await signToken({ sub: user.id, role: user.role, email: user.email });
+    // Build token payload explicitly; generateToken is async
+    const token = await generateToken({ id: user.id, role: user.role, email: user.email });
 
-    // Build response
-    const res = NextResponse.json({
+    const response = NextResponse.json({
       message: 'Login successful',
       user: {
         id: user.id,
@@ -43,18 +41,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Use cookie name 'auth_token' to match getUserFromRequest()
-    res.cookies.set('auth_token', token, {
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days (seconds)
-      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    return res;
-  } catch (err) {
-    console.error('Login error:', err);
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

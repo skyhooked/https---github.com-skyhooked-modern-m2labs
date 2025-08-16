@@ -60,7 +60,17 @@ export interface WarrantyClaim {
   productName: string;
   serialNumber: string;
   issue: string;
-  status: 'submitted' | 'review' | 'approved' | 'rejected' | 'resolved';
+  /** Optional internal/admin notes shown in UI */
+  notes?: string; // <-- added to satisfy UI usage
+  // allow legacy labels seen in earlier code to prevent TS errors
+  status:
+    | 'submitted'
+    | 'review'
+    | 'under_review'
+    | 'approved'
+    | 'rejected'
+    | 'resolved'
+    | 'completed';
   submittedAt: string;
   updatedAt: string;
 }
@@ -70,7 +80,6 @@ export interface WarrantyClaim {
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-/** Convert a Uint8Array view to a *real* ArrayBuffer (no SharedArrayBuffer union). */
 function toArrayBuffer(view: Uint8Array): ArrayBuffer {
   const ab = new ArrayBuffer(view.byteLength);
   new Uint8Array(ab).set(view);
@@ -114,6 +123,23 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   let res = 0;
   for (let i = 0; i < a.length; i++) res |= a[i] ^ b[i];
   return res === 0;
+}
+
+/** ---------- Validation helpers (exported for API routes) ---------- */
+
+export function validateEmail(email: string): boolean {
+  if (!email) return false;
+  // simple RFC-ish pattern, same as many prod apps use
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
+}
+
+export function validatePassword(password: string): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (typeof password !== 'string' || password.length < 8) errors.push('min_length_8');
+  if (!/[a-z]/.test(password)) errors.push('required_lowercase');
+  if (!/[A-Z]/.test(password)) errors.push('required_uppercase');
+  if (!/[0-9]/.test(password)) errors.push('required_digit');
+  return { isValid: errors.length === 0, errors };
 }
 
 /** ---------- Password hashing (PBKDF2-SHA256) ---------- */
@@ -176,7 +202,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
 // alias some projects expect
 export const verifyPasswordHash = verifyPassword;
 
-/** ---------- JWT (HS256) implemented with WebCrypto ---------- */
+/** ---------- JWT (HS256) with WebCrypto ---------- */
 
 export interface JwtPayload {
   sub: string; // user id
@@ -213,6 +239,14 @@ export async function signToken(
   return `${data}.${sigSeg}`;
 }
 
+/** Convenience wrapper that your API routes import. */
+export async function generateToken(
+  user: { id: string; role: Role; email?: string },
+  opts?: { expiresInSeconds?: number }
+): Promise<string> {
+  return signToken({ sub: user.id, role: user.role, email: user.email }, opts);
+}
+
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const [h, p, s] = token.split('.');
   if (!h || !p || !s) throw new Error('Malformed token');
@@ -240,11 +274,15 @@ export async function getUserFromRequest(
   request: NextRequest
 ): Promise<{ id: string; email?: string; role: Role } | null> {
   try {
-    // Prefer Authorization header; fallback to cookie 'auth_token'
+    // Prefer Authorization header; fallback to cookie
     const authz = request.headers.get('authorization') || '';
     const bearer = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7).trim() : null;
-    const cookie = request.cookies?.get?.('auth_token')?.value ?? null;
-    const token = bearer || cookie;
+
+    // accept both naming styles
+    const cookieDash = request.cookies?.get?.('auth-token')?.value ?? null;
+    const cookieUnderscore = request.cookies?.get?.('auth_token')?.value ?? null;
+
+    const token = bearer || cookieDash || cookieUnderscore;
     if (!token) return null;
 
     const payload = await verifyToken(token);
@@ -255,7 +293,6 @@ export async function getUserFromRequest(
 }
 
 /** ---------- Ecwid SSO (HS256 JWT) ---------- */
-/** Creates an Ecwid-compatible SSO token. */
 export async function generateEcwidSSOToken(input: {
   email: string;
   customerId?: string;
@@ -281,8 +318,7 @@ export async function generateEcwidSSOToken(input: {
   const secret = (process.env.ECWID_SSO_SECRET || getSecret()).toString();
   const key = await getHmacKey(secret);
   const sig = await crypto.subtle.sign('HMAC', key, toArrayBuffer(textEncoder.encode(data)));
-  const token = `${data}.${b64urlEncode(new Uint8Array(sig))}`;
-  return token;
+  return `${data}.${b64urlEncode(new Uint8Array(sig))}`;
 }
 
 /** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
