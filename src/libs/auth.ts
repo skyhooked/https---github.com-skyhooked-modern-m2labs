@@ -1,8 +1,10 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { NextRequest } from 'next/server';
+// Edge-safe auth utilities (no Node 'crypto' or 'jsonwebtoken' deps)
 
-// User types
+import type { NextRequest } from 'next/server';
+
+/** ---------- Domain Models ---------- */
+export type Role = 'customer' | 'admin';
+
 export interface User {
   id: string;
   email: string;
@@ -13,7 +15,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   isVerified: boolean;
-  role: 'customer' | 'admin';
+  role: Role;
 }
 
 export interface UserRegistration {
@@ -25,40 +27,30 @@ export interface UserRegistration {
   dateOfBirth?: string;
 }
 
-export interface UserLogin {
-  email: string;
-  password: string;
-}
-
 export interface Order {
   id: string;
   userId: string;
-  ecwidOrderId?: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  ecwidOrderId: string;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
   currency: string;
-  items: OrderItem[];
-  shippingAddress: Address;
-  billingAddress: Address;
+  items: any[];
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  billingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   createdAt: string;
   updatedAt: string;
-}
-
-export interface OrderItem {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  sku?: string;
-}
-
-export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
 }
 
 export interface WarrantyClaim {
@@ -68,110 +60,201 @@ export interface WarrantyClaim {
   productName: string;
   serialNumber: string;
   issue: string;
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'completed';
+  status: 'submitted' | 'review' | 'approved' | 'rejected' | 'resolved';
   submittedAt: string;
   updatedAt: string;
-  notes?: string;
 }
 
-// JWT Secret (in production, this should come from environment variables)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
+/** ---------- Config / helpers ---------- */
 
-// Password hashing
-export const hashPassword = async (password: string): Promise<string> => {
-  const saltRounds = 12;
-  return bcrypt.hash(password, saltRounds);
-};
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
-export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-  return bcrypt.compare(password, hashedPassword);
-};
+/** Convert a Uint8Array view to a *real* ArrayBuffer (no SharedArrayBuffer union). */
+function toArrayBuffer(view: Uint8Array): ArrayBuffer {
+  const ab = new ArrayBuffer(view.byteLength);
+  new Uint8Array(ab).set(view);
+  return ab;
+}
 
-// JWT token management
-export const generateToken = (user: Omit<User, 'password'>): string => {
-  return jwt.sign(
-    { 
-      userId: user.id, 
-      email: user.email,
-      role: user.role 
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
+/** Use an env var when available; fall back to a dev secret so local builds work. */
+function getSecret(): string {
+  return (process.env.AUTH_SECRET || 'dev-secret-please-set-AUTH_SECRET').toString();
+}
+
+async function getHmacKey(): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(textEncoder.encode(getSecret())),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
   );
-};
+}
 
-export const verifyToken = (token: string): any => {
+/** URL-safe base64 helpers (no Node Buffer) */
+function b64urlEncode(bytesOrString: Uint8Array | string): string {
+  const bytes = typeof bytesOrString === 'string' ? textEncoder.encode(bytesOrString) : bytesOrString;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  const base64 = btoa(binary);
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function b64urlDecode(str: string): Uint8Array {
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
+  const bin = atob(base64 + pad);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let res = 0;
+  for (let i = 0; i < a.length; i++) res |= a[i] ^ b[i];
+  return res === 0;
+}
+
+/** ---------- Password hashing (PBKDF2-SHA256) ---------- */
+
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_SALT_BYTES = 16;
+const PBKDF2_KEY_BITS = 256;
+
+/** Stored format: `pbkdf2$<iter>$<salt_b64url>$<hash_b64url>` */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES));
+
+  const baseKey = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(textEncoder.encode(password)),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: toArrayBuffer(salt), iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    baseKey,
+    PBKDF2_KEY_BITS
+  );
+
+  const hash = new Uint8Array(bits);
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${b64urlEncode(salt)}$${b64urlEncode(hash)}`;
+}
+
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
-    return null;
+    const [scheme, iterStr, saltB64, hashB64] = stored.split('$');
+    if (scheme !== 'pbkdf2') return false;
+    const iterations = parseInt(iterStr, 10);
+    const salt = b64urlDecode(saltB64);
+    const expected = b64urlDecode(hashB64);
+
+    const baseKey = await crypto.subtle.importKey(
+      'raw',
+      toArrayBuffer(textEncoder.encode(password)),
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    );
+
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt: toArrayBuffer(salt), iterations, hash: 'SHA-256' },
+      baseKey,
+      expected.length * 8
+    );
+
+    const actual = new Uint8Array(bits);
+    return timingSafeEqual(actual, expected);
+  } catch {
+    return false;
   }
-};
+}
 
-// Get user from request
-export const getUserFromRequest = async (request: NextRequest): Promise<User | null> => {
+// alias some projects expect
+export const verifyPasswordHash = verifyPassword;
+
+/** ---------- JWT (HS256) implemented with WebCrypto ---------- */
+
+export interface JwtPayload {
+  sub: string; // user id
+  role: Role;
+  email?: string;
+  iat: number; // issued at (seconds)
+  exp: number; // expiry (seconds)
+  [key: string]: unknown;
+}
+
+export interface JwtInput {
+  sub: string;
+  role: Role;
+  email?: string;
+  [key: string]: unknown;
+}
+
+export async function signToken(
+  payload: JwtInput,
+  opts?: { expiresInSeconds?: number }
+): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + (opts?.expiresInSeconds ?? 60 * 60 * 24 * 7); // default: 7 days
+
+  const headerSeg = b64urlEncode(JSON.stringify(header));
+  const payloadSeg = b64urlEncode(JSON.stringify({ ...payload, iat, exp }));
+  const data = `${headerSeg}.${payloadSeg}`;
+
+  const key = await getHmacKey();
+  const sigBuf = await crypto.subtle.sign('HMAC', key, toArrayBuffer(textEncoder.encode(data)));
+  const sigBytes = new Uint8Array(sigBuf);
+  const sigSeg = b64urlEncode(sigBytes);
+  return `${data}.${sigSeg}`;
+}
+
+export async function verifyToken(token: string): Promise<JwtPayload> {
+  const [h, p, s] = token.split('.');
+  if (!h || !p || !s) throw new Error('Malformed token');
+
+  const data = `${h}.${p}`;
+  const key = await getHmacKey();
+  const ok = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    toArrayBuffer(b64urlDecode(s)),
+    toArrayBuffer(textEncoder.encode(data))
+  );
+  if (!ok) throw new Error('Invalid signature');
+
+  const payload = JSON.parse(textDecoder.decode(b64urlDecode(p))) as JwtPayload;
+  const now = Math.floor(Date.now() / 1000);
+  if (typeof payload.exp === 'number' && now > payload.exp) throw new Error('Token expired');
+
+  return payload;
+}
+
+/** ---------- Request helper ---------- */
+
+export async function getUserFromRequest(
+  request: NextRequest
+): Promise<{ id: string; email?: string; role: Role } | null> {
   try {
-    const token = request.cookies.get('auth-token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
+    // Prefer Authorization header; fallback to cookie 'auth_token'
+    const authz = request.headers.get('authorization') || '';
+    const bearer = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7).trim() : null;
+    const cookie = request.cookies?.get?.('auth_token')?.value ?? null;
+    const token = bearer || cookie;
     if (!token) return null;
-    
-    const decoded = verifyToken(token);
-    if (!decoded) return null;
-    
-    // In a real app, you'd fetch the user from database here
-    // For now, we'll return the decoded token data
-    return decoded as User;
-  } catch (error) {
+
+    const payload = await verifyToken(token);
+    return { id: payload.sub, email: payload.email, role: payload.role };
+  } catch {
     return null;
   }
-};
+}
 
-// Validation helpers
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-  
-  if (!/(?=.*[a-z])/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-  
-  if (!/(?=.*[A-Z])/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/(?=.*\d)/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-  
-  if (!/(?=.*[@$!%*?&])/.test(password)) {
-    errors.push('Password must contain at least one special character (@$!%*?&)');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-// Generate Ecwid SSO token
-export const generateEcwidSSOToken = (user: User): string => {
-  const timestamp = Math.floor(Date.now() / 1000);
-  const payload = {
-    sub: user.id,
-    email: user.email,
-    name: `${user.firstName} ${user.lastName}`,
-    iat: timestamp,
-    exp: timestamp + 3600, // 1 hour expiration
-  };
-  
-  return jwt.sign(payload, JWT_SECRET);
-};
+/** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
+export function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
