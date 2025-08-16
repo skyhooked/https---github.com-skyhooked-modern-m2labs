@@ -1,69 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOrder, getUserByEmail } from '@/libs/database';
+import { ensureUserForEmail, createOrder } from '@/libs/database';
+import type { Order } from '@/libs/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const webhookData = await request.json();
-    
-    // Verify webhook authenticity (optional but recommended)
-    const signature = request.headers.get('x-ecwid-webhook-signature');
-    // In production, verify the signature using your webhook secret
-    
-    if (webhookData.eventType === 'order.paid') {
-      const orderData = webhookData.data;
-      
-      // Find user by email
-      let userId = null;
-      if (orderData.email) {
-        const user = await getUserByEmail(orderData.email);
-        userId = user?.id || null;
-      }
-      
-      // Create order in our database
-      const order = {
-        userId: userId,
-        ecwidOrderId: orderData.orderNumber,
-        status: 'processing' as const,
-        total: orderData.total,
-        currency: orderData.currency || 'USD',
-        items: orderData.items?.map((item: any) => ({
-          id: item.id.toString(),
-          productId: item.productId?.toString() || '',
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          sku: item.sku
-        })) || [],
-        shippingAddress: {
-          street: orderData.shippingAddress?.street || '',
-          city: orderData.shippingAddress?.city || '',
-          state: orderData.shippingAddress?.stateOrProvinceCode || '',
-          zipCode: orderData.shippingAddress?.postalCode || '',
-          country: orderData.shippingAddress?.countryCode || ''
-        },
-        billingAddress: {
-          street: orderData.billingAddress?.street || orderData.shippingAddress?.street || '',
-          city: orderData.billingAddress?.city || orderData.shippingAddress?.city || '',
-          state: orderData.billingAddress?.stateOrProvinceCode || orderData.shippingAddress?.stateOrProvinceCode || '',
-          zipCode: orderData.billingAddress?.postalCode || orderData.shippingAddress?.postalCode || '',
-          country: orderData.billingAddress?.countryCode || orderData.shippingAddress?.countryCode || ''
-        }
-      };
-      
-      await createOrder(order);
-      
-      console.log(`Order synced: ${orderData.orderNumber} for user: ${orderData.email}`);
+    const orderData = await request.json();
+
+    // Require email on the order
+    const email: string = String(orderData?.email || '').toLowerCase().trim();
+    if (!email) {
+      return NextResponse.json({ error: 'Order email missing' }, { status: 400 });
     }
-    
-    // Handle other webhook events as needed
-    if (webhookData.eventType === 'order.updated') {
-      // Handle order status updates
-      console.log(`Order updated: ${webhookData.data.orderNumber}`);
-    }
-    
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Webhook processing failed:', error);
-    return NextResponse.json({ error: 'Webhook failed' }, { status: 500 });
+
+    // Ensure local user exists
+    const user = await ensureUserForEmail(email);
+
+    // Build strict order payload for createOrder
+    const order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
+      userId: user.id,
+      ecwidOrderId: String(orderData?.orderNumber ?? ''),
+      status: 'processing',
+      total: Number(orderData?.total ?? 0),
+      currency: String(orderData?.currency ?? ''),
+      items: (orderData?.items ?? []) as any[],
+      shippingAddress: {
+        street: String(orderData?.shippingPerson?.street ?? ''),
+        city: String(orderData?.shippingPerson?.city ?? ''),
+        state: String(orderData?.shippingPerson?.stateOrProvinceCode ?? ''),
+        zipCode: String(orderData?.shippingPerson?.postalCode ?? ''),
+        country: String(orderData?.shippingPerson?.countryCode ?? ''),
+      },
+      billingAddress: {
+        street: String(orderData?.billingPerson?.street ?? ''),
+        city: String(orderData?.billingPerson?.city ?? ''),
+        state: String(orderData?.billingPerson?.stateOrProvinceCode ?? ''),
+        zipCode: String(orderData?.billingPerson?.postalCode ?? ''),
+        country: String(orderData?.billingPerson?.countryCode ?? ''),
+      },
+    };
+
+    await createOrder(order);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('Ecwid webhook error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
 import { getUserById } from '@/libs/database';
+import { ensureUserForEmail, createOrder } from '@/libs/database';
+
 
 export async function GET(request: NextRequest) {
   try {
