@@ -60,22 +60,18 @@ export interface WarrantyClaim {
   productName: string;
   serialNumber: string;
   issue: string;
-  /**
-   * Support both sets of status strings used around the app:
-   * - 'submitted' (aka pending), 'under_review' (aka review), 'approved',
-   *   'rejected', 'completed' (aka resolved)
-   */
+  /** include legacy statuses used by some pages to avoid TS errors */
   status:
     | 'submitted'
-    | 'under_review'
     | 'review'
     | 'approved'
     | 'rejected'
-    | 'completed'
-    | 'resolved';
+    | 'resolved'
+    | 'under_review'
+    | 'completed';
   submittedAt: string;
   updatedAt: string;
-  /** Optional field used by /account/warranty/page.tsx */
+  /** optional notes used on some UI screens */
   notes?: string;
 }
 
@@ -129,17 +125,6 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   for (let i = 0; i < a.length; i++) res |= a[i] ^ b[i];
   return res === 0;
 }
-
-/** ---------- Validation ---------- */
-
-export const validateEmail = (email: string): boolean => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
-};
-
-export const validatePassword = (password: string): boolean => {
-  const p = String(password || '');
-  return p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
-};
 
 /** ---------- Password hashing (PBKDF2-SHA256) ---------- */
 
@@ -219,13 +204,6 @@ export interface JwtInput {
   [key: string]: unknown;
 }
 
-/** Normalize inputs coming from routes (some pass a full User instead of JwtInput). */
-function toJwtInput(payload: JwtInput | User): JwtInput {
-  if ('sub' in payload) return payload as JwtInput;
-  const user = payload as User;
-  return { sub: user.id, role: user.role, email: user.email };
-}
-
 export async function signToken(
   payload: JwtInput,
   opts?: { expiresInSeconds?: number }
@@ -245,14 +223,7 @@ export async function signToken(
   return `${data}.${sigSeg}`;
 }
 
-/** Keep compatibility with routes expecting `generateToken(user)` or `generateToken(jwtPayload)` */
-export function generateToken(
-  payload: JwtInput | User,
-  opts?: { expiresInSeconds?: number }
-): Promise<string> {
-  return signToken(toJwtInput(payload), opts);
-}
-
+/** Keep existing verifiers */
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const [h, p, s] = token.split('.');
   if (!h || !p || !s) throw new Error('Malformed token');
@@ -274,39 +245,6 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
   return payload;
 }
 
-/** ---------- Ecwid SSO token (HMAC-SHA256) ---------- */
-
-function getEcwidSecret(): string {
-  return (
-    process.env.ECWID_SSO_SECRET ||
-    process.env.AUTH_SECRET || // fallback if ECWID_SSO_SECRET not provided
-    'dev-ecwid-secret-please-set-ECWID_SSO_SECRET'
-  ).toString();
-}
-
-export async function generateEcwidSSOToken(
-  data: Record<string, any>,
-  overrideSecret?: string
-): Promise<string> {
-  const payload = { ...data, iat: Math.floor(Date.now() / 1000) };
-  const body = JSON.stringify(payload);
-
-  const secret = overrideSecret ?? getEcwidSecret();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    toArrayBuffer(textEncoder.encode(secret)),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  const sigBuf = await crypto.subtle.sign('HMAC', key, toArrayBuffer(textEncoder.encode(body)));
-  const signature = b64urlEncode(new Uint8Array(sigBuf));
-
-  // Common compact form: base64url(body) + "." + base64url(signature)
-  return `${b64urlEncode(body)}.${signature}`;
-}
-
 /** ---------- Request helper ---------- */
 
 export async function getUserFromRequest(
@@ -316,7 +254,7 @@ export async function getUserFromRequest(
     // Prefer Authorization header; fallback to cookie 'auth_token'
     const authz = request.headers.get('authorization') || '';
     const bearer = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7).trim() : null;
-    const cookie = (request as any).cookies?.get?.('auth_token')?.value ?? null;
+    const cookie = request.cookies?.get?.('auth_token')?.value ?? null;
     const token = bearer || cookie;
     if (!token) return null;
 
@@ -330,4 +268,60 @@ export async function getUserFromRequest(
 /** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+/** ---------- Minimal validators + compatibility exports ---------- */
+
+/** Simple email format check used by routes */
+export function validateEmail(email: string): boolean {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+/** Simple password rule (match existing UI expectations) */
+export function validatePassword(password: string): boolean {
+  return typeof password === 'string' && password.length >= 8;
+}
+
+/** Keep legacy name expected by routes */
+export const generateToken = signToken;
+
+/**
+ * Ecwid SSO token helper used by /api/ecwid/sso route.
+ * Produces a compact HMAC-signed blob from the given fields.
+ */
+export async function generateEcwidSSOToken(input: {
+  email: string;
+  customerId?: string;
+  name?: string;
+  ttlSeconds?: number;
+}): Promise<string> {
+  const secret = (process.env.ECWID_SSO_SECRET || '').toString();
+  if (!secret) throw new Error('Missing ECWID_SSO_SECRET');
+
+  const now = Math.floor(Date.now() / 1000);
+  const exp = now + (input.ttlSeconds ?? 10 * 60);
+
+  // Minimal, deterministic string to sign (avoid JSON key order issues)
+  const parts = [
+    `email=${encodeURIComponent(input.email)}`,
+    input.customerId ? `customer_id=${encodeURIComponent(input.customerId)}` : null,
+    input.name ? `name=${encodeURIComponent(input.name)}` : null,
+    `iat=${now}`,
+    `exp=${exp}`,
+  ]
+    .filter(Boolean)
+    .join('&');
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(textEncoder.encode(secret)),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, toArrayBuffer(textEncoder.encode(parts)));
+  const sig = b64urlEncode(new Uint8Array(sigBuf));
+
+  // Return a compact token string; the route can append this to redirects/URLs
+  return `${parts}&sig=${sig}`;
 }

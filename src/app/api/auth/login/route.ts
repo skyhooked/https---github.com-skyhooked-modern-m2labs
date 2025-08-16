@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithPassword } from '@/libs/database';
 import { verifyPassword, generateToken, validateEmail } from '@/libs/auth';
+
 export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
@@ -17,33 +18,27 @@ export async function POST(request: NextRequest) {
     }
 
     if (!validateEmail(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
     // Get user with password
     const user = await getUserWithPassword(email);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, user.password);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Generate JWT token
-    const { password: _, ...userWithoutPassword } = user;
-    const token = generateToken(userWithoutPassword);
+    // Generate JWT token (must await; generateToken is async)
+    const token = await generateToken({
+      sub: user.id,
+      role: user.role,
+      email: user.email,
+    });
 
     // Create response
     const response = NextResponse.json({
@@ -54,8 +49,8 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         isVerified: user.isVerified,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
 
     // Set HTTP-only cookie
@@ -63,15 +58,12 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

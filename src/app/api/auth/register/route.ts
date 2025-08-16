@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/libs/database';
 import { validateEmail, validatePassword, generateToken } from '@/libs/auth';
+
 export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
@@ -23,10 +24,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
+    if (!validatePassword(password)) {
       return NextResponse.json(
-        { error: 'Password requirements not met', details: passwordValidation.errors },
+        { error: 'Password requirements not met' },
         { status: 400 }
       );
     }
@@ -39,36 +39,43 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
         phone,
-        dateOfBirth
+        dateOfBirth,
       });
 
-      // Generate JWT token
-      const token = generateToken(user);
+      // Generate JWT token (generateToken is async)
+      const token = await generateToken({
+        sub: user.id,
+        role: user.role,
+        email: user.email,
+      });
 
       // Create response with token in cookie
-      const response = NextResponse.json({
-        message: 'User created successfully',
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          isVerified: user.isVerified,
-          role: user.role
-        }
-      }, { status: 201 });
+      const response = NextResponse.json(
+        {
+          message: 'User created successfully',
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isVerified: user.isVerified,
+            role: user.role,
+          },
+        },
+        { status: 201 }
+      );
 
       // Set HTTP-only cookie
       response.cookies.set('auth-token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 // 7 days
+        maxAge: 7 * 24 * 60 * 60, // 7 days
       });
 
       return response;
     } catch (error: any) {
-      if (error.message === 'User with this email already exists') {
+      if (error?.message === 'User with this email already exists') {
         return NextResponse.json(
           { error: 'An account with this email already exists' },
           { status: 409 }
