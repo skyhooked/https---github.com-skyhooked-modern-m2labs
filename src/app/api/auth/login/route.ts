@@ -1,47 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithPassword } from '@/libs/database';
-import { verifyPassword, generateToken, validateEmail } from '@/libs/auth';
+import { verifyPassword, signToken } from '@/libs/auth';
 
 export const runtime = 'edge';
 
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
-    // Validation
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
-
-    if (!validateEmail(email)) {
+    if (!isValidEmail(email)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
-    // Get user with password
     const user = await getUserWithPassword(email);
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, user.password);
-    if (!isPasswordValid) {
+    const ok = await verifyPassword(password, user.password);
+    if (!ok) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Generate JWT token (must await; generateToken is async)
-    const token = await generateToken({
-      sub: user.id,
-      role: user.role,
-      email: user.email,
-    });
+    // Create JWT (JwtInput shape: sub, role, email)
+    const token = await signToken({ sub: user.id, role: user.role, email: user.email });
 
-    // Create response
-    const response = NextResponse.json({
+    // Build response
+    const res = NextResponse.json({
       message: 'Login successful',
       user: {
         id: user.id,
@@ -53,17 +43,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Set HTTP-only cookie
-    response.cookies.set('auth-token', token, {
+    // Use cookie name 'auth_token' to match getUserFromRequest()
+    res.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days (seconds)
+      path: '/',
     });
 
-    return response;
-  } catch (error) {
-    console.error('Login error:', error);
+    return res;
+  } catch (err) {
+    console.error('Login error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

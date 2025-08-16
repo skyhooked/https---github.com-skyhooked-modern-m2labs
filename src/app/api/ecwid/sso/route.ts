@@ -1,37 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
+
 export const runtime = 'edge';
 
+// Support both GET and POST in case your frontend calls either
 export async function GET(request: NextRequest) {
+  return handle(request);
+}
+export async function POST(request: NextRequest) {
+  return handle(request);
+}
+
+async function handle(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      // Return empty response for non-authenticated users
-      return NextResponse.json({ sso: null });
+    if (!user || !user.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Generate SSO token for Ecwid
-    const ssoToken = generateEcwidSSOToken(user);
-    
+    const ssoToken = await generateEcwidSSOToken({
+      email: user.email,          // required by the helper
+      customerId: user.id,        // optional, but useful for mapping
+      // name: you can add a name string here if you have it on hand
+      ttlSeconds: 300,            // 5 minutes
+    });
+
     return NextResponse.json({
       sso: {
         token: ssoToken,
-        timestamp: Math.floor(Date.now() / 1000),
-        user: {
-          id: user.id,
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          firstName: user.firstName,
-          lastName: user.lastName
-        }
-      }
+        email: user.email,
+        customerId: user.id,
+        expiresIn: 300,
+      },
     });
-  } catch (error) {
-    console.error('Ecwid SSO error:', error);
-    return NextResponse.json(
-      { error: 'SSO token generation failed' },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error('Ecwid SSO error:', err);
+    return NextResponse.json({ error: 'Failed to generate SSO token' }, { status: 500 });
   }
 }
