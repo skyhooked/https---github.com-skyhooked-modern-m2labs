@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get fresh user data from database
-    const freshUser = await getUserById(user.userId || user.id);
+    const freshUser = await getUserById(user.id);
     
     if (!freshUser) {
       return NextResponse.json(
