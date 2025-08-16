@@ -1,0 +1,26 @@
+[
+  {
+    "id": "me7uhdcnr294sh5wrxk",
+    "email": "gitfkd@gmail.com",
+    "firstName": "git",
+    "lastName": "fkd",
+    "password": "$2b$12$PE6EaLYUKPLJO9c/KHTHCe2/.8k0D3WYjYSV2Sblx9Op1TeB.cdUS",
+    "createdAt": "2025-08-12T01:10:24.983Z",
+    "updatedAt": "2025-08-12T01:10:24.983Z",
+    "isVerified": false,
+    "role": "customer"
+  },
+  {
+    "id": "me8rkzez92s86tjtod",
+    "email": "jonathan@m2-labs.com",
+    "firstName": "Jonathon",
+    "lastName": "Labadie",
+    "phone": "7065250821",
+    "dateOfBirth": "1987-10-02",
+    "password": "$2b$12$gAjXOfQBH1RKjhfaair.de8G3HPwbKpzEN9XrAoqEUBFoUouBgg/a",
+    "createdAt": "2025-08-12T16:37:00.875Z",
+    "updatedAt": "2025-08-12T16:37:00.875Z",
+    "isVerified": false,
+    "role": "customer"
+  }
+]

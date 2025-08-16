@@ -1,0 +1,230 @@
+[
+  {
+    "name": "Caro Pohl",
+    "image": "/images/uploads/1755221517314-cp-sc2.jpg",
+    "genre": "Metal",
+    "featured": true,
+    "location": "Cologne, Germany",
+    "bio": "Caro Pohl picked up a guitar at 14 and never needed permission to get loud. Her first was a Yamaha Pacifica. It wasn’t about the gear. It was about pushing sound hard enough to make it hers. She was already deep into Rock and Metal by then. She learned by listening and playing until her hands caught up with her ears.\n\nAt 16, she had a band and a purpose. The setup was raw but deliberate. A Mesa Boogie Dual Rectifier at the core, dialed in to hit like it should. That amp still works hard in her studio sessions. These days, her live rig is streamlined. It’s built around a Kemper Profiler, two control pedals, and now The Bomber Overdrive, which has earned a permanent place on her board. No clutter. Just precision.\n\nSince 2011, she’s been the guitarist in Saddiscore. That’s not just a band. That’s where her sound lives. Heavy, focused, and fully under control. Caro doesn’t overplay. She locks in. Every note has a job, and she makes sure it gets done.",
+    "gear": [
+      "The Bomber Overdrive"
+    ],
+    "website": "https://saddiscore.de/",
+    "socialMedia": {
+      "instagram": "@saddiscore",
+      "spotify": "https://open.spotify.com/artist/0XkyklXB3YOwxTuSylThrw",
+      "bandcamp": "",
+      "tidal": "https://tidal.com/artist/5395187"
+    },
+    "testimonial": "",
+    "showBandsintown": false,
+    "bandsintown": {
+      "artistName": "",
+      "enabled": false
+    },
+    "useCustomTemplate": false,
+    "customTemplatePath": "",
+    "customSections": [
+      {
+        "id": "1755225563992",
+        "type": "gallery",
+        "title": "Gallery",
+        "content": [
+          "public/images/CP-SC1.jpg",
+          "public/images/CP-SC2.jpg",
+          "public/images/CP-SC3.jpg"
+        ],
+        "enabled": true,
+        "order": 1
+      }
+    ],
+    "id": "caro-pohl",
+    "order": 1
+  },
+  {
+    "name": "Hector Guadarrama",
+    "image": "/images/uploads/1755191400328-hg4.jpg",
+    "genre": "Pop-Punk, Producer, Recording Engineer",
+    "featured": true,
+    "location": "Seattle, WA",
+    "bio": "Hector's musical journey began at the age of 9 with the viola, sparking a lifelong passion for music. By 13, he had picked up the guitar, and at 17, he joined his first band.\n\nBased in Seattle, Hector owns and operates Mestizo Audio, a studio he founded in 2020 after years of recording experience starting from age 16. His work at Mestizo Audio reflects his dedication to creating exceptional audio experiences.\n\nAs a guitarist for palettes, Hector has enjoyed the thrill of touring and performing live. In 2024, palettes completed a couple of successful tours, including an almost completely sold out run with The Home Team.\n\nWith a commitment to his craft and a love for music, Hector continues to explore new horizons through his work at Mestizo Audio and his performances with palettes.\n\nHector is currently using The Bomber Overdrive by M2 Labs.",
+    "gear": [
+      "The Bomber Overdrive"
+    ],
+    "website": "https://linktr.ee/mestizoaudio",
+    "socialMedia": {
+      "instagram": "https://www.instagram.com/mestizoaudio/",
+      "spotify": "https://open.spotify.com/artist/6fktdsYeSWl3qSGekown62",
+      "bandcamp": "",
+      "tidal": ""
+    },
+    "testimonial": "",
+    "showBandsintown": false,
+    "bandsintown": {
+      "artistName": "",
+      "enabled": false
+    },
+    "useCustomTemplate": false,
+    "customTemplatePath": "",
+    "customSections": [
+      {
+        "id": "1755178612715",
+        "type": "gallery",
+        "title": "Gallery",
+        "content": [
+          "public\\images\\HG1.jpg",
+          "public\\images\\HG3.jpg",
+          "public\\images\\HG4.jpg",
+          "public\\images\\HG5.jpg",
+          "public\\images\\HG2.jpg"
+        ],
+        "enabled": true,
+        "order": 1,
+        "galleryConfig": {
+          "gridColumns": {
+            "mobile": 2,
+            "tablet": 2,
+            "desktop": 5
+          },
+          "aspectRatio": "square",
+          "gap": "md",
+          "borderRadius": "md",
+          "hoverEffect": "scale",
+          "lightbox": true,
+          "captions": false
+        }
+      },
+      {
+        "id": "1755299637770",
+        "type": "gallery",
+        "title": "Credits",
+        "content": [
+          "public\\images\\The-Home-Team-The-Crucible-of-Life.png",
+          "public\\images\\Instant-Crush-Im-Sorry-I-Didnt-Bite-my-Tongue.png",
+          "public\\images\\Palettes-Self-Titled-EP.png",
+          "public\\images\\The-Plot-In-You-Dispose.png",
+          "public\\images\\Hylian-No-More-Years.png",
+          "public\\images\\Swim-Down-Act-Like-Everything-Is-Fine.png",
+          "public\\images\\Reaction-Feed-Where-You-Stood-Parts-1-and-2.png",
+          "public\\images\\Arcade-Dreams-Sunshine-Coast.png",
+          "public\\images\\Radcab - Daughter-of-an-Americanm-Occultist.png",
+          "public\\images\\Broadside-Cruel.png",
+          "public\\images\\This-Wild-Life-Dead-to-Me.png",
+          "public\\images\\Don-Broco-Birthday-Party.png"
+        ],
+        "enabled": true,
+        "order": 2,
+        "galleryConfig": {
+          "gridColumns": {
+            "mobile": 3,
+            "tablet": 3,
+            "desktop": 3
+          },
+          "aspectRatio": "square",
+          "gap": "sm",
+          "borderRadius": "md",
+          "hoverEffect": "scale",
+          "lightbox": true,
+          "captions": false
+        }
+      }
+    ],
+    "id": "hector-guadarrama",
+    "order": 2
+  },
+  {
+    "name": "WormWood Project",
+    "image": "/images/uploads/1755217994525-wwp6.jpg",
+    "genre": "Southern Gothic, Modern Grunge",
+    "featured": false,
+    "location": "Gainesville, GA",
+    "bio": "The WormWood Project is a visceral blend of Southern Gothic grit and modern grunge, led by frontman Aubrey Britt Bailey, whose haunting lyrics explore themes of addiction, loss, and redemption. Their debut EP, Ghosts, is a raw tribute to lives lost, with each track capturing Bailey’s unfiltered emotion and masterful storytelling. Anchored by Anton Shields’ powerhouse drumming and driven by gritty guitar from Brandon Lee Gaines, alongside Jaco Kiley’s slithering bass, the band crafts an intense, cinematic sound that’s both timeless and unforgettable. The WormWood Project invites listeners into a world of vivid, haunting melodies that linger long after the music fades.\n\n​\n\nBrandon Lee Gaines and Aubrey Britt Bailey are currently using The Bomber Overdrive",
+    "gear": [
+      "The Bomber Overdrive"
+    ],
+    "website": "https://linktr.ee/wormwoodproject",
+    "socialMedia": {
+      "instagram": "https://www.instagram.com/wormwoodprojectofficial",
+      "spotify": "https://open.spotify.com/artist/7LVGlqRc0Fa0n9rNmzyTt9",
+      "bandcamp": ""
+    },
+    "testimonial": "",
+    "showBandsintown": false,
+    "bandsintown": {
+      "artistName": "",
+      "enabled": false
+    },
+    "useCustomTemplate": false,
+    "customTemplatePath": "",
+    "customSections": [
+      {
+        "id": "1755226164462",
+        "type": "gallery",
+        "title": "Gallery",
+        "content": [
+          "public\\images\\wwp1.jpg",
+          "public\\images\\wwp2.jpg",
+          "public\\images\\wwp3.jpg",
+          "public\\images\\wwp4.jpg",
+          "public\\images\\wwp5.jpg",
+          "public\\images\\wwp6.jpg",
+          "public\\images\\wwp7.jpg"
+        ],
+        "enabled": true,
+        "order": 1
+      }
+    ],
+    "id": "wormwood-project",
+    "order": 3
+  },
+  {
+    "name": "Loraine",
+    "image": "/images/uploads/1755216432601-loraine14.jpg",
+    "genre": "Post-Rock",
+    "featured": true,
+    "location": "Atlanta, GA",
+    "bio": "Loraine is an instrumental post-rock band, based out of Atlanta, which began in 2012 with the simple intention of writing music that makes you feel something. Each song is a stream of emotion, locked in time. With a huge emphasis on keeping things concise, something atypical for the genre, each part is impermanent and transitory. They'll never let a part linger for too long, they'll never let you get bored of a section, and they'll never let something feel like it should go somewhere, but doesn’t.\nAfter a hiatus from 2017 until 2022, they’re back with some new members and will finally be pressing their full length album, “Exist” very soon. New music is also being written with the new members, so the plan is to follow up the full length with fresh new music for the foreseeable future.\nJustin Young and Eric Anderson are both founding members, and have very different approaches to both their parts and their guitar tone. Justin uses the single channel, clean amp pedal platform approach, so his pedalboard is massive and looks like something out of a sci-fi movie. Eric on the other hand uses mostly the 2 channels of his amp for the majority of his tonal options, with a minimal pedalboard setup. The Bomber Overdrive however, has become a staple on both of their boards, as a kind of in-between middle drive channel.",
+    "gear": [
+      "The Bomber Overdrive"
+    ],
+    "website": "https://linktr.ee/lorainemusic",
+    "socialMedia": {
+      "instagram": "https://www.instagram.com/lorainetheband/",
+      "spotify": "https://open.spotify.com/playlist/1SArPm63a08vVGvYveuZjY?si=vQjAY5B2TtqOc_m-ZFwbXQ",
+      "bandcamp": "https://loraine.bandcamp.com/"
+    },
+    "testimonial": "",
+    "showBandsintown": true,
+    "bandsintown": {
+      "artistName": "loraine",
+      "enabled": true
+    },
+    "useCustomTemplate": false,
+    "customTemplatePath": "",
+    "customSections": [
+      {
+        "id": "1755177899894",
+        "type": "gallery",
+        "title": "Gallery",
+        "content": [
+          "public\\images\\Loraine2.jpg",
+          "public\\images\\Loraine3.jpg",
+          "public\\images\\Loraine4.jpg",
+          "public\\images\\Loraine5.jpg",
+          "public\\images\\Loraine6.jpg",
+          "public\\images\\Loraine7.jpg",
+          "public\\images\\Loraine8.jpg",
+          "public\\images\\Loraine9.jpg",
+          "public\\images\\Loraine10.jpg",
+          "public\\images\\Loraine11.jpg",
+          "public\\images\\Loraine12.jpg",
+          "public\\images\\Loraine13.jpg"
+        ],
+        "enabled": true,
+        "order": 1
+      }
+    ],
+    "id": "loraine",
+    "order": 4
+  }
+]

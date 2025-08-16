@@ -1,0 +1,183 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { getAllArtists } from '@/data/artistData';
+import { newsData } from '@/data/newsData';
+
+interface SearchModalProps {
+  onClose: () => void;
+}
+
+export default function SearchModal({ onClose }: SearchModalProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<{
+    artists: any[];
+    news: any[];
+  }>({ artists: [], news: [] });
+
+  const performSearch = (term: string) => {
+    if (!term.trim()) {
+      setResults({ artists: [], news: [] });
+      return;
+    }
+
+    const searchLower = term.toLowerCase();
+    
+    // Search artists
+    const artists = getAllArtists().filter(artist => 
+      artist.name.toLowerCase().includes(searchLower) ||
+      artist.genre.toLowerCase().includes(searchLower) ||
+      artist.location.toLowerCase().includes(searchLower) ||
+      artist.bio.toLowerCase().includes(searchLower) ||
+      artist.gear.some(gear => gear.toLowerCase().includes(searchLower))
+    );
+
+    // Search news
+    const news = newsData.filter(post =>
+      post.title.toLowerCase().includes(searchLower) ||
+      post.fullContent.toLowerCase().includes(searchLower) ||
+      (post.category && post.category.toLowerCase().includes(searchLower))
+    );
+
+    setResults({ artists, news });
+  };
+
+  useEffect(() => {
+    performSearch(searchTerm);
+  }, [searchTerm]);
+
+  // Close modal when clicking outside
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 z-[10000] flex items-start justify-center pt-20"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-[#36454F] rounded-lg shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden border border-white/10">
+        {/* Search Header */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search artists, news, gear..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-3 bg-[#2D3A3F] border border-white/20 rounded-lg focus:outline-none focus:border-[#FF8A3D] text-lg text-white placeholder-white/60"
+                autoFocus
+              />
+              <Image
+                src="/icons/search.svg"
+                alt="Search"
+                width={20}
+                height={20}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 opacity-50 brightness-0 invert"
+              />
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/70 hover:text-white text-2xl font-bold p-2"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Search Results */}
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {!searchTerm.trim() ? (
+            <div className="text-center text-white/60 py-8">
+              <p>Start typing to search for artists, news, or gear...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Artists Results */}
+              {results.artists.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Artists ({results.artists.length})</h3>
+                  <div className="space-y-3">
+                    {results.artists.map((artist) => (
+                      <Link
+                        key={artist.id}
+                        href="/artists"
+                        onClick={onClose}
+                        className="block p-3 rounded-lg hover:bg-white/5 transition-colors border border-white/10"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src={artist.image}
+                            alt={artist.name}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                          <div>
+                            <h4 className="font-medium text-white">{artist.name}</h4>
+                            <p className="text-sm text-white/70">{artist.genre} • {artist.location}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* News Results */}
+              {results.news.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">News ({results.news.length})</h3>
+                  <div className="space-y-3">
+                    {results.news.map((post) => (
+                      <Link
+                        key={post.id}
+                        href="/news"
+                        onClick={onClose}
+                        className="block p-3 rounded-lg hover:bg-white/5 transition-colors border border-white/10"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src={post.coverImage}
+                            alt={post.title}
+                            width={40}
+                            height={40}
+                            className="rounded object-cover"
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-medium text-white">{post.title}</h4>
+                            <p className="text-sm text-white/70">
+                              {post.fullContent.substring(0, 100)}...
+                            </p>
+                            {post.category && (
+                              <span className="inline-block bg-[#FF8A3D] text-black px-2 py-1 rounded text-xs mt-1">
+                                {post.category}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No Results */}
+              {searchTerm.trim() && results.artists.length === 0 && results.news.length === 0 && (
+                <div className="text-center text-white/60 py-8">
+                  <p>No results found for "{searchTerm}"</p>
+                  <p className="text-sm mt-2">Try searching for artist names, genres, gear, or news topics.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
