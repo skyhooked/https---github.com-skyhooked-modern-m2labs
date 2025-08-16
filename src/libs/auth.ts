@@ -60,7 +60,19 @@ export interface WarrantyClaim {
   productName: string;
   serialNumber: string;
   issue: string;
-  status: 'submitted' | 'review' | 'approved' | 'rejected' | 'resolved';
+  /**
+   * Support both sets of status strings used around the app:
+   * - 'submitted' (aka pending), 'under_review' (aka review), 'approved',
+   *   'rejected', 'completed' (aka resolved)
+   */
+  status:
+    | 'submitted'
+    | 'under_review'
+    | 'review'
+    | 'approved'
+    | 'rejected'
+    | 'completed'
+    | 'resolved';
   submittedAt: string;
   updatedAt: string;
   /** Optional field used by /account/warranty/page.tsx */
@@ -118,7 +130,7 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return res === 0;
 }
 
-/** ---------- Validation (added) ---------- */
+/** ---------- Validation ---------- */
 
 export const validateEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
