@@ -5,7 +5,7 @@ import { getOrdersByUserId } from '@/libs/database';
 export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Not authenticated' },
@@ -13,10 +13,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const orders = await getOrdersByUserId(user.userId || user.id);
+    // Use the strict User shape (id only)
+    const orders = await getOrdersByUserId(user.id);
 
     return NextResponse.json({
-      orders: orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      orders: orders.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
     });
   } catch (error) {
     console.error('Get orders error:', error);
