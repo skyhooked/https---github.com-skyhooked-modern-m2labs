@@ -6,6 +6,7 @@ import AuthWrapper from '@/components/admin/AuthWrapper';
 import ArtistForm from '@/components/admin/ArtistForm';
 import Image from 'next/image';
 import { getAllArtists, updateArtist, addArtist, deleteArtist, loadArtistsFromServer, reorderArtists, Artist } from '@/data/artistData';
+export const runtime = 'edge'
 
 export default function ArtistManagement() {
   const [artists, setArtists] = useState<Artist[]>(getAllArtists());

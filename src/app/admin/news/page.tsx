@@ -5,6 +5,7 @@ import AuthWrapper from '@/components/admin/AuthWrapper';
 import NewsForm from '@/components/admin/NewsForm';
 import Image from 'next/image';
 import { NewsPost } from '@/data/newsData';
+export const runtime = 'edge'
 
 type CustomSectionType = 'text' | 'gallery' | 'video' | 'html';
 

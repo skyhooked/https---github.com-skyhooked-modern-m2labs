@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { WarrantyClaim, Order } from '@/libs/auth';
 import Link from 'next/link';
+export const runtime = 'edge'
 
 export default function Warranty() {
   const { user, loading } = useAuth();

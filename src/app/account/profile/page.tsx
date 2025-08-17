@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+export const runtime = 'edge'
 
 export default function Profile() {
   const { user, loading, updateProfile } = useAuth();

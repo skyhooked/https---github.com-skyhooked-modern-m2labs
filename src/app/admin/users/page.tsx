@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import { User } from '@/libs/auth';
+export const runtime = 'edge'
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
 import { ensureUserForEmail } from '@/libs/database';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NewsPost, newsData as defaultNewsData } from '@/data/newsData';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs'
 
 /**
  * Edge-safe in-memory store (per isolate). If you need persistence,

@@ -1,5 +1,6 @@
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
+export const runtime = 'edge'
 
 export default function NewsletterManagement() {
   return (

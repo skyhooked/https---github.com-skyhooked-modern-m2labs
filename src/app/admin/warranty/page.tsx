@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import { WarrantyClaim } from '@/libs/auth';
+export const runtime = 'edge'
 
 export default function WarrantyManagement() {
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);

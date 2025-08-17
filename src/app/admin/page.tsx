@@ -2,6 +2,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import Link from 'next/link';
 import { getAllArtists } from '@/data/artistData';
+export const runtime = 'edge'
 
 interface ModuleCardProps {
   title: string;
