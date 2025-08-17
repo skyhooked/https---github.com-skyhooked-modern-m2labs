@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
     cssChunking: 'strict',
   },
 
+  // Ensure proper routing for Cloudflare Pages
+  trailingSlash: true,
+
   images: {
     remotePatterns: [
       {
