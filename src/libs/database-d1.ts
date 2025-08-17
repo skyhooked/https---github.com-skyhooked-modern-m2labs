@@ -309,6 +309,162 @@ export const updateWarrantyClaim = async (id: string, updates: Partial<WarrantyC
   return updatedClaim;
 };
 
+// ---------- Artists ----------
+export interface Artist {
+  id: string;
+  name: string;
+  bio?: string;
+  genre?: string;
+  location?: string;
+  image?: string;
+  website?: string;
+  instagram?: string;
+  youtube?: string;
+  spotify?: string;
+  bandcamp?: string;
+  tidal?: string;
+  gear: string[]; // Will be stored as JSON string in DB
+  testimonial?: string;
+  featured: boolean;
+  showBandsintown?: boolean;
+  bandsintown_artist_name?: string;
+  order: number; // Renamed from order_position to match frontend
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getArtists = async (): Promise<Artist[]> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('SELECT * FROM artists ORDER BY order_position ASC').all();
+  return (result.results || []).map(artist => ({
+    ...artist,
+    gear: JSON.parse(artist.gear || '[]'),
+    order: artist.order_position, // Map DB field to frontend field
+  }));
+};
+
+export const getArtistById = async (id: string): Promise<Artist | null> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('SELECT * FROM artists WHERE id = ?').bind(id).first();
+  if (!result) return null;
+  
+  return {
+    ...result,
+    gear: JSON.parse(result.gear || '[]'),
+    order: result.order_position,
+  };
+};
+
+export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updatedAt'>): Promise<Artist> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const artistId = artistData.id || generateId();
+  const now = new Date().toISOString();
+  
+  const newArtist: Artist = {
+    id: artistId,
+    ...artistData,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.prepare(`
+    INSERT INTO artists (
+      id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal, 
+      gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    newArtist.id,
+    newArtist.name,
+    newArtist.bio || null,
+    newArtist.genre || null,
+    newArtist.location || null,
+    newArtist.image || null,
+    newArtist.website || null,
+    newArtist.instagram || null,
+    newArtist.youtube || null,
+    newArtist.spotify || null,
+    newArtist.bandcamp || null,
+    newArtist.tidal || null,
+    JSON.stringify(newArtist.gear || []),
+    newArtist.testimonial || null,
+    newArtist.featured,
+    newArtist.showBandsintown || false,
+    newArtist.bandsintown_artist_name || null,
+    newArtist.order,
+    newArtist.createdAt,
+    newArtist.updatedAt
+  ).run();
+
+  return newArtist;
+};
+
+export const updateArtist = async (id: string, updates: Partial<Artist>): Promise<Artist | null> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const existingArtist = await getArtistById(id);
+  if (!existingArtist) return null;
+
+  const now = new Date().toISOString();
+  const updatedArtist = { ...existingArtist, ...updates, updatedAt: now };
+
+  await db.prepare(`
+    UPDATE artists 
+    SET name = ?, bio = ?, genre = ?, location = ?, image = ?, website = ?, instagram = ?, youtube = ?, 
+        spotify = ?, bandcamp = ?, tidal = ?, gear = ?, testimonial = ?, featured = ?, showBandsintown = ?, 
+        bandsintown_artist_name = ?, order_position = ?, updatedAt = ?
+    WHERE id = ?
+  `).bind(
+    updatedArtist.name,
+    updatedArtist.bio || null,
+    updatedArtist.genre || null,
+    updatedArtist.location || null,
+    updatedArtist.image || null,
+    updatedArtist.website || null,
+    updatedArtist.instagram || null,
+    updatedArtist.youtube || null,
+    updatedArtist.spotify || null,
+    updatedArtist.bandcamp || null,
+    updatedArtist.tidal || null,
+    JSON.stringify(updatedArtist.gear || []),
+    updatedArtist.testimonial || null,
+    updatedArtist.featured,
+    updatedArtist.showBandsintown || false,
+    updatedArtist.bandsintown_artist_name || null,
+    updatedArtist.order,
+    updatedArtist.updatedAt,
+    id
+  ).run();
+
+  return updatedArtist;
+};
+
+export const deleteArtist = async (id: string): Promise<boolean> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('DELETE FROM artists WHERE id = ?').bind(id).run();
+  return result.success;
+};
+
+export const getFeaturedArtists = async (count: number = 3): Promise<Artist[]> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('SELECT * FROM artists WHERE featured = 1 ORDER BY order_position ASC LIMIT ?').bind(count).all();
+  return (result.results || []).map(artist => ({
+    ...artist,
+    gear: JSON.parse(artist.gear || '[]'),
+    order: artist.order_position,
+  }));
+};
+
 // ---------- Helper Functions ----------
 export const ensureUserForEmail = async (email: string, userData?: Partial<UserRegistration>): Promise<User> => {
   let user = await getUserByEmail(email);
@@ -392,12 +548,38 @@ export const initializeDatabase = async (): Promise<void> => {
         FOREIGN KEY (userId) REFERENCES users (id)
       );
 
+      -- Artists table
+      CREATE TABLE IF NOT EXISTS artists (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        bio TEXT,
+        genre TEXT,
+        location TEXT,
+        image TEXT,
+        website TEXT,
+        instagram TEXT,
+        youtube TEXT,
+        spotify TEXT,
+        bandcamp TEXT,
+        tidal TEXT,
+        gear TEXT, -- JSON array as string
+        testimonial TEXT,
+        featured BOOLEAN NOT NULL DEFAULT FALSE,
+        showBandsintown BOOLEAN NOT NULL DEFAULT FALSE,
+        bandsintown_artist_name TEXT,
+        order_position INTEGER NOT NULL DEFAULT 0,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
       -- Create indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId);
       CREATE INDEX IF NOT EXISTS idx_orders_ecwidOrderId ON orders (ecwidOrderId);
       CREATE INDEX IF NOT EXISTS idx_warranty_claims_userId ON warranty_claims (userId);
       CREATE INDEX IF NOT EXISTS idx_warranty_claims_orderId ON warranty_claims (orderId);
+      CREATE INDEX IF NOT EXISTS idx_artists_order_position ON artists (order_position);
+      CREATE INDEX IF NOT EXISTS idx_artists_featured ON artists (featured);
     `);
 
     // Insert default admin user if it doesn't exist
@@ -417,6 +599,87 @@ export const initializeDatabase = async (): Promise<void> => {
         new Date().toISOString(),
         new Date().toISOString()
       ).run();
+    }
+
+    // Insert initial artists if table is empty
+    const artistCount = await db.prepare('SELECT COUNT(*) as count FROM artists').first();
+    if (artistCount.count === 0) {
+      const now = new Date().toISOString();
+      const initialArtists = [
+        {
+          id: 'caro-pohl',
+          name: 'Caro Pohl',
+          bio: 'Caro Pohl picked up a guitar at 14 and never needed permission to get loud. Her first was a Yamaha Pacifica. It wasn\'t about the gear. It was about pushing sound hard enough to make it hers.',
+          genre: 'Metal',
+          location: 'Cologne, Germany',
+          image: '/images/uploads/1755221517314-cp-sc2.jpg',
+          website: 'https://saddiscore.de/',
+          instagram: '@saddiscore',
+          spotify: 'https://open.spotify.com/artist/0XkyklXB3YOwxTuSylThrw',
+          tidal: 'https://tidal.com/artist/5395187',
+          gear: '["The Bomber Overdrive"]',
+          featured: true,
+          order_position: 1
+        },
+        {
+          id: 'hector-guzman',
+          name: 'Hector Guzman',
+          bio: 'Hector Guzman is a producer and mix engineer based in Los Angeles. His credits include major-label and independent artists across genres spanning from Alternative Rock, Hip-hop, and Country.',
+          genre: 'Producer',
+          location: 'Los Angeles, CA',
+          image: '/images/HG.webp',
+          website: 'https://www.hectorguzman.com/',
+          instagram: '@hectorguzman.co',
+          gear: '["The Bomber Overdrive"]',
+          featured: true,
+          order_position: 2
+        },
+        {
+          id: 'loraine-james',
+          name: 'Loraine James',
+          bio: 'Loraine James has carved out a distinctive space in electronic music through her innovative blend of broken beat, jungle, ambient, and experimental sounds.',
+          genre: 'Electronic/Experimental',
+          location: 'London, UK',
+          image: '/images/Lorainepfp.jpg',
+          website: 'https://lorainejames.bandcamp.com/',
+          instagram: '@lorainejames',
+          spotify: 'https://open.spotify.com/artist/7j0rlQs0PAjRtJcIGIax4E',
+          bandcamp: 'https://lorainejames.bandcamp.com/',
+          gear: '["The Bomber Overdrive"]',
+          featured: true,
+          order_position: 3
+        }
+      ];
+
+      for (const artist of initialArtists) {
+        await db.prepare(`
+          INSERT INTO artists (
+            id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal,
+            gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          artist.id,
+          artist.name,
+          artist.bio,
+          artist.genre,
+          artist.location,
+          artist.image,
+          artist.website || null,
+          artist.instagram || null,
+          null, // youtube
+          artist.spotify || null,
+          artist.bandcamp || null,
+          artist.tidal || null,
+          artist.gear,
+          null, // testimonial
+          artist.featured,
+          false, // showBandsintown
+          null, // bandsintown_artist_name
+          artist.order_position,
+          now,
+          now
+        ).run();
+      }
     }
     
     console.log('Database initialized successfully');
