@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
 
+  // Optimize for Cloudflare Pages deployment
+  experimental: {
+    cssChunking: 'strict',
+  },
+
   images: {
     remotePatterns: [
       {
