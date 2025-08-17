@@ -64,8 +64,8 @@ const isAllowedImageRef = (s: string) => {
 const normalizeImageRef = (s: string) => {
   let t = (s || '').trim();
 
-  // remote or temporary stay as-is
-  if (t.startsWith('http') || t.startsWith('blob:') || t.startsWith('data:')) return t;
+  // remote, API endpoints, or temporary stay as-is
+  if (t.startsWith('http') || t.startsWith('blob:') || t.startsWith('data:') || t.startsWith('/api/')) return t;
 
   // Convert Windows backslashes to forward slashes
   t = t.replace(/\\/g, '/');
@@ -253,7 +253,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
       }
 
       const result = await response.json();
-      setValues((v) => ({ ...v, image: result.url }));
+      setValues((v) => ({ ...v, image: result.path }));
       setImageFileName(`✅ ${file.name} (uploaded)`);
       URL.revokeObjectURL(previewUrl);
     } catch (error) {

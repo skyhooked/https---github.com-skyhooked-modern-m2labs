@@ -53,8 +53,8 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
       }
 
       const result = await response.json();
-      setFormData(prev => ({ ...prev, coverImage: result.url }));
-      setPreviewImage(result.url);
+      setFormData(prev => ({ ...prev, coverImage: result.path }));
+      setPreviewImage(result.path);
     } catch (error) {
       console.error('Upload error:', error);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
