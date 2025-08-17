@@ -49,7 +49,9 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
+    console.log('🚀 Starting artist creation...')
     await initializeDatabase()
+    console.log('🔧 Database initialization completed')
     const body = await req.json()
     
     console.log('Received artist data:', JSON.stringify(body, null, 2))

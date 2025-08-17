@@ -61,6 +61,7 @@ function getDatabase(): D1Database {
     console.error('📍 Current environment variables:');
     console.error('   CLOUDFLARE_ACCOUNT_ID:', process.env.CLOUDFLARE_ACCOUNT_ID?.substring(0, 8) + '...');
     console.error('   D1_DATABASE_ID:', process.env.D1_DATABASE_ID?.substring(0, 8) + '...');
+    console.error('🌐 Current URL/environment:', globalAny.location?.href || 'unknown');
   } else {
     console.log('✅ D1 Database binding found successfully');
   }
@@ -517,15 +518,20 @@ export const ensureUserForEmail = async (email: string, userData?: Partial<UserR
 
 // ---------- Database Initialization ----------
 export const initializeDatabase = async (): Promise<void> => {
+  console.log('🔍 Attempting to get D1 database...');
   const db = getDatabase();
+  
   if (!db) {
-    console.warn('Database not available - this may be expected in local development or preview mode');
+    console.error('❌ DATABASE CONNECTION FAILED');
+    console.error('This should NOT happen with your current binding configuration!');
     console.warn('Environment variables:', {
       D1_DATABASE_ID: process.env.D1_DATABASE_ID,
       CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID
     });
-    return;
+    throw new Error('Database not available');
   }
+  
+  console.log('✅ Database connection successful, proceeding with initialization...');
   
   try {
     // Run the migration SQL to set up tables and default data
