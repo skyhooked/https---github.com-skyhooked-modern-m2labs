@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
       productName,
       serialNumber,
       issue,
-      status: 'submitted',
     });
 
     return NextResponse.json(
