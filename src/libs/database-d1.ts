@@ -118,7 +118,11 @@ function createMockD1Database(): D1Database {
       }
       
       const result = await response.json();
-      return { results: result.result?.[0]?.results || [] };
+      return { 
+        results: result.result?.[0]?.results || [], 
+        success: true, 
+        meta: result.result?.[0]?.meta || {} 
+      };
     },
     first: async () => {
       console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
@@ -180,7 +184,7 @@ function createMockD1Database(): D1Database {
       const result = await response.json();
       return { count: 1, duration: 0 };
     }
-  } as D1Database;
+  } as unknown as D1Database;
 }
 
 // ---------- Users ----------
