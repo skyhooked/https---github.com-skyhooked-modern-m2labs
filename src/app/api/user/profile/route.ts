@@ -2,9 +2,11 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
-import { getUserById, updateUser } from '@/libs/database-edge';
+import { getUserById, updateUser, initializeDatabase } from '@/libs/database-d1';
 
 export async function GET(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   try {
     const sessionUser = await getUserFromRequest(request);
     if (!sessionUser) {
@@ -37,6 +39,8 @@ export async function GET(request: NextRequest) {
 
 // Support both PUT and POST for profile updates
 export async function PUT(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   return handleUpdate(request);
 }
 export async function POST(request: NextRequest) {

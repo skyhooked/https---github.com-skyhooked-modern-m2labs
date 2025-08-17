@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserWithPassword } from '@/libs/database-edge';
+import { getUserWithPassword, initializeDatabase } from '@/libs/database-d1';
 import { verifyPassword, validateEmail, signToken } from '@/libs/auth';
 
 export const runtime = 'edge'
 
 export async function POST(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
+  
   try {
     const body = await request.json();
     const { email, password } = body ?? {};

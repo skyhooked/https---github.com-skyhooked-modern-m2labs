@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
-import { getUsers } from '@/libs/database-edge';
+import { getUsers, initializeDatabase } from '@/libs/database-d1';
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   try {
     const user = await getUserFromRequest(request);
     

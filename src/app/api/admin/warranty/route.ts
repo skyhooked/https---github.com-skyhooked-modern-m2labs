@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
-import { getWarrantyClaims, updateWarrantyClaim } from '@/libs/database-edge';
+import { getWarrantyClaims, updateWarrantyClaim, initializeDatabase } from '@/libs/database-d1';
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   try {
     const user = await getUserFromRequest(request);
     
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   try {
     const user = await getUserFromRequest(request);
     

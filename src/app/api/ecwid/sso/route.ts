@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
-import { ensureUserForEmail } from '@/libs/database-edge';
+import { ensureUserForEmail, initializeDatabase } from '@/libs/database-d1';
 
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
+  
   try {
     // Auth: read from Authorization Bearer or 'auth_token' cookie
     const me = await getUserFromRequest(request);

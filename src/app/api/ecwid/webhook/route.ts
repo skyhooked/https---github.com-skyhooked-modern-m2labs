@@ -1,10 +1,12 @@
 export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureUserForEmail, createOrder } from '@/libs/database-edge';
+import { ensureUserForEmail, createOrder, initializeDatabase } from '@/libs/database-d1';
 import type { Order } from '@/libs/auth';
 
 export async function POST(request: NextRequest) {
+  // Initialize database on first request
+  await initializeDatabase();
   try {
     const orderData = await request.json();
 
