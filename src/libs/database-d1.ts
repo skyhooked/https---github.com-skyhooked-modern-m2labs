@@ -39,7 +39,21 @@ interface D1ExecResult {
 // Get D1 database from environment bindings
 function getDatabase(): D1Database {
   // @ts-ignore - Cloudflare bindings are injected at runtime
-  return globalThis.DB || (globalThis as any).env?.DB;
+  const globalAny = globalThis as any;
+  
+  // Try multiple binding locations for Cloudflare Pages
+  const db = globalAny.DB || 
+             globalAny.env?.DB || 
+             globalAny.__env?.DB ||
+             globalAny.ASSETS?.env?.DB ||
+             globalAny.context?.env?.DB;
+  
+  if (!db) {
+    console.error('D1 Database binding not found. Available bindings:', Object.keys(globalAny.env || {}));
+    console.error('GlobalThis keys:', Object.keys(globalAny));
+  }
+  
+  return db;
 }
 
 // ---------- Users ----------
@@ -493,7 +507,11 @@ export const ensureUserForEmail = async (email: string, userData?: Partial<UserR
 export const initializeDatabase = async (): Promise<void> => {
   const db = getDatabase();
   if (!db) {
-    console.warn('Database not available - this may be expected in local development');
+    console.warn('Database not available - this may be expected in local development or preview mode');
+    console.warn('Environment variables:', {
+      D1_DATABASE_ID: process.env.D1_DATABASE_ID,
+      CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID
+    });
     return;
   }
   

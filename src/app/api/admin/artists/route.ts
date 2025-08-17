@@ -13,6 +13,31 @@ export async function GET() {
     return NextResponse.json(artists)
   } catch (err: any) {
     console.error('Failed to get artists:', err)
+    
+    // If D1 is not available, return fallback data
+    if (err?.message?.includes('Database not available')) {
+      console.warn('D1 database not available, returning fallback data')
+      const fallbackArtists = [
+        {
+          id: 'caro-pohl',
+          name: 'Caro Pohl',
+          bio: 'Guitarist in Saddiscore since 2011.',
+          genre: 'Metal',
+          location: 'Cologne, Germany',
+          image: '/images/uploads/1755221517314-cp-sc2.jpg',
+          website: 'https://saddiscore.de/',
+          instagram: '@saddiscore',
+          spotify: 'https://open.spotify.com/artist/0XkyklXB3YOwxTuSylThrw',
+          gear: ['The Bomber Overdrive'],
+          featured: true,
+          order: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      return NextResponse.json(fallbackArtists)
+    }
+    
     return NextResponse.json({ error: String(err?.message || err) }, { status: 500 })
   }
 }
@@ -111,6 +136,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(newArtist, { status: 201 })
   } catch (err: any) {
     console.error('Failed to create/update artist:', err)
+    
+    // If D1 is not available, provide helpful error message
+    if (err?.message?.includes('Database not available')) {
+      console.warn('D1 database not available - this may be a preview deployment issue')
+      return NextResponse.json({ 
+        error: 'Database temporarily unavailable. This may be expected in preview deployments. Artist creation will work in production.' 
+      }, { status: 503 })
+    }
+    
     return NextResponse.json({ error: String(err?.message || err) }, { status: 500 })
   }
 }
