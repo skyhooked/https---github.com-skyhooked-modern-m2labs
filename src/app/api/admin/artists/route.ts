@@ -12,9 +12,9 @@ type Artist = {
 }
 
 // ===== GitHub config from environment =====
-const OWNER = mustEnv('GITHUB_OWNER')
-const REPO = mustEnv('GITHUB_REPO')
-const TOKEN = mustEnv('GITHUB_TOKEN')
+const OWNER = process.env.GITHUB_OWNER || ''
+const REPO = process.env.GITHUB_REPO || ''
+const TOKEN = process.env.GITHUB_TOKEN || ''
 const BRANCH = process.env.GITHUB_BRANCH || 'main'
 const FILE_PATH = process.env.GITHUB_FILE_PATH || 'src/data/artists.json'
 const GH_BASE = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`
@@ -24,6 +24,12 @@ function mustEnv(name: string): string {
   const v = process.env[name]
   if (!v) throw new Error(`Missing required env var: ${name}`)
   return v
+}
+
+function checkEnvVars() {
+  if (!OWNER) throw new Error(`Missing required env var: GITHUB_OWNER`)
+  if (!REPO) throw new Error(`Missing required env var: GITHUB_REPO`)
+  if (!TOKEN) throw new Error(`Missing required env var: GITHUB_TOKEN`)
 }
 
 function genId() {
@@ -80,6 +86,7 @@ async function ghPutFile(jsonString: string, sha: string | null, message: string
 // ===== Handlers =====
 export async function GET() {
   try {
+    checkEnvVars()
     const { items } = await ghGetFile()
     return NextResponse.json(items)
   } catch (err: any) {
@@ -94,6 +101,7 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
+    checkEnvVars()
     const body = await req.json()
 
     // Replace entire list
