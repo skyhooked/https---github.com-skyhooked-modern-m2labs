@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       
       const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '75b5286f0b6ae344b3617e9357d53065';
       const bucketName = process.env.R2_BUCKET_NAME || 'm2labs-images';
-      const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+      const apiToken = process.env.CF_API_TOKEN;
       
       if (!apiToken) {
         return NextResponse.json(
