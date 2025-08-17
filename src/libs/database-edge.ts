@@ -24,6 +24,8 @@ const defaultUsers: (User & { password?: string })[] = [
     role: 'admin',
     password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isVerified: true,
   }
 ];
 
@@ -74,6 +76,8 @@ export const createUser = async (userData: UserRegistration): Promise<User> => {
     role: 'user',
     password: hashedPassword,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isVerified: false,
   };
 
   users.push(newUser);
