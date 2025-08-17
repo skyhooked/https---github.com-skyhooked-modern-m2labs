@@ -49,14 +49,35 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    console.log('🚀 Starting artist creation...')
+    console.log('🚀 Starting artist operation...')
     await initializeDatabase()
     console.log('🔧 Database initialization completed')
     const body = await req.json()
     
-    console.log('Received artist data:', JSON.stringify(body, null, 2))
+    console.log('Received data:', JSON.stringify(body, null, 2))
     
-    // Validate required fields
+    // Handle array of artists (for reordering)
+    if (Array.isArray(body)) {
+      console.log('📋 Processing bulk artist reordering...')
+      
+      try {
+        // Update each artist's order in the database
+        for (const artist of body) {
+          if (artist.id) {
+            await updateArtist(artist.id, { order: artist.order });
+            console.log(`✅ Updated artist ${artist.id} order to ${artist.order}`);
+          }
+        }
+        
+        console.log('🎉 Bulk reordering completed successfully')
+        return NextResponse.json({ success: true, message: 'Artists reordered successfully' })
+      } catch (reorderError: any) {
+        console.error('❌ Bulk reordering failed:', reorderError)
+        return NextResponse.json({ error: `Failed to reorder artists: ${reorderError.message}` }, { status: 500 })
+      }
+    }
+    
+    // Handle single artist (creation/update)
     if (!body?.name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
     }
