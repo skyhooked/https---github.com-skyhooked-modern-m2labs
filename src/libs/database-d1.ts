@@ -187,6 +187,115 @@ function createMockD1Database(): D1Database {
   } as unknown as D1Database;
 }
 
+// ---------- News Posts ----------
+export interface NewsPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  fullContent: string;
+  coverImage?: string;
+  author: string;
+  publishDate: string;
+  readTime?: string;
+  category?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getNewsPosts = async (): Promise<NewsPost[]> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('SELECT * FROM news_posts ORDER BY publishDate DESC').all();
+  return result.results || [];
+};
+
+export const getNewsPostById = async (id: string): Promise<NewsPost | null> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('SELECT * FROM news_posts WHERE id = ?').bind(id).first();
+  return result || null;
+};
+
+export const createNewsPost = async (postData: Omit<NewsPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<NewsPost> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const postId = postData.title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 50) + '-' + Date.now().toString(36);
+  
+  const now = new Date().toISOString();
+  
+  const newPost: NewsPost = {
+    id: postId,
+    ...postData,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.prepare(`
+    INSERT INTO news_posts (
+      id, title, excerpt, fullContent, coverImage, author, publishDate, readTime, category, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    newPost.id,
+    newPost.title,
+    newPost.excerpt,
+    newPost.fullContent,
+    newPost.coverImage || null,
+    newPost.author,
+    newPost.publishDate,
+    newPost.readTime || null,
+    newPost.category || null,
+    newPost.createdAt,
+    newPost.updatedAt
+  ).run();
+
+  return newPost;
+};
+
+export const updateNewsPost = async (id: string, updates: Partial<NewsPost>): Promise<NewsPost | null> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const existingPost = await getNewsPostById(id);
+  if (!existingPost) return null;
+
+  const now = new Date().toISOString();
+  const updatedPost = { ...existingPost, ...updates, updatedAt: now };
+
+  await db.prepare(`
+    UPDATE news_posts 
+    SET title = ?, excerpt = ?, fullContent = ?, coverImage = ?, author = ?, publishDate = ?, readTime = ?, category = ?, updatedAt = ?
+    WHERE id = ?
+  `).bind(
+    updatedPost.title,
+    updatedPost.excerpt,
+    updatedPost.fullContent,
+    updatedPost.coverImage || null,
+    updatedPost.author,
+    updatedPost.publishDate,
+    updatedPost.readTime || null,
+    updatedPost.category || null,
+    updatedPost.updatedAt,
+    id
+  ).run();
+
+  return updatedPost;
+};
+
+export const deleteNewsPost = async (id: string): Promise<boolean> => {
+  const db = getDatabase();
+  if (!db) throw new Error('Database not available');
+  
+  const result = await db.prepare('DELETE FROM news_posts WHERE id = ?').bind(id).run();
+  return result.success;
+};
+
 // ---------- Users ----------
 export const getUsers = async (): Promise<(User & { password?: string })[]> => {
   const db = getDatabase();
@@ -753,6 +862,21 @@ export const initializeDatabase = async (): Promise<void> => {
         updatedAt TEXT NOT NULL
       );
 
+      -- News posts table
+      CREATE TABLE IF NOT EXISTS news_posts (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        excerpt TEXT,
+        fullContent TEXT NOT NULL,
+        coverImage TEXT,
+        author TEXT NOT NULL,
+        publishDate TEXT NOT NULL,
+        readTime TEXT,
+        category TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
       -- Create indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId);
@@ -761,6 +885,8 @@ export const initializeDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_warranty_claims_orderId ON warranty_claims (orderId);
       CREATE INDEX IF NOT EXISTS idx_artists_order_position ON artists (order_position);
       CREATE INDEX IF NOT EXISTS idx_artists_featured ON artists (featured);
+      CREATE INDEX IF NOT EXISTS idx_news_posts_publishDate ON news_posts (publishDate);
+      CREATE INDEX IF NOT EXISTS idx_news_posts_category ON news_posts (category);
     `);
 
     // Insert default admin user if it doesn't exist
