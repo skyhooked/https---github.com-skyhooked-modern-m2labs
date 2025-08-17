@@ -187,7 +187,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
   const validate = () => {
     const next: Partial<Record<keyof FormValues, string>> = {};
     if (!values.name.trim()) next.name = 'Name is required';
-    if (!isAllowedImageRef(values.image)) next.image = 'Use /images/filename.jpg or a valid image URL';
+    if (!isAllowedImageRef(values.image)) next.image = 'Use /images/filename.jpg, /api/images/filename.jpg, or a valid image URL';
     setErrors(next);
     return Object.keys(next).length === 0;
   };

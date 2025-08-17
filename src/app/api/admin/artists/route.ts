@@ -186,6 +186,7 @@ export async function POST(req: NextRequest) {
     if (!hasGitHubConfig) {
       // GitHub not configured, use local fallback
       console.warn('GitHub API not configured, using local storage fallback')
+      console.log('Received artist data:', JSON.stringify(body, null, 2))
       
       // For now, just return success with the submitted data
       // In a real implementation, you'd store this in your D1 database
@@ -194,14 +195,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'name is required' }, { status: 400 })
       }
       
+      // Use the image field instead of imageUrl to match the form data
       const newArtist: Artist = {
         id: input.id || genId(),
         name: input.name,
         bio: input.bio,
-        imageUrl: input.imageUrl,
+        imageUrl: input.imageUrl || input.image, // Support both field names
         ...input,
       }
       
+      console.log('Created artist:', JSON.stringify(newArtist, null, 2))
       return NextResponse.json(newArtist, { status: 201 })
     }
 
