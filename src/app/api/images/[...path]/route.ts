@@ -48,7 +48,7 @@ function getR2Bucket(): R2Bucket {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     const bucket = getR2Bucket();
@@ -59,8 +59,11 @@ export async function GET(
       );
     }
 
+    // Await the params promise
+    const resolvedParams = await params;
+    
     // Reconstruct the full path
-    const imagePath = params.path.join('/');
+    const imagePath = resolvedParams.path.join('/');
     
     // For uploaded images, they'll be under 'uploads/' prefix
     let key = imagePath;
