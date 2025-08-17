@@ -49,24 +49,149 @@ function getDatabase(): D1Database {
              globalAny.context?.env?.DB;
   
   if (!db) {
-    console.error('❌ D1 Database binding NOT FOUND');
-    console.error('🔍 Checking all possible locations:');
-    console.error('   globalThis.DB:', !!globalAny.DB);
-    console.error('   globalThis.env?.DB:', !!globalAny.env?.DB);
-    console.error('   globalThis.__env?.DB:', !!globalAny.__env?.DB);
-    console.error('   globalThis.ASSETS?.env?.DB:', !!globalAny.ASSETS?.env?.DB);
-    console.error('   globalThis.context?.env?.DB:', !!globalAny.context?.env?.DB);
-    console.error('🌍 Available env keys:', Object.keys(globalAny.env || {}));
-    console.error('🌍 Available globalThis keys:', Object.keys(globalAny).filter(k => !k.startsWith('_')));
-    console.error('📍 Current environment variables:');
-    console.error('   CLOUDFLARE_ACCOUNT_ID:', process.env.CLOUDFLARE_ACCOUNT_ID?.substring(0, 8) + '...');
-    console.error('   D1_DATABASE_ID:', process.env.D1_DATABASE_ID?.substring(0, 8) + '...');
-    console.error('🌐 Current URL/environment:', globalAny.location?.href || 'unknown');
+    console.warn('⚠️ D1 Database binding not found, will use fallback approach');
+    console.warn('This is likely due to a Pages binding configuration issue');
+    
+    // Create a mock D1 database that uses REST API
+    const mockDb = createMockD1Database();
+    return mockDb;
   } else {
     console.log('✅ D1 Database binding found successfully');
   }
   
   return db;
+}
+
+// Create a mock D1 database that uses Cloudflare REST API
+function createMockD1Database(): D1Database {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const databaseId = process.env.D1_DATABASE_ID;
+  const apiToken = process.env.CF_API_TOKEN;
+  
+  if (!accountId || !databaseId || !apiToken) {
+    throw new Error('Missing required environment variables for D1 REST API fallback');
+  }
+  
+  return {
+    prepare: (query: string) => ({
+      bind: (...values: any[]) => ({
+        run: async () => {
+          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+          
+          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sql: query,
+              params: values
+            })
+          });
+          
+          if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`D1 REST API error: ${response.status} ${error}`);
+          }
+          
+          const result = await response.json();
+          return { success: true, meta: result.result?.[0]?.meta || {} };
+        },
+        all: async () => {
+          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+          
+          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sql: query,
+              params: values
+            })
+          });
+          
+          if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`D1 REST API error: ${response.status} ${error}`);
+          }
+          
+          const result = await response.json();
+          return { results: result.result?.[0]?.results || [] };
+        },
+        first: async () => {
+          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+          
+          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sql: query,
+              params: values
+            })
+          });
+          
+          if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`D1 REST API error: ${response.status} ${error}`);
+          }
+          
+          const result = await response.json();
+          const results = result.result?.[0]?.results || [];
+          return results[0] || null;
+        },
+        raw: async () => {
+          throw new Error('raw() not implemented in D1 REST API fallback');
+        }
+      }),
+      run: async () => {
+        throw new Error('Must call bind() before run()');
+      },
+      all: async () => {
+        throw new Error('Must call bind() before all()');
+      },
+      first: async () => {
+        throw new Error('Must call bind() before first()');
+      },
+      raw: async () => {
+        throw new Error('Must call bind() before raw()');
+      }
+    }),
+    dump: async () => {
+      throw new Error('dump() not implemented in D1 REST API fallback');
+    },
+    batch: async () => {
+      throw new Error('batch() not implemented in D1 REST API fallback');
+    },
+    exec: async (query: string) => {
+      console.log('🔄 Using D1 REST API fallback for exec:', query.substring(0, 50) + '...');
+      
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sql: query,
+          params: []
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`D1 REST API error: ${response.status} ${error}`);
+      }
+      
+      const result = await response.json();
+      return { count: 1, duration: 0 };
+    }
+  } as D1Database;
 }
 
 // ---------- Users ----------
