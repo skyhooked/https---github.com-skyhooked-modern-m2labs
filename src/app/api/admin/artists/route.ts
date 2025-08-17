@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Buffer } from 'node:buffer'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 type Artist = {
   id: string

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithPassword } from '@/libs/database';
 import { verifyPassword, validateEmail, signToken } from '@/libs/auth';
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 export async function POST(request: NextRequest) {
   try {
