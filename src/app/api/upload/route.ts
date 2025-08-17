@@ -62,9 +62,19 @@ interface R2Objects {
 }
 
 // Get R2 bucket from environment bindings
-function getR2Bucket(): R2Bucket {
+function getR2Bucket(): R2Bucket | null {
   // @ts-ignore - Cloudflare bindings are injected at runtime
-  return globalThis.R2 || (globalThis as any).env?.R2;
+  const bucket = globalThis.R2 || (globalThis as any).env?.R2 || (globalThis as any).DB?.env?.R2;
+  
+  console.log('R2 Bucket check:', {
+    globalThis_R2: !!globalThis.R2,
+    env_R2: !!(globalThis as any).env?.R2,
+    bucket: !!bucket,
+    envKeys: Object.keys((globalThis as any).env || {}),
+    globalKeys: Object.keys(globalThis).filter(k => k.includes('R2') || k.includes('bucket'))
+  });
+  
+  return bucket || null;
 }
 
 // Generate unique filename
@@ -94,31 +104,70 @@ export async function POST(request: NextRequest) {
     }
 
     const bucket = getR2Bucket();
-    if (!bucket) {
-      return NextResponse.json(
-        { error: 'R2 storage not configured' }, 
-        { status: 500 }
-      );
-    }
-
+    
     // Generate unique filename
     const filename = generateFilename(file.name);
     const key = `uploads/${filename}`;
+    
+    if (bucket) {
+      // Use R2 binding if available
+      try {
+        // Convert file to ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
 
-    // Convert file to ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-
-    // Upload to R2
-    await bucket.put(key, arrayBuffer, {
-      httpMetadata: {
-        contentType: file.type,
-        cacheControl: 'public, max-age=31536000', // 1 year cache
-      },
-      customMetadata: {
-        originalName: file.name,
-        uploadedAt: new Date().toISOString(),
-      },
-    });
+        // Upload to R2
+        await bucket.put(key, arrayBuffer, {
+          httpMetadata: {
+            contentType: file.type,
+            cacheControl: 'public, max-age=31536000', // 1 year cache
+          },
+          customMetadata: {
+            originalName: file.name,
+            uploadedAt: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error('R2 upload via binding failed:', error);
+        throw error;
+      }
+    } else {
+      // Fallback: Use Cloudflare R2 REST API
+      console.log('Using R2 REST API fallback');
+      
+      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '75b5286f0b6ae344b3617e9357d53065';
+      const bucketName = process.env.R2_BUCKET_NAME || 'm2labs-images';
+      const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+      
+      if (!apiToken) {
+        return NextResponse.json(
+          { 
+            error: 'R2 storage not configured. Missing API token.',
+            details: 'Neither R2 binding nor API token is available.'
+          }, 
+          { status: 500 }
+        );
+      }
+      
+      // Upload via REST API
+      const arrayBuffer = await file.arrayBuffer();
+      const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects/${key}`;
+      
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': file.type,
+          'Cache-Control': 'public, max-age=31536000',
+        },
+        body: arrayBuffer,
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('R2 REST API upload failed:', uploadResponse.status, errorText);
+        throw new Error(`R2 upload failed: ${uploadResponse.status} ${errorText}`);
+      }
+    }
 
     // Generate public URL for the image
     // Use our API endpoint to serve images from R2
