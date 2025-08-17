@@ -64,13 +64,14 @@ interface R2Objects {
 // Get R2 bucket from environment bindings
 function getR2Bucket(): R2Bucket | null {
   // @ts-ignore - Cloudflare bindings are injected at runtime
-  const bucket = globalThis.R2 || (globalThis as any).env?.R2 || (globalThis as any).DB?.env?.R2;
+  const globalAny = globalThis as any;
+  const bucket = globalAny.R2 || globalAny.env?.R2 || globalAny.DB?.env?.R2;
   
   console.log('R2 Bucket check:', {
-    globalThis_R2: !!globalThis.R2,
-    env_R2: !!(globalThis as any).env?.R2,
+    globalThis_R2: !!globalAny.R2,
+    env_R2: !!globalAny.env?.R2,
     bucket: !!bucket,
-    envKeys: Object.keys((globalThis as any).env || {}),
+    envKeys: Object.keys(globalAny.env || {}),
     globalKeys: Object.keys(globalThis).filter(k => k.includes('R2') || k.includes('bucket'))
   });
   
