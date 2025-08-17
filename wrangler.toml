@@ -7,7 +7,7 @@ pages_build_output_dir = ".vercel/output/static"
 # Environment variables
 [vars]
 CLOUDFLARE_ACCOUNT_ID = "75b5286f0b6ae344b3617e9357d53065"
-D1_DATABASE_ID = "32c16743-49ee-4404-a091-bfbf0bb92c32"
+D1_DATABASE_ID = "908b575e-422b-4f0e-8436-85cf62044999"
 R2_BUCKET_NAME = "m2labs-images"
 CF_API_TOKEN = "kNermyxONWZy_n6uF5BxpHYlrhDA8S8_-ExVWRNG"
 
@@ -15,7 +15,7 @@ CF_API_TOKEN = "kNermyxONWZy_n6uF5BxpHYlrhDA8S8_-ExVWRNG"
 [[d1_databases]]
 binding = "DB"
 database_name = "m2labs-production"
-database_id = "32c16743-49ee-4404-a091-bfbf0bb92c32"
+database_id = "908b575e-422b-4f0e-8436-85cf62044999"
 
 # Cloudflare R2 Storage
 [[r2_buckets]]
