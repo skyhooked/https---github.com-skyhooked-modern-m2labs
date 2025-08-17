@@ -117,13 +117,14 @@ export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
   return orders.filter(order => order.userId === userId);
 };
 
-export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt'>): Promise<Order> => {
+export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> => {
   const orders = await getOrders();
   
   const newOrder: Order = {
     id: generateId(),
     ...orderData,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   orders.push(newOrder);
