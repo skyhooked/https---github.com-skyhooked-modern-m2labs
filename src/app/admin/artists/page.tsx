@@ -52,17 +52,23 @@ export default function ArtistManagement() {
         updatedArtists = [...getAllArtists()];
       }
 
-      // Persist to server
+      // Persist to server - send individual artist for creation/update
+      const artistToSend = editingArtist ? { ...artistData, id: editingArtist.id } : artistData;
+      
+      console.log('Sending artist data:', JSON.stringify(artistToSend, null, 2));
+      
       const response = await fetch('/api/admin/artists', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedArtists),
+        body: JSON.stringify(artistToSend), // Send single artist instead of array
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save to server');
+        const errorText = await response.text();
+        console.error('Server error:', response.status, errorText);
+        throw new Error(`Failed to save to server: ${response.status} ${errorText}`);
       }
 
       setArtists(updatedArtists);
