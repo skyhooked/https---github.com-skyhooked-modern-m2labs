@@ -157,7 +157,7 @@ export const createWarrantyClaim = async (claimData: Omit<WarrantyClaim, 'id' | 
   const newClaim: WarrantyClaim = {
     id: generateId(),
     ...claimData,
-    status: 'pending',
+    status: 'submitted',
     submittedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
