@@ -363,11 +363,9 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
   const db = getDatabase();
   if (!db) throw new Error('Database not available');
   
-  const artistId = artistData.id || generateId();
   const now = new Date().toISOString();
   
   const newArtist: Artist = {
-    id: artistId,
     ...artistData,
     createdAt: now,
     updatedAt: now,
