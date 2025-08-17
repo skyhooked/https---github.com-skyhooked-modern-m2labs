@@ -73,7 +73,7 @@ export const createUser = async (userData: UserRegistration): Promise<User> => {
     lastName: userData.lastName,
     phone: userData.phone || '',
     dateOfBirth: userData.dateOfBirth || '',
-    role: 'user',
+    role: 'customer',
     password: hashedPassword,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
