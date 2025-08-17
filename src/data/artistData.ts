@@ -165,6 +165,21 @@ export function getFeaturedArtists(count: number = 3): Artist[] {
 // Internal variable to hold current artists data
 let currentArtistsData: Artist[] = [...artistsData];
 
+// Load artists from localStorage if available (client-side only)
+if (typeof window !== 'undefined') {
+  try {
+    const stored = localStorage.getItem('m2labs_artists');
+    if (stored) {
+      const parsedArtists = JSON.parse(stored);
+      if (Array.isArray(parsedArtists) && parsedArtists.length > 0) {
+        currentArtistsData = parsedArtists;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load artists from localStorage:', error);
+  }
+}
+
 // Utility function to get all artists (sorted by order)
 export function getAllArtists(): Artist[] {
   return currentArtistsData.sort((a, b) => a.order - b.order);
@@ -209,6 +224,14 @@ export function updateArtist(artistId: string, updatedData: Partial<Artist>): bo
   const index = currentArtistsData.findIndex(a => a.id === artistId);
   if (index !== -1) {
     currentArtistsData[index] = { ...currentArtistsData[index], ...updatedData };
+    
+    // Store in localStorage to persist across page loads
+    try {
+      localStorage.setItem('m2labs_artists', JSON.stringify(currentArtistsData));
+    } catch (error) {
+      console.warn('Failed to save artists to localStorage:', error);
+    }
+    
     return true;
   }
   return false;
@@ -225,6 +248,14 @@ export function addArtist(artistData: Omit<Artist, 'id'>): Artist {
   const maxOrder = Math.max(...currentArtistsData.map(a => a.order), 0);
   const newArtist: Artist = { ...artistData, id, order: maxOrder + 1 };
   currentArtistsData.push(newArtist);
+  
+  // Store in localStorage to persist across page loads
+  try {
+    localStorage.setItem('m2labs_artists', JSON.stringify(currentArtistsData));
+  } catch (error) {
+    console.warn('Failed to save artists to localStorage:', error);
+  }
+  
   return newArtist;
 }
 
@@ -233,6 +264,14 @@ export function deleteArtist(artistId: string): boolean {
   const index = currentArtistsData.findIndex(a => a.id === artistId);
   if (index !== -1) {
     currentArtistsData.splice(index, 1);
+    
+    // Store in localStorage to persist across page loads
+    try {
+      localStorage.setItem('m2labs_artists', JSON.stringify(currentArtistsData));
+    } catch (error) {
+      console.warn('Failed to save artists to localStorage:', error);
+    }
+    
     return true;
   }
   return false;

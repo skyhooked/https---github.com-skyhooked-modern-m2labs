@@ -38,6 +38,7 @@ export default function ArtistManagement() {
     setSubmitting(true);
     try {
       let updatedArtists: Artist[];
+      let newArtist: Artist | null = null;
       
       if (editingArtist) {
         const success = updateArtist(editingArtist.id, artistData);
@@ -48,12 +49,15 @@ export default function ArtistManagement() {
           return;
         }
       } else {
-        addArtist(artistData);
+        newArtist = addArtist(artistData);
         updatedArtists = [...getAllArtists()];
+        console.log('Added artist with order:', newArtist.order);
       }
 
       // Persist to server - send individual artist for creation/update
-      const artistToSend = editingArtist ? { ...artistData, id: editingArtist.id } : artistData;
+      const artistToSend = editingArtist 
+        ? { ...artistData, id: editingArtist.id, order: editingArtist.order } 
+        : { ...artistData, id: newArtist!.id, order: newArtist!.order };
       
       console.log('Sending artist data:', JSON.stringify(artistToSend, null, 2));
       
