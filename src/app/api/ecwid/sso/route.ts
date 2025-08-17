@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, generateEcwidSSOToken } from '@/libs/auth';
-import { ensureUserForEmail } from '@/libs/database';
+import { ensureUserForEmail } from '@/libs/database-edge';
 
 export const runtime = 'edge'
 

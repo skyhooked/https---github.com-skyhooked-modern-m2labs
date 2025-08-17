@@ -2,7 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
-import { getUserById, updateUser } from '@/libs/database';
+import { getUserById, updateUser } from '@/libs/database-edge';
 
 export async function GET(request: NextRequest) {
   try {

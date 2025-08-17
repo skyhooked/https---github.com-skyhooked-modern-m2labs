@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserWithPassword } from '@/libs/database';
+import { getUserWithPassword } from '@/libs/database-edge';
 import { verifyPassword, validateEmail, signToken } from '@/libs/auth';
 
 export const runtime = 'edge'

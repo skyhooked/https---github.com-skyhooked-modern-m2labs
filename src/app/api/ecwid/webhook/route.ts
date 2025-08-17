@@ -1,7 +1,7 @@
 export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureUserForEmail, createOrder } from '@/libs/database';
+import { ensureUserForEmail, createOrder } from '@/libs/database-edge';
 import type { Order } from '@/libs/auth';
 
 export async function POST(request: NextRequest) {
