@@ -49,8 +49,20 @@ function getDatabase(): D1Database {
              globalAny.context?.env?.DB;
   
   if (!db) {
-    console.error('D1 Database binding not found. Available bindings:', Object.keys(globalAny.env || {}));
-    console.error('GlobalThis keys:', Object.keys(globalAny));
+    console.error('❌ D1 Database binding NOT FOUND');
+    console.error('🔍 Checking all possible locations:');
+    console.error('   globalThis.DB:', !!globalAny.DB);
+    console.error('   globalThis.env?.DB:', !!globalAny.env?.DB);
+    console.error('   globalThis.__env?.DB:', !!globalAny.__env?.DB);
+    console.error('   globalThis.ASSETS?.env?.DB:', !!globalAny.ASSETS?.env?.DB);
+    console.error('   globalThis.context?.env?.DB:', !!globalAny.context?.env?.DB);
+    console.error('🌍 Available env keys:', Object.keys(globalAny.env || {}));
+    console.error('🌍 Available globalThis keys:', Object.keys(globalAny).filter(k => !k.startsWith('_')));
+    console.error('📍 Current environment variables:');
+    console.error('   CLOUDFLARE_ACCOUNT_ID:', process.env.CLOUDFLARE_ACCOUNT_ID?.substring(0, 8) + '...');
+    console.error('   D1_DATABASE_ID:', process.env.D1_DATABASE_ID?.substring(0, 8) + '...');
+  } else {
+    console.log('✅ D1 Database binding found successfully');
   }
   
   return db;
