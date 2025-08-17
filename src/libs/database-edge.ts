@@ -147,14 +147,15 @@ export const getWarrantyClaimsByUserId = async (userId: string): Promise<Warrant
   return claims.filter(claim => claim.userId === userId);
 };
 
-export const createWarrantyClaim = async (claimData: Omit<WarrantyClaim, 'id' | 'createdAt' | 'status'>): Promise<WarrantyClaim> => {
+export const createWarrantyClaim = async (claimData: Omit<WarrantyClaim, 'id' | 'status' | 'submittedAt' | 'updatedAt'>): Promise<WarrantyClaim> => {
   const claims = await getWarrantyClaims();
   
   const newClaim: WarrantyClaim = {
     id: generateId(),
     ...claimData,
     status: 'pending',
-    createdAt: new Date().toISOString(),
+    submittedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   claims.push(newClaim);
