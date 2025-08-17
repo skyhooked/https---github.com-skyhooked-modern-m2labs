@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
         id: input.id || genId(),
         name: input.name,
         bio: input.bio,
-        imageUrl: input.imageUrl || input.image, // Support both field names
+        imageUrl: (input.imageUrl as string) || (input.image as string), // Support both field names
         ...input,
       }
       
