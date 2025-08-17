@@ -4,6 +4,12 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
+# Environment variables
+[vars]
+CLOUDFLARE_ACCOUNT_ID = "75b5286f0b6ae344b3617e9357d53065"
+D1_DATABASE_ID = "32c16743-49ee-4404-a091-bfbf0bb92c32"
+R2_BUCKET_NAME = "m2labs-images"
+
 # Cloudflare D1 Database
 [[d1_databases]]
 binding = "DB"

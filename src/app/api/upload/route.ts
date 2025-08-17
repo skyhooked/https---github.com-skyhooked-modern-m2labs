@@ -120,17 +120,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // R2 public URL format: https://pub-{subdomain}.r2.dev/{key}
-    // For now, we'll use the custom domain approach in production
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    // Generate public URL for the image
+    // Use our API endpoint to serve images from R2
+    const publicPath = `/api/images/${filename}`;
+    
+    // Also provide the direct R2 URL for reference
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '75b5286f0b6ae344b3617e9357d53065';
     const bucketName = process.env.R2_BUCKET_NAME || 'm2labs-images';
-    
-    // Generate the R2 public URL
-    // Note: In production, you'd want to use a custom domain
-    const imageUrl = `https://pub-${accountId?.slice(0, 8)}.r2.dev/${key}`;
-    
-    // For now, return a path that works with both local and R2
-    const publicPath = `/images/${filename}`;
+    const r2PublicUrl = `https://${bucketName}.${accountId}.r2.cloudflarestorage.com/${key}`;
 
     return NextResponse.json({
       message: 'File uploaded successfully',
@@ -140,7 +137,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
       type: file.type,
       r2Key: key,
-      r2Url: imageUrl,
+      r2Url: r2PublicUrl,
     });
 
   } catch (err) {
