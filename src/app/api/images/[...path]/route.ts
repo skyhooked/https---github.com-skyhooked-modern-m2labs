@@ -41,9 +41,10 @@ interface R2GetOptions {
 }
 
 // Get R2 bucket from environment bindings
-function getR2Bucket(): R2Bucket {
+function getR2Bucket(): R2Bucket | null {
   // @ts-ignore - Cloudflare bindings are injected at runtime
-  return globalThis.R2 || (globalThis as any).env?.R2;
+  const globalAny = globalThis as any;
+  return globalAny.R2 || globalAny.env?.R2 || null;
 }
 
 export async function GET(
@@ -52,12 +53,6 @@ export async function GET(
 ) {
   try {
     const bucket = getR2Bucket();
-    if (!bucket) {
-      return NextResponse.json(
-        { error: 'R2 storage not configured' },
-        { status: 500 }
-      );
-    }
 
     // Await the params promise
     const resolvedParams = await params;
@@ -71,32 +66,89 @@ export async function GET(
       key = `uploads/${imagePath}`;
     }
 
-    // Get the object from R2
-    const object = await bucket.get(key);
+    if (bucket) {
+      // Use R2 binding if available
+      try {
+        const object = await bucket.get(key);
+        
+        if (!object) {
+          return NextResponse.json(
+            { error: 'Image not found' },
+            { status: 404 }
+          );
+        }
+
+        // Stream the image data
+        const headers = new Headers();
+        
+        // Set content type from R2 metadata
+        if (object.httpMetadata?.contentType) {
+          headers.set('Content-Type', object.httpMetadata.contentType);
+        }
+        
+        // Set cache headers
+        headers.set('Cache-Control', 'public, max-age=31536000'); // 1 year
+        headers.set('ETag', object.httpEtag);
+        
+        // Return the image stream
+        return new NextResponse(object.body, {
+          headers,
+        });
+      } catch (error) {
+        console.error('R2 binding error:', error);
+        // Fall through to REST API
+      }
+    }
+
+    // Fallback: Use Cloudflare R2 REST API
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '75b5286f0b6ae344b3617e9357d53065';
+    const bucketName = process.env.R2_BUCKET_NAME || 'm2labs-images';
+    const apiToken = process.env.CF_API_TOKEN;
     
-    if (!object) {
+    if (!apiToken) {
       return NextResponse.json(
-        { error: 'Image not found' },
-        { status: 404 }
+        { error: 'R2 storage not configured' },
+        { status: 500 }
       );
     }
 
-    // Stream the image data
-    const headers = new Headers();
-    
-    // Set content type from R2 metadata
-    if (object.httpMetadata?.contentType) {
-      headers.set('Content-Type', object.httpMetadata.contentType);
+    try {
+      const objectUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects/${key}`;
+      
+      const response = await fetch(objectUrl, {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+        },
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return NextResponse.json(
+            { error: 'Image not found' },
+            { status: 404 }
+          );
+        }
+        throw new Error(`R2 API error: ${response.status}`);
+      }
+
+      // Forward the image response
+      const headers = new Headers();
+      const contentType = response.headers.get('content-type');
+      if (contentType) {
+        headers.set('Content-Type', contentType);
+      }
+      headers.set('Cache-Control', 'public, max-age=31536000'); // 1 year
+      
+      return new NextResponse(response.body, {
+        headers,
+      });
+    } catch (fetchError) {
+      console.error('R2 REST API error:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to load image' },
+        { status: 500 }
+      );
     }
-    
-    // Set cache headers
-    headers.set('Cache-Control', 'public, max-age=31536000'); // 1 year
-    headers.set('ETag', object.httpEtag);
-    
-    // Return the image stream
-    return new NextResponse(object.body, {
-      headers,
-    });
 
   } catch (error) {
     console.error('Error serving image from R2:', error);

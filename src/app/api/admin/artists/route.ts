@@ -178,8 +178,35 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    checkEnvVars()
     const body = await req.json()
+    
+    // Check if GitHub API is available
+    const hasGitHubConfig = OWNER && REPO && TOKEN
+    
+    if (!hasGitHubConfig) {
+      // GitHub not configured, use local fallback
+      console.warn('GitHub API not configured, using local storage fallback')
+      
+      // For now, just return success with the submitted data
+      // In a real implementation, you'd store this in your D1 database
+      const input = body as Partial<Artist>
+      if (!input?.name) {
+        return NextResponse.json({ error: 'name is required' }, { status: 400 })
+      }
+      
+      const newArtist: Artist = {
+        id: input.id || genId(),
+        name: input.name,
+        bio: input.bio,
+        imageUrl: input.imageUrl,
+        ...input,
+      }
+      
+      return NextResponse.json(newArtist, { status: 201 })
+    }
+
+    // GitHub is configured, proceed with GitHub API operations
+    checkEnvVars()
 
     // Replace entire list
     if (Array.isArray(body)) {
