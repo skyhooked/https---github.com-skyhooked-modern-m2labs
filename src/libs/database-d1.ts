@@ -387,8 +387,15 @@ export const getArtistById = async (id: string): Promise<Artist | null> => {
 };
 
 export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updatedAt'>): Promise<Artist> => {
+  console.log('🎯 createArtist called with data:', JSON.stringify(artistData, null, 2));
+  
   const db = getDatabase();
-  if (!db) throw new Error('Database not available');
+  if (!db) {
+    console.error('❌ Database not available in createArtist');
+    throw new Error('Database not available');
+  }
+  
+  console.log('✅ Database found in createArtist');
   
   const now = new Date().toISOString();
   
@@ -397,36 +404,58 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
     createdAt: now,
     updatedAt: now,
   };
+  
+  console.log('📝 Prepared artist data for insertion:', {
+    id: newArtist.id,
+    name: newArtist.name,
+    order: newArtist.order,
+    featured: newArtist.featured
+  });
 
-  await db.prepare(`
-    INSERT INTO artists (
-      id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal, 
-      gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    newArtist.id,
-    newArtist.name,
-    newArtist.bio || null,
-    newArtist.genre || null,
-    newArtist.location || null,
-    newArtist.image || null,
-    newArtist.website || null,
-    newArtist.instagram || null,
-    newArtist.youtube || null,
-    newArtist.spotify || null,
-    newArtist.bandcamp || null,
-    newArtist.tidal || null,
-    JSON.stringify(newArtist.gear || []),
-    newArtist.testimonial || null,
-    newArtist.featured,
-    newArtist.showBandsintown || false,
-    newArtist.bandsintown_artist_name || null,
-    newArtist.order,
-    newArtist.createdAt,
-    newArtist.updatedAt
-  ).run();
+  try {
+    console.log('🔧 Attempting database insertion...');
+    
+    const result = await db.prepare(`
+      INSERT INTO artists (
+        id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal, 
+        gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      newArtist.id,
+      newArtist.name,
+      newArtist.bio || null,
+      newArtist.genre || null,
+      newArtist.location || null,
+      newArtist.image || null,
+      newArtist.website || null,
+      newArtist.instagram || null,
+      newArtist.youtube || null,
+      newArtist.spotify || null,
+      newArtist.bandcamp || null,
+      newArtist.tidal || null,
+      JSON.stringify(newArtist.gear || []),
+      newArtist.testimonial || null,
+      newArtist.featured,
+      newArtist.showBandsintown || false,
+      newArtist.bandsintown_artist_name || null,
+      newArtist.order,
+      newArtist.createdAt,
+      newArtist.updatedAt
+    ).run();
 
-  return newArtist;
+    console.log('✅ Database insertion successful:', result);
+    console.log('🎉 Artist created successfully:', newArtist.id);
+    
+    return newArtist;
+  } catch (dbError: any) {
+    console.error('❌ Database insertion failed:', dbError);
+    console.error('Error details:', {
+      message: dbError.message,
+      stack: dbError.stack,
+      artistData: newArtist
+    });
+    throw new Error(`Failed to create artist in database: ${dbError.message}`);
+  }
 };
 
 export const updateArtist = async (id: string, updates: Partial<Artist>): Promise<Artist | null> => {
