@@ -173,7 +173,7 @@ export function getAllArtists(): Artist[] {
 // Utility function to load artists from server (for initialization)
 export async function loadArtistsFromServer(): Promise<Artist[]> {
   try {
-    const response = await fetch('/api/artists');
+    const response = await fetch('/api/admin/artists');
     if (response.ok) {
       const data = await response.json();
       if (Array.isArray(data)) {
