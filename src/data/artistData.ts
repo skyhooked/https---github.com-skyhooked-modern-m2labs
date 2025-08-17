@@ -173,7 +173,7 @@ export function getAllArtists(): Artist[] {
 // Utility function to load artists from server (for initialization)
 export async function loadArtistsFromServer(): Promise<Artist[]> {
   try {
-    const response = await fetch('/api/admin/artists');
+    const response = await fetch('/api/artists');
     if (response.ok) {
       const data = await response.json();
       if (Array.isArray(data)) {
@@ -182,18 +182,8 @@ export async function loadArtistsFromServer(): Promise<Artist[]> {
           currentArtistsData = data;
           return data;
         } else {
-          // Empty array from server, use default data and save it
+          // Empty array from server, use default data
           currentArtistsData = [...artistsData];
-          // Save default data to server for future use
-          try {
-            await fetch('/api/admin/artists', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(currentArtistsData),
-            });
-          } catch (saveError) {
-            console.warn('Failed to save default artists data:', saveError);
-          }
           return currentArtistsData;
         }
       }
