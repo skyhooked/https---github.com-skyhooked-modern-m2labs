@@ -72,96 +72,85 @@ function createMockD1Database(): D1Database {
     throw new Error('Missing required environment variables for D1 REST API fallback');
   }
   
-  return {
-    prepare: (query: string) => ({
-      bind: (...values: any[]) => ({
-        run: async () => {
-          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
-          
-          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              sql: query,
-              params: values
-            })
-          });
-          
-          if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`D1 REST API error: ${response.status} ${error}`);
-          }
-          
-          const result = await response.json();
-          return { success: true, meta: result.result?.[0]?.meta || {} };
+  const createBoundStatement = (query: string, values: any[] = []) => ({
+    bind: (...newValues: any[]) => createBoundStatement(query, newValues),
+    run: async () => {
+      console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+      
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
         },
-        all: async () => {
-          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
-          
-          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              sql: query,
-              params: values
-            })
-          });
-          
-          if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`D1 REST API error: ${response.status} ${error}`);
-          }
-          
-          const result = await response.json();
-          return { results: result.result?.[0]?.results || [] };
-        },
-        first: async () => {
-          console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
-          
-          const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              sql: query,
-              params: values
-            })
-          });
-          
-          if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`D1 REST API error: ${response.status} ${error}`);
-          }
-          
-          const result = await response.json();
-          const results = result.result?.[0]?.results || [];
-          return results[0] || null;
-        },
-        raw: async () => {
-          throw new Error('raw() not implemented in D1 REST API fallback');
-        }
-      }),
-      run: async () => {
-        throw new Error('Must call bind() before run()');
-      },
-      all: async () => {
-        throw new Error('Must call bind() before all()');
-      },
-      first: async () => {
-        throw new Error('Must call bind() before first()');
-      },
-      raw: async () => {
-        throw new Error('Must call bind() before raw()');
+        body: JSON.stringify({
+          sql: query,
+          params: values
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`D1 REST API error: ${response.status} ${error}`);
       }
-    }),
+      
+      const result = await response.json();
+      return { success: true, meta: result.result?.[0]?.meta || {} };
+    },
+    all: async () => {
+      console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+      
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sql: query,
+          params: values
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`D1 REST API error: ${response.status} ${error}`);
+      }
+      
+      const result = await response.json();
+      return { results: result.result?.[0]?.results || [] };
+    },
+    first: async () => {
+      console.log('🔄 Using D1 REST API fallback for query:', query.substring(0, 50) + '...');
+      
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sql: query,
+          params: values
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`D1 REST API error: ${response.status} ${error}`);
+      }
+      
+      const result = await response.json();
+      const results = result.result?.[0]?.results || [];
+      return results[0] || null;
+    },
+    raw: async () => {
+      throw new Error('raw() not implemented in D1 REST API fallback');
+    }
+  });
+
+  return {
+    prepare: (query: string) => createBoundStatement(query),
     dump: async () => {
       throw new Error('dump() not implemented in D1 REST API fallback');
     },
