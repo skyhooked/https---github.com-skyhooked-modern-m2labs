@@ -6,8 +6,8 @@ import Hero from '@/components/Hero';
 import SectionDivider from '@/components/SectionDivider';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getLatestPosts, formatDate, loadNewsFromServer } from '@/data/newsData';
-import { getFeaturedArtists, loadArtistsFromServer } from '@/data/artistData';
+import { getLatestPosts, formatDate, loadNewsFromServer, NewsPost } from '@/data/newsData';
+import { getFeaturedArtists, loadArtistsFromServer, Artist } from '@/data/artistData';
 
 
 export const runtime = 'edge';
@@ -15,8 +15,8 @@ export const dynamic = 'force-dynamic';
 
 
 export default function Home() {
-  const [featuredArtists, setFeaturedArtists] = useState<any[]>([]);
-  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [featuredArtists, setFeaturedArtists] = useState<Artist[]>([]);
+  const [latestPosts, setLatestPosts] = useState<NewsPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load data from server on mount and refresh periodically
@@ -267,30 +267,30 @@ export default function Home() {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <div className="mb-3">
-                    <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
-                    <div className="flex flex-wrap gap-1">
-                      {artist.genre.split(',').map((genre, index) => (
-                        <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
-                          {genre.trim()}
-                        </span>
-                      ))}
+                                      <div className="mb-3">
+                      <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {artist.genre?.split(',').map((genre: string, index: number) => (
+                          <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
+                            {genre.trim()}
+                          </span>
+                        )) || null}
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-secondary text-sm mb-2">📍 {artist.location}</p>
-                  <p className="text-secondary mb-4 line-clamp-3">{artist.bio}</p>
+                  <p className="text-secondary text-sm mb-2">📍 {artist.location || 'Unknown location'}</p>
+                  <p className="text-secondary mb-4 line-clamp-3">{artist.bio || 'No bio available'}</p>
                   {artist.testimonial && (
                     <blockquote className="text-sm italic text-gray-600 border-l-4 border-[#FF8A3D] pl-3 mb-4">
                       "{artist.testimonial}"
                     </blockquote>
                   )}
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {artist.gear.slice(0, 2).map((item, index) => (
+                    {artist.gear?.slice(0, 2).map((item: string, index: number) => (
                       <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                         {item}
                       </span>
-                    ))}
-                    {artist.gear.length > 2 && (
+                    )) || null}
+                    {artist.gear && artist.gear.length > 2 && (
                       <span className="text-xs text-gray-500">+{artist.gear.length - 2} more</span>
                     )}
                   </div>
