@@ -4,6 +4,7 @@
     "/*"
   ],
   "exclude": [
+    "/",
     "/images/*",
     "/icons/*",
     "/logos/*",
