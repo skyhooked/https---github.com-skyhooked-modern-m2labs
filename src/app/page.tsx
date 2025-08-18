@@ -10,8 +10,7 @@ import { getLatestPosts, formatDate, loadNewsFromServer, NewsPost } from '@/data
 import { getFeaturedArtists, loadArtistsFromServer, Artist } from '@/data/artistData';
 
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+// Remove dynamic export to allow static generation
 
 
 export default function Home() {
