@@ -15,13 +15,20 @@ export const dynamic = 'force-dynamic';
 
 
 export default function Home() {
-  const [featuredArtists, setFeaturedArtists] = useState(getFeaturedArtists(3));
-  const [latestPosts, setLatestPosts] = useState(getLatestPosts(3));
+  const [featuredArtists, setFeaturedArtists] = useState<any[]>([]);
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load data from server on mount and refresh periodically
   useEffect(() => {
     const loadData = async () => {
       try {
+        // First set fallback data immediately for faster render
+        setFeaturedArtists(getFeaturedArtists(3));
+        setLatestPosts(getLatestPosts(3));
+        setIsLoading(false);
+        
+        // Then try to load fresh data from server
         await Promise.all([
           loadArtistsFromServer(),
           loadNewsFromServer()
@@ -30,6 +37,10 @@ export default function Home() {
         setLatestPosts(getLatestPosts(3));
       } catch (error) {
         console.error('Failed to load data:', error);
+        // Ensure we still have fallback data even if server fails
+        setFeaturedArtists(getFeaturedArtists(3));
+        setLatestPosts(getLatestPosts(3));
+        setIsLoading(false);
       }
     };
 
@@ -169,7 +180,24 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestPosts.map((post) => (
+            {latestPosts.length === 0 && isLoading ? (
+              // Loading placeholder
+              Array.from({ length: 3 }).map((_, index) => (
+                <article key={index} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+                  <div className="w-full h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-4 w-3/4"></div>
+                    <div className="flex justify-between items-center">
+                      <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              latestPosts.map((post) => (
               <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <Image
                   src={post.coverImage}
@@ -187,7 +215,8 @@ export default function Home() {
                   </div>
                 </div>
               </article>
-            ))}
+              ))
+            )}
           </div>
           
           <div className="text-center mt-12">
@@ -213,7 +242,22 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredArtists.map((artist) => (
+            {featuredArtists.length === 0 && isLoading ? (
+              // Loading placeholder
+              Array.from({ length: 3 }).map((_, index) => (
+                <article key={index} className="bg-white rounded-lg shadow-lg overflow-hidden border animate-pulse">
+                  <div className="w-full h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-2 w-20"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-2 w-32"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-4 w-3/4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              featuredArtists.map((artist) => (
               <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
                 <Image
                   src={artist.image}
@@ -260,7 +304,8 @@ export default function Home() {
                   </div>
                 </div>
               </article>
-            ))}
+              ))
+            )}
           </div>
           
           
