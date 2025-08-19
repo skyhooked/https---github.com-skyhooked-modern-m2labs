@@ -458,15 +458,13 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'u
     updatedAt: now,
   };
 
-  // Support both Ecwid and Foxy order IDs for backward compatibility
   await db.prepare(`
-    INSERT INTO orders (id, userId, ecwidOrderId, foxyOrderId, status, total, currency, items, shippingAddress, billingAddress, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO orders (id, userId, ecwidOrderId, status, total, currency, items, shippingAddress, billingAddress, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     newOrder.id,
     newOrder.userId,
-    newOrder.ecwidOrderId || null,
-    newOrder.ecwidOrderId || null, // Use same ID for Foxy compatibility
+    newOrder.ecwidOrderId,
     newOrder.status,
     newOrder.total,
     newOrder.currency,
@@ -793,6 +791,7 @@ export const initializeDatabase = async (): Promise<void> => {
   
   try {
     // Run the migration SQL to set up tables and default data
+    // Read and execute the e-commerce schema migration
     await db.exec(`
       -- Users table
       CREATE TABLE IF NOT EXISTS users (
@@ -1262,6 +1261,16 @@ export const initializeDatabase = async (): Promise<void> => {
     }
     
     console.log('Database initialized successfully');
+    
+    // Initialize e-commerce tables
+    try {
+      const { initializeEcommerceDatabase } = await import('./database-ecommerce');
+      await initializeEcommerceDatabase();
+      console.log('E-commerce database initialized successfully');
+    } catch (ecommerceError) {
+      console.error('Failed to initialize e-commerce database:', ecommerceError);
+      // Don't throw error - allow main initialization to continue
+    }
   } catch (error) {
     console.error('Failed to initialize database:', error);
     throw error;

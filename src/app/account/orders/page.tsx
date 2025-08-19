@@ -192,14 +192,6 @@ export default function Orders() {
                             File warranty claim
                           </Link>
                         )}
-                        <a
-                          href={`https://${process.env.NEXT_PUBLIC_FOXY_SUBDOMAIN || 'm2-labs'}.foxycart.com/customer-portal`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-gray-900 hover:text-gray-700"
-                        >
-                          View in Foxy ↗
-                        </a>
                         <button className="text-sm font-medium text-gray-900 hover:text-gray-700">
                           View details
                         </button>

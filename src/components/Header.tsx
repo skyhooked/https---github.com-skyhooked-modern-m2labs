@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion, type TargetAndTransition } from 'framer-motion';
 import logoSrc from '../assets/logos/H-Logo-white.svg';
 import SearchModal from './SearchModal';
+import CartIcon from './cart/CartIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAllArtists, loadArtistsFromServer, Artist } from '@/data/artistData';
 
@@ -212,18 +213,7 @@ export default function Header() {
                 />
               </Link>
             )}
-            <Link href="/cart" aria-label="Cart" className="relative text-white hover:text-accent transition-colors">
-              <Image
-                src="/icons/cart.svg"
-                alt="Cart"
-                width={20}
-                height={20}
-                className="brightness-0 invert"
-              />
-              <span className="absolute -top-2 -right-3 bg-[#FF8A3D] text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                0
-              </span>
-            </Link>
+            <CartIcon />
           </div>
         </div>
 
