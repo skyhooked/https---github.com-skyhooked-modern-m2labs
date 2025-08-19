@@ -1176,6 +1176,88 @@ export const initializeDatabase = async (): Promise<void> => {
         ).run();
       }
     }
+
+    // Insert default news posts if table is empty
+    const newsCount = await db.prepare('SELECT COUNT(*) as count FROM news_posts').first();
+    if (newsCount.count === 0) {
+      const now = new Date().toISOString();
+      const defaultNewsPosts = [
+        {
+          id: "bomber-cologne",
+          title: "The Bomber Has Landed: Cologne Gets Its First Taste of M2 Labs Overdrive",
+          excerpt: "Thick tone. Punchy drive. No survivors. We're proud to announce that the Bomber Overdrive has officially touched down in Cologne...",
+          fullContent: "Thick tone. Punchy drive. No survivors. We're proud to announce that the Bomber Overdrive has officially touched down in Cologne and is making waves in the local music scene. This marks our first international distribution partnership, bringing the signature M2 Labs sound to musicians across Germany and Europe.",
+          coverImage: "/images/M2-Labs-The-Bomber-Overdrive-3.jpg",
+          author: "Jonathan",
+          publishDate: "2024-06-13",
+          readTime: "1 min read",
+          category: null
+        },
+        {
+          id: "price-stability",
+          title: "Standing Strong: Our Commitment to Price Stability in Changing Times",
+          excerpt: "The symphony of global commerce has always been a delicate dance of supply and demand, manufacturing relationships and economic forces...",
+          fullContent: "The symphony of global commerce has always been a delicate dance of supply and demand, manufacturing relationships and economic forces. In these uncertain times, we remain committed to providing consistent, fair pricing for our customers while maintaining the quality standards that define M2 Labs.",
+          coverImage: "/images/M2-Labs-The-Bomber-Overdrive-4.jpg",
+          author: "Jonathan",
+          publishDate: "2024-04-17",
+          readTime: "2 min read",
+          category: null
+        },
+        {
+          id: "wormwood-project",
+          title: "Sonic Artistry: Brandon Gaines of WormWood Project Talks Music, Art and Tone",
+          excerpt: "In the world of gritty, atmospheric music, few bands capture the raw essence of Southern Gothic Grunge quite like the WormWood Project...",
+          fullContent: "In the world of gritty, atmospheric music, few bands capture the raw essence of Southern Gothic Grunge quite like the WormWood Project. We sat down with Brandon Gaines to discuss their unique sound, artistic vision, and how the Bomber Overdrive fits into their sonic palette.",
+          coverImage: "/images/M2-Labs-The-Bomber-Overdrive-5.jpg",
+          author: "Jonathan",
+          publishDate: "2024-04-03",
+          readTime: "2 min read",
+          category: null
+        },
+        {
+          id: "loraine-postrock",
+          title: "Loraine: Atlanta's Post‑Rock Revelation",
+          excerpt: "Discover how the band Loraine balances concise post‑rock song structures with emotional depth and learn what's next on their horizon.",
+          fullContent: "Discover how the band Loraine balances concise post‑rock song structures with emotional depth and learn what's next on their horizon. Their innovative approach to post-rock has been turning heads in Atlanta's vibrant music scene.",
+          coverImage: "/images/M2-Labs-The-Bomber-Overdrive-1.jpg",
+          author: "Jonathan",
+          publishDate: "2024-04-02",
+          readTime: "Spotlight",
+          category: "Spotlight"
+        },
+        {
+          id: "riff-wizard-interview",
+          title: "Interview with Ethan of Riff Wizard Guitars",
+          excerpt: "Dive into the creative mind behind Riff Wizard Guitars and find out how the store became a home for boutique gear enthusiasts.",
+          fullContent: "Dive into the creative mind behind Riff Wizard Guitars and find out how the store became a home for boutique gear enthusiasts. Ethan shares his journey building a community around quality instruments and effects.",
+          coverImage: "/images/TBO-Pedal-HERO.webp",
+          author: "Jonathan",
+          publishDate: "2024-04-02",
+          readTime: "Interview",
+          category: "Interview"
+        }
+      ];
+
+      for (const post of defaultNewsPosts) {
+        await db.prepare(`
+          INSERT INTO news_posts (id, title, excerpt, fullContent, coverImage, author, publishDate, readTime, category, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          post.id,
+          post.title,
+          post.excerpt,
+          post.fullContent,
+          post.coverImage,
+          post.author,
+          post.publishDate,
+          post.readTime,
+          post.category,
+          now,
+          now
+        ).run();
+      }
+    }
     
     console.log('Database initialized successfully');
   } catch (error) {
