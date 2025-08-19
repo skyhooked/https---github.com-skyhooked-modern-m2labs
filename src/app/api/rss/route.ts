@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeDatabase, getNewsPosts } from '@/libs/database-d1';
+import { markdownToHtml, isMarkdown } from '@/utils/markdown';
 
 export const runtime = 'edge';
 
@@ -44,7 +45,7 @@ ${posts.map(post => `    <item>
       <content:encoded><![CDATA[
         ${post.coverImage ? `<img src="${post.coverImage.startsWith('http') ? post.coverImage : baseUrl + post.coverImage}" alt="${post.title}" style="max-width: 100%; height: auto; margin-bottom: 15px;" />` : ''}
         <p><strong>${post.excerpt || ''}</strong></p>
-        ${post.fullContent}
+        ${isMarkdown(post.fullContent) ? markdownToHtml(post.fullContent) : post.fullContent}
         <p><em>Published by ${post.author} on ${new Date(post.publishDate).toLocaleDateString()}</em></p>
       ]]></content:encoded>
     </item>`).join('\n')}

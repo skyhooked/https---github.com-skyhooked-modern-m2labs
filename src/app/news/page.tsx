@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import Image from 'next/image';
 import { getAllPosts, loadNewsFromServer, formatDate, NewsPost } from '@/data/newsData';
+import { markdownToHtml, isMarkdown } from '@/utils/markdown';
 
 export default function News() {
   const [posts, setPosts] = useState<NewsPost[]>(getAllPosts());
@@ -69,9 +70,14 @@ export default function News() {
                   </div>
                   <div className="md:w-2/3 p-8">
                     <h3 className="text-2xl font-bold mb-4 text-primary">{post.title}</h3>
-                    <p className="text-secondary leading-relaxed mb-4">
-                      {post.fullContent}
-                    </p>
+                    <div 
+                      className="text-secondary leading-relaxed mb-4 prose prose-gray max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: isMarkdown(post.fullContent) 
+                          ? markdownToHtml(post.fullContent) 
+                          : post.fullContent 
+                      }}
+                    />
                     <div className="flex justify-between items-center text-sm text-secondary/70">
                       <span>By {post.author} – {formatDate(post.publishDate)} – {post.readTime}</span>
                       {post.category && <span className="bg-[#FF8A3D] text-black px-2 py-1 rounded text-xs">{post.category}</span>}

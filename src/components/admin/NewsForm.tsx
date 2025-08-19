@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Wysiwyg from '@/components/admin/Wysiwyg';
+import MarkdownEditor from '@/components/admin/MarkdownEditor';
 import Image from 'next/image';
 import { NewsPost } from '@/data/newsData';
 
@@ -311,10 +311,10 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
           <label htmlFor="fullContent" className="block text-sm font-medium text-gray-700 mb-2">
             Full Content *
           </label>
-          {/* Replaced textarea with Wysiwyg */}
-          <Wysiwyg
+          {/* Replaced Wysiwyg with MarkdownEditor for clean formatting */}
+          <MarkdownEditor
             value={formData.fullContent}
-            onChange={(html) => setFormData(prev => ({ ...prev, fullContent: html }))}
+            onChange={(content) => setFormData(prev => ({ ...prev, fullContent: content }))}
             minHeight={320}
           />
         </div>
