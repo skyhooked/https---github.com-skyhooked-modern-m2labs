@@ -282,6 +282,19 @@ export async function getUserFromRequest(
   }
 }
 
+/** ---------- Token helper ---------- */
+export async function getUserFromToken(
+  token: string
+): Promise<{ id: string; email?: string; role: Role } | null> {
+  try {
+    if (!token) return null;
+    const payload = await verifyToken(token);
+    return { id: payload.sub, email: payload.email, role: payload.role };
+  } catch {
+    return null;
+  }
+}
+
 /** ---------- Ecwid SSO token (HMAC + base64 payload) ---------- */
 /**
  * Ecwid expects a JWT-like compact string composed of base64url(header).base64url(payload).signature

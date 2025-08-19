@@ -9,7 +9,27 @@ import {
   getTemplateById
 } from '@/libs/database-d1';
 import { getUserFromToken } from '@/libs/auth';
-import { generateUnsubscribeUrl } from '../unsubscribe/route';
+// Helper function to generate unsubscribe token
+function generateUnsubscribeToken(email: string): string {
+  // Simple base64 encoding - in production use proper HMAC or JWT
+  return Buffer.from(email).toString('base64');
+}
+
+// Helper function to generate unsubscribe URL
+function generateUnsubscribeUrl(email: string, campaignId?: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://m2labs.com';
+  const token = generateUnsubscribeToken(email);
+  const params = new URLSearchParams({
+    email,
+    token
+  });
+  
+  if (campaignId) {
+    params.append('campaign', campaignId);
+  }
+  
+  return `${baseUrl}/api/newsletter/unsubscribe?${params.toString()}`;
+}
 
 export const runtime = 'edge';
 

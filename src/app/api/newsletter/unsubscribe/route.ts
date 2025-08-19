@@ -98,13 +98,13 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to generate unsubscribe token
-export function generateUnsubscribeToken(email: string): string {
+function generateUnsubscribeToken(email: string): string {
   // Simple base64 encoding - in production use proper HMAC or JWT
   return Buffer.from(email).toString('base64');
 }
 
 // Helper function to generate unsubscribe URL
-export function generateUnsubscribeUrl(email: string, campaignId?: string): string {
+function generateUnsubscribeUrl(email: string, campaignId?: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://m2labs.com';
   const token = generateUnsubscribeToken(email);
   const params = new URLSearchParams({
