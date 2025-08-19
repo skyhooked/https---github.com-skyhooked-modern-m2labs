@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       htmlContent,
       category,
       variables: variables || {},
-      createdBy: authUser.id
+      createdBy: 'admin' // Simple admin ID since we removed JWT auth
     };
 
     const newTemplate = await createNewsletterTemplate(templateData);

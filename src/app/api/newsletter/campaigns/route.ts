@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       content,
       templateId,
       scheduledAt,
-      createdBy: authUser.id,
+      createdBy: 'admin', // Simple admin ID since we removed JWT auth
       tags: tags || []
     };
 
