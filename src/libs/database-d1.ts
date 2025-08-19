@@ -1369,7 +1369,7 @@ export const updateNewsletterCampaign = async (id: string, updates: Partial<News
   const now = new Date().toISOString();
   
   // Handle tags serialization
-  const processedUpdates = { ...updates };
+  const processedUpdates: any = { ...updates };
   if (processedUpdates.tags) {
     processedUpdates.tags = JSON.stringify(processedUpdates.tags);
   }
@@ -1458,7 +1458,7 @@ export const updateNewsletterTemplate = async (id: string, updates: Partial<News
   const now = new Date().toISOString();
   
   // Handle variables serialization
-  const processedUpdates = { ...updates };
+  const processedUpdates: any = { ...updates };
   if (processedUpdates.variables) {
     processedUpdates.variables = JSON.stringify(processedUpdates.variables);
   }
