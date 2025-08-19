@@ -1,0 +1,3 @@
+[33m437ce54[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: Handle null/undefined types in newsletter unsubscribe
+[33m5150b40[m fix: Resolve TypeScript errors in newsletter API routes
+[33mcf4cfc5[m fix: Resolve build errors for newsletter system

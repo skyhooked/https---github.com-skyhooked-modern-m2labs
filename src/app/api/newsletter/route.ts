@@ -1,4 +1,4 @@
-// Newsletter API endpoints
+// Newsletter API endpoints - trigger deployment
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   initializeDatabase,
