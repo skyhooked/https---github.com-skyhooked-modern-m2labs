@@ -160,7 +160,12 @@ async function simulateEmailSending(campaign: any, subscribers: any[], content: 
   const results = {
     successful: 0,
     failed: 0,
-    details: []
+    details: [] as Array<{
+      email: string;
+      status: string;
+      sentAt?: string;
+      error?: string;
+    }>
   };
 
   for (const subscriber of subscribers) {
@@ -195,13 +200,13 @@ async function simulateEmailSending(campaign: any, subscribers: any[], content: 
         sentAt: new Date().toISOString()
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to send email to ${subscriber.email}:`, error);
       results.failed++;
       results.details.push({
         email: subscriber.email,
         status: 'failed',
-        error: error.message
+        error: error?.message || 'Unknown error'
       });
     }
   }
