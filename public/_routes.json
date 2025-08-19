@@ -1,20 +1,8 @@
 {
   "version": 1,
   "include": [
-    "/api/*",
-    "/admin/*",
-    "/artists/*",
-    "/login",
-    "/register",
-    "/news",
-    "/shop",
-    "/contact",
-    "/warranty",
-    "/our-story",
-    "/privacy",
-    "/wormwood-project",
-    "/artist-endorsement",
-    "/account/*"
+    "/",
+    "/*"
   ],
   "exclude": [
     "/images/*",
