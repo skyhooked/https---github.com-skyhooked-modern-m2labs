@@ -109,10 +109,10 @@ export default function AdminDashboard() {
       title: 'Newsletter Management',
       description: 'Manage email campaigns and subscriber lists',
       icon: '📧',
-      disabled: true,
+      href: '/admin/newsletter',
       stats: [
-        { label: 'Subscribers', value: '-' },
-        { label: 'Campaigns', value: '-' },
+        { label: 'Subscribers', value: '0' },
+        { label: 'Campaigns', value: '0' },
       ],
     },
     {

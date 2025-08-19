@@ -877,6 +877,87 @@ export const initializeDatabase = async (): Promise<void> => {
         updatedAt TEXT NOT NULL
       );
 
+      -- Newsletter subscribers table
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        firstName TEXT,
+        lastName TEXT,
+        userId TEXT, -- NULL if anonymous subscriber, links to users table if registered
+        subscriptionDate TEXT NOT NULL,
+        isActive BOOLEAN NOT NULL DEFAULT TRUE,
+        preferences TEXT, -- JSON object with subscription preferences
+        source TEXT NOT NULL DEFAULT 'website', -- 'website', 'admin', 'import', etc.
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users (id)
+      );
+
+      -- Newsletter campaigns table
+      CREATE TABLE IF NOT EXISTS newsletter_campaigns (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        previewText TEXT,
+        content TEXT NOT NULL, -- HTML content
+        templateId TEXT, -- Reference to newsletter_templates
+        status TEXT NOT NULL CHECK (status IN ('draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled')) DEFAULT 'draft',
+        scheduledAt TEXT, -- When to send (NULL for immediate)
+        sentAt TEXT, -- When actually sent
+        recipientCount INTEGER DEFAULT 0,
+        openCount INTEGER DEFAULT 0,
+        clickCount INTEGER DEFAULT 0,
+        unsubscribeCount INTEGER DEFAULT 0,
+        bounceCount INTEGER DEFAULT 0,
+        createdBy TEXT NOT NULL, -- User ID who created the campaign
+        tags TEXT, -- JSON array of tags for organization
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        FOREIGN KEY (createdBy) REFERENCES users (id),
+        FOREIGN KEY (templateId) REFERENCES newsletter_templates (id)
+      );
+
+      -- Newsletter templates table
+      CREATE TABLE IF NOT EXISTS newsletter_templates (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        thumbnail TEXT, -- Preview image URL
+        htmlContent TEXT NOT NULL,
+        isDefault BOOLEAN NOT NULL DEFAULT FALSE,
+        category TEXT, -- 'announcement', 'product', 'artist', 'custom', etc.
+        variables TEXT, -- JSON object defining template variables
+        createdBy TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        FOREIGN KEY (createdBy) REFERENCES users (id)
+      );
+
+      -- Newsletter analytics table (for detailed tracking)
+      CREATE TABLE IF NOT EXISTS newsletter_analytics (
+        id TEXT PRIMARY KEY,
+        campaignId TEXT NOT NULL,
+        subscriberId TEXT NOT NULL,
+        eventType TEXT NOT NULL CHECK (eventType IN ('sent', 'delivered', 'opened', 'clicked', 'unsubscribed', 'bounced')),
+        eventData TEXT, -- JSON object with event-specific data (e.g., clicked URL, bounce reason)
+        userAgent TEXT,
+        ipAddress TEXT,
+        timestamp TEXT NOT NULL,
+        FOREIGN KEY (campaignId) REFERENCES newsletter_campaigns (id),
+        FOREIGN KEY (subscriberId) REFERENCES newsletter_subscribers (id)
+      );
+
+      -- Newsletter unsubscribes table (separate from subscribers for audit trail)
+      CREATE TABLE IF NOT EXISTS newsletter_unsubscribes (
+        id TEXT PRIMARY KEY,
+        subscriberId TEXT NOT NULL,
+        campaignId TEXT, -- NULL if general unsubscribe
+        reason TEXT, -- Optional reason from user
+        unsubscribeDate TEXT NOT NULL,
+        FOREIGN KEY (subscriberId) REFERENCES newsletter_subscribers (id),
+        FOREIGN KEY (campaignId) REFERENCES newsletter_campaigns (id)
+      );
+
       -- Create indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId);
@@ -887,6 +968,19 @@ export const initializeDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_artists_featured ON artists (featured);
       CREATE INDEX IF NOT EXISTS idx_news_posts_publishDate ON news_posts (publishDate);
       CREATE INDEX IF NOT EXISTS idx_news_posts_category ON news_posts (category);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_email ON newsletter_subscribers (email);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_userId ON newsletter_subscribers (userId);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_isActive ON newsletter_subscribers (isActive);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_status ON newsletter_campaigns (status);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_scheduledAt ON newsletter_campaigns (scheduledAt);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_createdBy ON newsletter_campaigns (createdBy);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_templates_category ON newsletter_templates (category);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_templates_isDefault ON newsletter_templates (isDefault);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_campaignId ON newsletter_analytics (campaignId);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_subscriberId ON newsletter_analytics (subscriberId);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_eventType ON newsletter_analytics (eventType);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_timestamp ON newsletter_analytics (timestamp);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_unsubscribes_subscriberId ON newsletter_unsubscribes (subscriberId);
     `);
 
     // Insert default admin user if it doesn't exist
@@ -903,6 +997,100 @@ export const initializeDatabase = async (): Promise<void> => {
         'admin',
         '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
         true,
+        new Date().toISOString(),
+        new Date().toISOString()
+      ).run();
+    }
+
+    // Insert default newsletter template if it doesn't exist
+    const templateExists = await db.prepare('SELECT COUNT(*) as count FROM newsletter_templates WHERE id = ?').bind('default-template-001').first();
+    if (templateExists.count === 0) {
+      await db.prepare(`
+        INSERT INTO newsletter_templates (id, name, description, htmlContent, isDefault, category, variables, createdBy, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        'default-template-001',
+        'M2 Labs Default Template',
+        'Clean, branded template for M2 Labs newsletters',
+        `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f4f4f4; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-top: 20px; 
+        }
+        .header { 
+            text-align: center; 
+            background: #FF8A3D; 
+            color: white; 
+            padding: 20px; 
+            border-radius: 10px 10px 0 0; 
+            margin: -20px -20px 20px -20px; 
+        }
+        .content { 
+            padding: 20px 0; 
+        }
+        .footer { 
+            text-align: center; 
+            font-size: 12px; 
+            color: #666; 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #eee; 
+        }
+        .btn { 
+            display: inline-block; 
+            background: #FF8A3D; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+        }
+        @media only screen and (max-width: 600px) {
+            .container { 
+                margin: 10px; 
+                padding: 15px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>M2 Labs</h1>
+            <p>{{headerText}}</p>
+        </div>
+        <div class="content">
+            {{content}}
+        </div>
+        <div class="footer">
+            <p>M2 Labs - Premium Guitar Effects</p>
+            <p><a href="{{unsubscribeUrl}}">Unsubscribe</a> | <a href="{{websiteUrl}}">Visit Website</a></p>
+            <p>{{companyAddress}}</p>
+        </div>
+    </div>
+</body>
+</html>`,
+        true,
+        'default',
+        '{"subject":"Newsletter Subject","headerText":"Stay Connected","content":"Newsletter content goes here","unsubscribeUrl":"{{unsubscribeUrl}}","websiteUrl":"https://m2labs.com","companyAddress":"M2 Labs, Your City, State 12345"}',
+        'admin-001',
         new Date().toISOString(),
         new Date().toISOString()
       ).run();
@@ -994,4 +1182,323 @@ export const initializeDatabase = async (): Promise<void> => {
     console.error('Failed to initialize database:', error);
     throw error;
   }
+};
+
+// ---------- Newsletter Functions ----------
+
+// Newsletter Subscriber Functions
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  userId?: string;
+  subscriptionDate: string;
+  isActive: boolean;
+  preferences?: any;
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getNewsletterSubscribers = async (): Promise<NewsletterSubscriber[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_subscribers ORDER BY createdAt DESC').all();
+  return result.results || [];
+};
+
+export const getActiveSubscribers = async (): Promise<NewsletterSubscriber[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_subscribers WHERE isActive = ? ORDER BY createdAt DESC').bind(true).all();
+  return result.results || [];
+};
+
+export const getSubscriberByEmail = async (email: string): Promise<NewsletterSubscriber | null> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_subscribers WHERE email = ?').bind(email.toLowerCase()).first();
+  return result || null;
+};
+
+export const createNewsletterSubscriber = async (data: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  userId?: string;
+  source?: string;
+  preferences?: any;
+}): Promise<NewsletterSubscriber> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = generateId();
+  
+  await db.prepare(`
+    INSERT INTO newsletter_subscribers (id, email, firstName, lastName, userId, subscriptionDate, isActive, preferences, source, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    data.email.toLowerCase(),
+    data.firstName || null,
+    data.lastName || null,
+    data.userId || null,
+    now,
+    true,
+    JSON.stringify(data.preferences || {}),
+    data.source || 'website',
+    now,
+    now
+  ).run();
+
+  return await db.prepare('SELECT * FROM newsletter_subscribers WHERE id = ?').bind(id).first();
+};
+
+export const updateNewsletterSubscriber = async (id: string, updates: Partial<NewsletterSubscriber>): Promise<NewsletterSubscriber | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  const setClause = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+  const values = [...Object.values(updates), now, id];
+  
+  await db.prepare(`UPDATE newsletter_subscribers SET ${setClause}, updatedAt = ? WHERE id = ?`).bind(...values).run();
+  return await db.prepare('SELECT * FROM newsletter_subscribers WHERE id = ?').bind(id).first();
+};
+
+export const unsubscribeEmail = async (email: string, campaignId?: string, reason?: string): Promise<boolean> => {
+  const db = getDatabase();
+  const subscriber = await getSubscriberByEmail(email);
+  if (!subscriber) return false;
+
+  const now = new Date().toISOString();
+  
+  // Mark subscriber as inactive
+  await db.prepare('UPDATE newsletter_subscribers SET isActive = ?, updatedAt = ? WHERE id = ?')
+    .bind(false, now, subscriber.id).run();
+  
+  // Record unsubscribe event
+  await db.prepare(`
+    INSERT INTO newsletter_unsubscribes (id, subscriberId, campaignId, reason, unsubscribeDate)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(generateId(), subscriber.id, campaignId || null, reason || null, now).run();
+
+  return true;
+};
+
+// Newsletter Campaign Functions
+export interface NewsletterCampaign {
+  id: string;
+  name: string;
+  subject: string;
+  previewText?: string;
+  content: string;
+  templateId?: string;
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'paused' | 'cancelled';
+  scheduledAt?: string;
+  sentAt?: string;
+  recipientCount: number;
+  openCount: number;
+  clickCount: number;
+  unsubscribeCount: number;
+  bounceCount: number;
+  createdBy: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getNewsletterCampaigns = async (): Promise<NewsletterCampaign[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_campaigns ORDER BY createdAt DESC').all();
+  return (result.results || []).map(campaign => ({
+    ...campaign,
+    tags: campaign.tags ? JSON.parse(campaign.tags) : []
+  }));
+};
+
+export const getCampaignById = async (id: string): Promise<NewsletterCampaign | null> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_campaigns WHERE id = ?').bind(id).first();
+  if (!result) return null;
+  
+  return {
+    ...result,
+    tags: result.tags ? JSON.parse(result.tags) : []
+  };
+};
+
+export const createNewsletterCampaign = async (data: {
+  name: string;
+  subject: string;
+  previewText?: string;
+  content: string;
+  templateId?: string;
+  scheduledAt?: string;
+  createdBy: string;
+  tags?: string[];
+}): Promise<NewsletterCampaign> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = generateId();
+  
+  await db.prepare(`
+    INSERT INTO newsletter_campaigns (id, name, subject, previewText, content, templateId, status, scheduledAt, recipientCount, openCount, clickCount, unsubscribeCount, bounceCount, createdBy, tags, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    data.name,
+    data.subject,
+    data.previewText || null,
+    data.content,
+    data.templateId || null,
+    data.scheduledAt ? 'scheduled' : 'draft',
+    data.scheduledAt || null,
+    0, 0, 0, 0, 0,
+    data.createdBy,
+    JSON.stringify(data.tags || []),
+    now,
+    now
+  ).run();
+
+  return await getCampaignById(id);
+};
+
+export const updateNewsletterCampaign = async (id: string, updates: Partial<NewsletterCampaign>): Promise<NewsletterCampaign | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  // Handle tags serialization
+  const processedUpdates = { ...updates };
+  if (processedUpdates.tags) {
+    processedUpdates.tags = JSON.stringify(processedUpdates.tags);
+  }
+  
+  const setClause = Object.keys(processedUpdates).map(key => `${key} = ?`).join(', ');
+  const values = [...Object.values(processedUpdates), now, id];
+  
+  await db.prepare(`UPDATE newsletter_campaigns SET ${setClause}, updatedAt = ? WHERE id = ?`).bind(...values).run();
+  return await getCampaignById(id);
+};
+
+// Newsletter Template Functions
+export interface NewsletterTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  thumbnail?: string;
+  htmlContent: string;
+  isDefault: boolean;
+  category: string;
+  variables?: any;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getNewsletterTemplates = async (): Promise<NewsletterTemplate[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_templates ORDER BY isDefault DESC, createdAt DESC').all();
+  return (result.results || []).map(template => ({
+    ...template,
+    variables: template.variables ? JSON.parse(template.variables) : {}
+  }));
+};
+
+export const getTemplateById = async (id: string): Promise<NewsletterTemplate | null> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_templates WHERE id = ?').bind(id).first();
+  if (!result) return null;
+  
+  return {
+    ...result,
+    variables: result.variables ? JSON.parse(result.variables) : {}
+  };
+};
+
+export const createNewsletterTemplate = async (data: {
+  name: string;
+  description?: string;
+  thumbnail?: string;
+  htmlContent: string;
+  category: string;
+  variables?: any;
+  createdBy: string;
+}): Promise<NewsletterTemplate> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = generateId();
+  
+  await db.prepare(`
+    INSERT INTO newsletter_templates (id, name, description, thumbnail, htmlContent, isDefault, category, variables, createdBy, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    data.name,
+    data.description || null,
+    data.thumbnail || null,
+    data.htmlContent,
+    false,
+    data.category,
+    JSON.stringify(data.variables || {}),
+    data.createdBy,
+    now,
+    now
+  ).run();
+
+  return await getTemplateById(id);
+};
+
+export const updateNewsletterTemplate = async (id: string, updates: Partial<NewsletterTemplate>): Promise<NewsletterTemplate | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  // Handle variables serialization
+  const processedUpdates = { ...updates };
+  if (processedUpdates.variables) {
+    processedUpdates.variables = JSON.stringify(processedUpdates.variables);
+  }
+  
+  const setClause = Object.keys(processedUpdates).map(key => `${key} = ?`).join(', ');
+  const values = [...Object.values(processedUpdates), now, id];
+  
+  await db.prepare(`UPDATE newsletter_templates SET ${setClause}, updatedAt = ? WHERE id = ?`).bind(...values).run();
+  return await getTemplateById(id);
+};
+
+// Newsletter Analytics Functions
+export const recordNewsletterEvent = async (data: {
+  campaignId: string;
+  subscriberId: string;
+  eventType: 'sent' | 'delivered' | 'opened' | 'clicked' | 'unsubscribed' | 'bounced';
+  eventData?: any;
+  userAgent?: string;
+  ipAddress?: string;
+}): Promise<void> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO newsletter_analytics (id, campaignId, subscriberId, eventType, eventData, userAgent, ipAddress, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    generateId(),
+    data.campaignId,
+    data.subscriberId,
+    data.eventType,
+    JSON.stringify(data.eventData || {}),
+    data.userAgent || null,
+    data.ipAddress || null,
+    now
+  ).run();
+  
+  // Update campaign counters
+  const counterColumn = `${data.eventType}Count`;
+  if (['open', 'click', 'unsubscribe', 'bounce'].includes(data.eventType.replace('Count', ''))) {
+    await db.prepare(`UPDATE newsletter_campaigns SET ${counterColumn} = ${counterColumn} + 1 WHERE id = ?`)
+      .bind(data.campaignId).run();
+  }
+};
+
+export const getCampaignAnalytics = async (campaignId: string): Promise<any[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM newsletter_analytics WHERE campaignId = ? ORDER BY timestamp DESC')
+    .bind(campaignId).all();
+  return result.results || [];
 };

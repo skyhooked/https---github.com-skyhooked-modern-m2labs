@@ -14,6 +14,9 @@ export default function HomeClient() {
   const [featuredArtists, setFeaturedArtists] = useState<any[]>([]);
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
 
   // Load data from server on mount and refresh periodically
   useEffect(() => {
@@ -51,6 +54,56 @@ export default function HomeClient() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Newsletter signup handler
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!newsletterEmail.trim()) {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Please enter a valid email address');
+      return;
+    }
+
+    setNewsletterStatus('loading');
+    setNewsletterMessage('');
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          source: 'homepage'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setNewsletterStatus('success');
+        setNewsletterMessage(data.alreadySubscribed 
+          ? 'You\'re already subscribed to our newsletter!' 
+          : 'Successfully subscribed to our newsletter!');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterMessage(data.error || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setNewsletterStatus('error');
+      setNewsletterMessage('Failed to subscribe. Please try again.');
+    }
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setNewsletterStatus('idle');
+      setNewsletterMessage('');
+    }, 5000);
+  };
 
   // Helper function to extract handle from URL or return as-is
   const extractHandle = (input: string, platform: string): string => {
@@ -325,7 +378,7 @@ export default function HomeClient() {
           <h2 className="text-3xl font-bold mb-2 text-[#F5F5F5]">Stay in Touch</h2>
           <p className="max-w-2xl mx-auto mb-6 text-[#F5F5F5]">Join our email list to receive updates.</p>
           
-          <form className="flex flex-col sm:flex-row justify-center items-center gap-2 max-w-xl mx-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row justify-center items-center gap-2 max-w-xl mx-auto">
             <label htmlFor="email" className="sr-only">Email address</label>
             <input
               type="email"
@@ -333,15 +386,31 @@ export default function HomeClient() {
               name="email"
               placeholder="Enter your email here"
               required
-              className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent"
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              disabled={newsletterStatus === 'loading'}
+              className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent disabled:opacity-50"
             />
             <button
               type="submit"
-              className="bg-accent text-white px-6 py-3 rounded font-medium hover:bg-accent/80 transition-colors"
+              disabled={newsletterStatus === 'loading'}
+              className="bg-accent text-white px-6 py-3 rounded font-medium hover:bg-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign Up
+              {newsletterStatus === 'loading' ? 'Signing Up...' : 'Sign Up'}
             </button>
           </form>
+          
+          {newsletterMessage && (
+            <div className={`mt-4 text-center p-3 rounded ${
+              newsletterStatus === 'success' 
+                ? 'bg-green-100 text-green-800 border border-green-200' 
+                : newsletterStatus === 'error'
+                ? 'bg-red-100 text-red-800 border border-red-200'
+                : ''
+            }`}>
+              {newsletterMessage}
+            </div>
+          )}
         </div>
       </section>
     </Layout>

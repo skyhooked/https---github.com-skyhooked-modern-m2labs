@@ -1,7 +1,63 @@
+'use client';
+
+import { useState } from 'react';
 import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 
 export default function OurStory() {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
+
+  // Newsletter signup handler
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!newsletterEmail.trim()) {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Please enter a valid email address');
+      return;
+    }
+
+    setNewsletterStatus('loading');
+    setNewsletterMessage('');
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          source: 'our-story'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setNewsletterStatus('success');
+        setNewsletterMessage(data.alreadySubscribed 
+          ? 'You\'re already subscribed to our newsletter!' 
+          : 'Successfully subscribed to our newsletter!');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterMessage(data.error || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setNewsletterStatus('error');
+      setNewsletterMessage('Failed to subscribe. Please try again.');
+    }
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setNewsletterStatus('idle');
+      setNewsletterMessage('');
+    }, 5000);
+  };
   return (
     <Layout>      
             {/* Our Story - Single Section */}
@@ -45,7 +101,7 @@ export default function OurStory() {
               <h3 className="text-2xl font-bold mb-6 text-primary text-center">Stay in Touch</h3>
               <p className="text-secondary mb-6 text-center">Join our email list to receive updates, pre‑sale announcements and community news.</p>
               
-              <form className="flex flex-col sm:flex-row justify-center items-center gap-2 max-w-xl mx-auto">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row justify-center items-center gap-2 max-w-xl mx-auto">
                 <label htmlFor="story-email" className="sr-only">Email address</label>
                 <input
                   type="email"
@@ -53,15 +109,31 @@ export default function OurStory() {
                   name="email"
                   placeholder="Enter your email here"
                   required
-                  className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  disabled={newsletterStatus === 'loading'}
+                  className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent disabled:opacity-50"
                 />
                 <button
                   type="submit"
-                  className="bg-[#FF8A3D] text-black px-6 py-3 rounded font-medium hover:bg-[#F5F5F5] transition-colors"
+                  disabled={newsletterStatus === 'loading'}
+                  className="bg-[#FF8A3D] text-black px-6 py-3 rounded font-medium hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign Up
+                  {newsletterStatus === 'loading' ? 'Signing Up...' : 'Sign Up'}
                 </button>
               </form>
+              
+              {newsletterMessage && (
+                <div className={`mt-4 text-center p-3 rounded ${
+                  newsletterStatus === 'success' 
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : newsletterStatus === 'error'
+                    ? 'bg-red-100 text-red-800 border border-red-200'
+                    : ''
+                }`}>
+                  {newsletterMessage}
+                </div>
+              )}
             </div>
           </div>
         </div>

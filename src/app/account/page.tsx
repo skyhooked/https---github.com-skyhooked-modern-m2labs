@@ -124,6 +124,26 @@ export default function Account() {
               </div>
             </Link>
 
+            {/* Newsletter Preferences */}
+            <Link
+              href="/account/newsletter"
+              className="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-[#FF8A3D] rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-primary">Newsletter</h3>
+                  <p className="text-sm text-secondary">Manage your email preferences</p>
+                </div>
+              </div>
+            </Link>
+
             {/* Support */}
             <Link
               href="/contact"

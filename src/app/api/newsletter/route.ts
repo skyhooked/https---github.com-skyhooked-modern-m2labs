@@ -1,0 +1,155 @@
+// Newsletter API endpoints
+import { NextRequest, NextResponse } from 'next/server';
+import { 
+  initializeDatabase,
+  createNewsletterSubscriber,
+  getNewsletterSubscribers,
+  getSubscriberByEmail,
+  unsubscribeEmail,
+  updateNewsletterSubscriber
+} from '@/libs/database-d1';
+import { getUserFromToken } from '@/libs/auth';
+
+export const runtime = 'edge';
+
+// GET - Get all newsletter subscribers (admin only)
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const user = token ? await getUserFromToken(token) : null;
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await initializeDatabase();
+    const subscribers = await getNewsletterSubscribers();
+    
+    return NextResponse.json({
+      subscribers,
+      totalCount: subscribers.length,
+      activeCount: subscribers.filter(s => s.isActive).length
+    });
+  } catch (error) {
+    console.error('Error fetching newsletter subscribers:', error);
+    return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 });
+  }
+}
+
+// POST - Subscribe to newsletter
+export async function POST(request: NextRequest) {
+  try {
+    await initializeDatabase();
+    const body = await request.json();
+    const { email, firstName, lastName, source } = body;
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    // Check if email is already subscribed
+    const existingSubscriber = await getSubscriberByEmail(email);
+    if (existingSubscriber) {
+      if (existingSubscriber.isActive) {
+        return NextResponse.json({ 
+          message: 'Email is already subscribed',
+          alreadySubscribed: true 
+        }, { status: 200 });
+      } else {
+        // Reactivate the subscription
+        await updateNewsletterSubscriber(existingSubscriber.id, {
+          isActive: true,
+          firstName: firstName || existingSubscriber.firstName,
+          lastName: lastName || existingSubscriber.lastName
+        });
+        return NextResponse.json({ 
+          message: 'Successfully resubscribed to newsletter',
+          reactivated: true 
+        });
+      }
+    }
+
+    // Check if user is logged in to link the subscription
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const user = token ? await getUserFromToken(token) : null;
+
+    const subscriberData = {
+      email: email.toLowerCase(),
+      firstName: firstName || (user?.firstName),
+      lastName: lastName || (user?.lastName),
+      userId: user?.id,
+      source: source || 'website'
+    };
+
+    const newSubscriber = await createNewsletterSubscriber(subscriberData);
+    
+    return NextResponse.json({ 
+      message: 'Successfully subscribed to newsletter',
+      subscriber: newSubscriber
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error subscribing to newsletter:', error);
+    return NextResponse.json({ error: 'Failed to subscribe to newsletter' }, { status: 500 });
+  }
+}
+
+// PUT - Update subscriber (admin only)
+export async function PUT(request: NextRequest) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const user = token ? await getUserFromToken(token) : null;
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await initializeDatabase();
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Subscriber ID is required' }, { status: 400 });
+    }
+
+    const updatedSubscriber = await updateNewsletterSubscriber(id, updates);
+    
+    if (!updatedSubscriber) {
+      return NextResponse.json({ error: 'Subscriber not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ 
+      message: 'Subscriber updated successfully',
+      subscriber: updatedSubscriber
+    });
+  } catch (error) {
+    console.error('Error updating subscriber:', error);
+    return NextResponse.json({ error: 'Failed to update subscriber' }, { status: 500 });
+  }
+}
+
+// DELETE - Unsubscribe from newsletter
+export async function DELETE(request: NextRequest) {
+  try {
+    await initializeDatabase();
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+    const reason = searchParams.get('reason');
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    const success = await unsubscribeEmail(email, undefined, reason);
+    
+    if (!success) {
+      return NextResponse.json({ error: 'Email not found in subscribers' }, { status: 404 });
+    }
+
+    return NextResponse.json({ 
+      message: 'Successfully unsubscribed from newsletter' 
+    });
+  } catch (error) {
+    console.error('Error unsubscribing from newsletter:', error);
+    return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
+  }
+}
