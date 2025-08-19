@@ -197,7 +197,7 @@ export default function Home() {
                 </article>
               ))
             ) : (
-              latestPosts.map((post) => (
+              latestPosts.map((post: any) => (
               <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <Image
                   src={post.coverImage}
@@ -257,7 +257,7 @@ export default function Home() {
                 </article>
               ))
             ) : (
-              featuredArtists.map((artist) => (
+              featuredArtists.map((artist: any) => (
               <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
                 <Image
                   src={artist.image}
@@ -270,11 +270,11 @@ export default function Home() {
                   <div className="mb-3">
                     <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
                     <div className="flex flex-wrap gap-1">
-                      {artist.genre.split(',').map((genre, index) => (
-                        <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
-                          {genre.trim()}
-                        </span>
-                      ))}
+                                              {artist.genre?.split(',').map((genre: string, index: number) => (
+                          <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
+                            {genre.trim()}
+                          </span>
+                        )) || null}
                     </div>
                   </div>
                   <p className="text-secondary text-sm mb-2">📍 {artist.location}</p>
@@ -285,12 +285,12 @@ export default function Home() {
                     </blockquote>
                   )}
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {artist.gear.slice(0, 2).map((item, index) => (
+                    {artist.gear?.slice(0, 2).map((item: string, index: number) => (
                       <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                         {item}
                       </span>
-                    ))}
-                    {artist.gear.length > 2 && (
+                    )) || null}
+                    {artist.gear && artist.gear.length > 2 && (
                       <span className="text-xs text-gray-500">+{artist.gear.length - 2} more</span>
                     )}
                   </div>
