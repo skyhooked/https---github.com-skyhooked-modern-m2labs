@@ -291,7 +291,7 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
                 Or enter image URL
               </label>
               <input
-                type="url"
+                type="text"
                 id="coverImage"
                 name="coverImage"
                 value={formData.coverImage}
