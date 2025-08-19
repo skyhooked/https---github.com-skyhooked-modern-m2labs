@@ -39,7 +39,19 @@ export default function News() {
     <Layout>      
       <section className="py-16 text-center bg-[#36454F]">
         <div className="max-w-4xl mx-auto px-5">
-          <h2 className="text-3xl font-bold mb-6 text-[#F5F5F5]">Latest Posts</h2>
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <h2 className="text-3xl font-bold text-[#F5F5F5]">Latest Posts</h2>
+            <a 
+              href="/api/rss" 
+              className="inline-flex items-center gap-2 px-3 py-2 bg-[#FF8A3D] text-black rounded-lg text-sm font-medium hover:bg-[#FF8A3D]/80 transition-colors"
+              title="Subscribe to RSS Feed"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3.429 2.776c9.064 0 16.397 7.333 16.397 16.397h-3.473c0-7.127-5.797-12.924-12.924-12.924v-3.473zm0 5.838c5.678 0 10.286 4.608 10.286 10.286h-3.473c0-3.759-3.054-6.813-6.813-6.813v-3.473zm2.995 9.329c0 1.652-1.342 2.995-2.995 2.995s-2.995-1.343-2.995-2.995 1.342-2.995 2.995-2.995 2.995 1.343 2.995 2.995z"/>
+              </svg>
+              RSS Feed
+            </a>
+          </div>
           <p className="max-w-2xl mx-auto mb-8 text-[#F5F5F5]">Stay up to date with our latest updates, product launches, and stories from the M2 Labs community.</p>
           
           <div className="space-y-8">

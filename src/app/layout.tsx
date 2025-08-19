@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description:
     'Crafting the future of vintage sound with high-quality analog equipment, modern design and a transferable lifetime warranty.',
   icons: { icon: '/favicon.svg' },
+  other: {
+    'alternate': 'application/rss+xml; M2 Labs News; /api/rss'
+  }
 };
 
 export default function RootLayout({
