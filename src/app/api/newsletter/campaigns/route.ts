@@ -15,9 +15,9 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       content,
       templateId,
       scheduledAt,
-      createdBy: user.id,
+      createdBy: authUser.id,
       tags: tags || []
     };
 
@@ -90,9 +90,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -132,9 +132,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -6,7 +6,8 @@ import {
   getNewsletterSubscribers,
   getSubscriberByEmail,
   unsubscribeEmail,
-  updateNewsletterSubscriber
+  updateNewsletterSubscriber,
+  getUserById
 } from '@/libs/database-d1';
 import { getUserFromToken } from '@/libs/auth';
 
@@ -16,9 +17,9 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -71,13 +72,23 @@ export async function POST(request: NextRequest) {
 
     // Check if user is logged in to link the subscription
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
+    
+    // Get full user data from database if authenticated
+    let fullUser = null;
+    if (authUser?.id) {
+      try {
+        fullUser = await getUserById(authUser.id);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    }
 
     const subscriberData = {
       email: email.toLowerCase(),
-      firstName: firstName || (user?.firstName),
-      lastName: lastName || (user?.lastName),
-      userId: user?.id,
+      firstName: firstName || (fullUser?.firstName),
+      lastName: lastName || (fullUser?.lastName),
+      userId: authUser?.id,
       source: source || 'website'
     };
 
@@ -97,9 +108,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = token ? await getUserFromToken(token) : null;
+    const authUser = token ? await getUserFromToken(token) : null;
     
-    if (!user || user.role !== 'admin') {
+    if (!authUser || authUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
