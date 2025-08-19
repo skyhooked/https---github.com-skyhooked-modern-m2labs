@@ -14,7 +14,7 @@ export function markdownToHtml(markdown: string): string {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 underline hover:text-blue-800 transition-colors" target="_blank" rel="noopener noreferrer">$1</a>')
     // Lists - handle properly
     .replace(/^\* (.+)$/gm, '<li class="mb-1">$1</li>')
-    .replace(/(<li class="mb-1">.*?<\/li>)(?:\n<li class="mb-1">.*?<\/li>)*/gs, (match) => {
+    .replace(/(<li class="mb-1">.*?<\/li>(?:\n<li class="mb-1">.*?<\/li>)*)/g, (match) => {
       return `<ul class="list-disc list-inside mb-4 space-y-1 text-gray-700">${match}</ul>`;
     })
     // Line breaks - convert double newlines to paragraphs

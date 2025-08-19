@@ -31,7 +31,7 @@ export default function MarkdownEditor({ value, onChange, minHeight = 320 }: Mar
       .replace(/<p class="mb-4"><\/p>/g, '')
       // Lists
       .replace(/^\* (.+)$/gm, '<li class="ml-4">• $1</li>')
-      .replace(/(<li class="ml-4">.*<\/li>)/gs, '<ul class="mb-4 space-y-1">$1</ul>')
+      .replace(/(<li class="ml-4">.*?<\/li>(?:\n<li class="ml-4">.*?<\/li>)*)/g, '<ul class="mb-4 space-y-1">$1</ul>')
       // Clean up extra tags
       .replace(/<p class="mb-4">(<h[1-3])/g, '$1')
       .replace(/(<\/h[1-3]>)<\/p>/g, '$1');
