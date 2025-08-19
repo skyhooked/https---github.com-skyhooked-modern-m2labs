@@ -34,11 +34,14 @@ export default function NewsletterManagement() {
         
         if (subscribersResponse.ok) {
           const subscribersData = await subscribersResponse.json();
+          console.log('Newsletter API response:', subscribersData);
           setStats(prev => ({
             ...prev,
             totalSubscribers: subscribersData.totalCount || 0,
             activeSubscribers: subscribersData.activeCount || 0
           }));
+        } else {
+          console.error('Newsletter API error:', subscribersResponse.status, await subscribersResponse.text());
         }
 
         // Fetch campaigns
