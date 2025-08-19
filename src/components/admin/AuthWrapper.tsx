@@ -20,34 +20,16 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     setIsAuthenticated(authStatus === 'true');
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Simple password check - replace with proper auth in the future
     const ADMIN_PASSWORD = 'admin123'; // TODO: Move to environment variables
     
     if (password === ADMIN_PASSWORD) {
-      try {
-        // Generate a proper JWT token for admin API access
-        const response = await fetch('/api/auth/admin-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: ADMIN_PASSWORD })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem(AUTH_KEY, 'true');
-          localStorage.setItem('token', data.token); // Store JWT token for API calls
-          setIsAuthenticated(true);
-          setError('');
-        } else {
-          setError('Failed to generate admin token');
-        }
-      } catch (error) {
-        console.error('Admin login error:', error);
-        setError('Login failed');
-      }
+      localStorage.setItem(AUTH_KEY, 'true');
+      setIsAuthenticated(true);
+      setError('');
     } else {
       setError('Invalid password');
     }
@@ -55,7 +37,6 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
 
   const handleLogout = () => {
     localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem('token'); // Clear JWT token
     setIsAuthenticated(false);
     setPassword('');
   };
