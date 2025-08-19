@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const success = await unsubscribeEmail(email, campaignId, reason);
+    const success = await unsubscribeEmail(email, campaignId || undefined, reason || undefined);
     
     if (!success) {
       return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });

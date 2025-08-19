@@ -150,7 +150,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const success = await unsubscribeEmail(email, undefined, reason);
+    const success = await unsubscribeEmail(email, undefined, reason || undefined);
     
     if (!success) {
       return NextResponse.json({ error: 'Email not found in subscribers' }, { status: 404 });
