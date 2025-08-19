@@ -13,6 +13,11 @@ import { getUserFromToken } from '@/libs/auth';
 
 export const runtime = 'edge';
 
+// Helper function to properly check if a subscriber is active
+const isSubscriberActive = (isActive: any): boolean => {
+  return isActive === true || isActive === 'true' || isActive === 1 || isActive === '1';
+};
+
 // GET - Get all newsletter subscribers (admin only)
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       subscribers,
       totalCount: subscribers.length,
-      activeCount: subscribers.filter(s => s.isActive === true || s.isActive === 'true').length
+      activeCount: subscribers.filter(s => isSubscriberActive(s.isActive)).length
     });
   } catch (error) {
     console.error('Error fetching newsletter subscribers:', error);
