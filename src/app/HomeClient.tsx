@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
@@ -7,7 +9,6 @@ import Link from 'next/link';
 import { getLatestPosts, formatDate, loadNewsFromServer } from '@/data/newsData';
 import { getFeaturedArtists, loadArtistsFromServer } from '@/data/artistData';
 
-'use client';
 
 export default function HomeClient() {
   const [featuredArtists, setFeaturedArtists] = useState<any[]>([]);
