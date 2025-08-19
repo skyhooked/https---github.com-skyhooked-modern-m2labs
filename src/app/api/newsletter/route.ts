@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       subscribers,
       totalCount: subscribers.length,
-      activeCount: subscribers.filter(s => s.isActive).length
+      activeCount: subscribers.filter(s => s.isActive === true || s.isActive === 'true').length
     });
   } catch (error) {
     console.error('Error fetching newsletter subscribers:', error);
