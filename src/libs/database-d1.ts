@@ -458,13 +458,15 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'u
     updatedAt: now,
   };
 
+  // Support both Ecwid and Foxy order IDs for backward compatibility
   await db.prepare(`
-    INSERT INTO orders (id, userId, ecwidOrderId, status, total, currency, items, shippingAddress, billingAddress, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO orders (id, userId, ecwidOrderId, foxyOrderId, status, total, currency, items, shippingAddress, billingAddress, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     newOrder.id,
     newOrder.userId,
-    newOrder.ecwidOrderId,
+    newOrder.ecwidOrderId || null,
+    newOrder.ecwidOrderId || null, // Use same ID for Foxy compatibility
     newOrder.status,
     newOrder.total,
     newOrder.currency,
