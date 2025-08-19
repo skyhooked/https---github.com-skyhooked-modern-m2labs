@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Warranty Claims', href: '/admin/warranty', icon: '🛡️', disabled: false },
     { name: 'News Management', href: '/admin/news', icon: '📰' },
     { name: 'Product Management', href: '/admin/products', icon: '🎸', disabled: true },
-    { name: 'Newsletter', href: '/admin/newsletter', icon: '📧', disabled: true },
+    { name: 'Newsletter', href: '/admin/newsletter', icon: '📧', disabled: false },
     { name: 'Artist Management', href: '/admin/artists', icon: '🎤', disabled: false },
     { name: 'Analytics', href: '/admin/analytics', icon: '📈', disabled: true },
     { name: 'Settings', href: '/admin/settings', icon: '⚙️', disabled: true },
@@ -116,6 +116,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 {pathname === '/admin' && 'Dashboard'}
                 {pathname === '/admin/news' && 'News Management'}
                 {pathname.includes('/admin/news/') && 'Edit News Post'}
+                {pathname === '/admin/newsletter' && 'Newsletter Management'}
+                {pathname === '/admin/users' && 'User Management'}
+                {pathname === '/admin/warranty' && 'Warranty Claims'}
+                {pathname === '/admin/artists' && 'Artist Management'}
               </h2>
             </div>
             <div className="ml-auto flex items-center gap-x-4 lg:gap-x-6">

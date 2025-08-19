@@ -21,11 +21,11 @@ export async function GET() {
         createdAt: s.createdAt
       }))
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in newsletter debug:', error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message,
+      error: error?.message || 'Unknown error',
       details: 'Failed to fetch newsletter subscribers'
     }, { status: 500 });
   }
