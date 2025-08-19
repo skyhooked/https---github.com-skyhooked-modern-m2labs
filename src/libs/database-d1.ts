@@ -1357,7 +1357,11 @@ export const createNewsletterCampaign = async (data: {
     now
   ).run();
 
-  return await getCampaignById(id);
+  const campaign = await getCampaignById(id);
+  if (!campaign) {
+    throw new Error('Failed to create newsletter campaign');
+  }
+  return campaign;
 };
 
 export const updateNewsletterCampaign = async (id: string, updates: Partial<NewsletterCampaign>): Promise<NewsletterCampaign | null> => {
@@ -1442,7 +1446,11 @@ export const createNewsletterTemplate = async (data: {
     now
   ).run();
 
-  return await getTemplateById(id);
+  const template = await getTemplateById(id);
+  if (!template) {
+    throw new Error('Failed to create newsletter template');
+  }
+  return template;
 };
 
 export const updateNewsletterTemplate = async (id: string, updates: Partial<NewsletterTemplate>): Promise<NewsletterTemplate | null> => {
