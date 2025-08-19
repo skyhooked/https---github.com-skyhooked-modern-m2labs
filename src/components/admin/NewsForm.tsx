@@ -26,6 +26,7 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewImage, setPreviewImage] = useState(post?.coverImage || '');
+  const [selectedFileName, setSelectedFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -37,26 +38,53 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+    // Validate file type
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) {
+      alert('Upload failed: Invalid file type. Only JPEG, PNG, WebP, and SVG are allowed.');
+      return;
+    }
 
+    // Validate file size (5MB limit for news images)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('Upload failed: File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setSelectedFileName(file.name);
+    console.log('Starting news image upload:', file.name, file.type, file.size);
+    
+    try {
+      const fileFormData = new FormData();
+      fileFormData.append('file', file);
+
+      console.log('Sending upload request to /api/upload');
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: fileFormData,
       });
+
+      console.log('Upload response status:', response.status);
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('Upload API error:', error);
         throw new Error(error.error || 'Upload failed');
       }
 
       const result = await response.json();
+      console.log('Upload successful:', result);
+      
       setFormData(prev => ({ ...prev, coverImage: result.path }));
       setPreviewImage(result.path);
+      setSelectedFileName(`✅ ${file.name} (uploaded)`);
+      
+      console.log('Image upload completed successfully');
     } catch (error) {
       console.error('Upload error:', error);
+      setSelectedFileName(`❌ ${file.name} (upload failed)`);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
@@ -226,7 +254,10 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('Upload button clicked');
+                    fileInputRef.current?.click();
+                  }}
                   disabled={uploadingImage}
                   className="px-4 py-2 bg-[#FF8A3D] text-black rounded-md hover:bg-[#FF8A3D]/80 transition-colors disabled:opacity-50"
                 >
@@ -236,11 +267,18 @@ export default function NewsForm({ post, onSubmit, onCancel, isLoading }: NewsFo
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/svg+xml"
                   onChange={handleImageUpload}
                   className="hidden"
                 />
               </div>
+              
+              {uploadingImage && (
+                <p className="mt-2 text-xs text-blue-600">🔄 Uploading image...</p>
+              )}
+              {selectedFileName && !uploadingImage && (
+                <p className="mt-2 text-xs text-black">Selected: {selectedFileName}</p>
+              )}
               
               <p className="text-xs text-gray-500 mt-1">
                 Upload a cover image (JPEG, PNG, or WebP, max 5MB)
