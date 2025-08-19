@@ -28,12 +28,12 @@ export async function GET(request: NextRequest) {
         defaultTemplateExists: templates.some(t => t.isDefault)
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Newsletter test error:', error);
     return NextResponse.json({
       status: 'error',
       message: 'Newsletter system test failed',
-      error: error.message
+      error: error?.message || 'Unknown error'
     }, { status: 500 });
   }
 }
