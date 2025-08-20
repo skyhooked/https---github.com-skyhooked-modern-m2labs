@@ -52,7 +52,10 @@ export async function POST(request: NextRequest) {
     const db = await getDatabase();
     
     const brandExists = await db.prepare('SELECT COUNT(*) as count FROM brands WHERE id = ?').bind('brand-m2labs').first();
+    console.log('Brand check result:', brandExists);
+    
     if (brandExists && brandExists.count === 0) {
+      console.log('Creating default brand...');
       await db.prepare(`
         INSERT INTO brands (id, name, slug, description, isActive, createdAt, updatedAt)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -65,6 +68,9 @@ export async function POST(request: NextRequest) {
         new Date().toISOString(),
         new Date().toISOString()
       ).run();
+      console.log('Default brand created successfully');
+    } else {
+      console.log('Brand already exists, count:', brandExists?.count);
     }
 
     const data = await request.json();
