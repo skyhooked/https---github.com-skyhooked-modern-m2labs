@@ -37,6 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check if user is authenticated on component mount
   useEffect(() => {
+    // Skip auth check for admin routes - they use their own AuthWrapper
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      setLoading(false);
+      return;
+    }
+    
     // Run auth check asynchronously without blocking render
     checkAuth();
   }, []);
@@ -140,6 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshUser = async () => {
+    // Skip refresh for admin routes
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      return;
+    }
     await checkAuth();
   };
 
