@@ -20,7 +20,7 @@ interface Product {
   cost?: number;
   isFeatured: boolean;
   isActive: boolean;
-  weight?: number;
+  weight?: string;
   dimensions?: string; // Keep as string for form compatibility
   powerRequirements?: string;
   compatibility?: string;

@@ -52,7 +52,7 @@ export interface Product {
   cost?: number;
   isActive: boolean;
   isFeatured: boolean;
-  weight?: number;
+  weight?: string;
   dimensions?: string; // String format like "2.6\" x 4.8\" x 1.6\""
   powerRequirements?: string;
   compatibility?: string;

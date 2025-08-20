@@ -35,25 +35,30 @@ interface Product {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brandId?: string;
+  sku?: string;
   basePrice: number;
   compareAtPrice?: number;
+  cost?: number;
   isFeatured: boolean;
   isActive: boolean;
+  weight?: string;
+  dimensions?: string;
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
-  brandId?: string;
+  // Enhanced fields inspired by JHS Pedals
+  youtubeVideoId?: string;
+  features?: string[];
+  toggleOptions?: Record<string, string>;
+  powerConsumption?: string;
+  relatedProducts?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+  metaKeywords?: string;
   variants?: ProductVariant[];
   images?: ProductImage[];
   categories?: Category[];
-  // New enhanced fields inspired by JHS Pedals
-  youtubeVideoId?: string;
-  features?: string[]; // Array of feature bullet points
-  toggleOptions?: Record<string, string>; // For explaining different settings/options
-  dimensions?: string;
-  weight?: string;
-  powerConsumption?: string;
-  relatedProducts?: string[]; // Product IDs
 }
 
 interface ProductFormProps {
@@ -68,25 +73,30 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     slug: '',
     description: '',
     shortDescription: '',
+    brandId: 'm2-labs', // Default to M2 Labs brand
+    sku: '',
     basePrice: 0,
     compareAtPrice: 0,
+    cost: 0,
     isFeatured: false,
     isActive: true,
+    weight: '',
+    dimensions: '',
     powerRequirements: '',
     compatibility: '',
     technicalSpecs: {},
-    brandId: 'm2-labs', // Default to M2 Labs brand
-    variants: [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
-    images: [],
-    categories: [],
-    // New enhanced fields
+    // Enhanced fields
     youtubeVideoId: '',
     features: [],
     toggleOptions: {},
-    dimensions: '',
-    weight: '',
     powerConsumption: '',
-    relatedProducts: []
+    relatedProducts: [],
+    seoTitle: '',
+    seoDescription: '',
+    metaKeywords: '',
+    variants: [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
+    images: [],
+    categories: []
   });
 
 
@@ -103,19 +113,24 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
       setFormData({
         ...product,
         compareAtPrice: product.compareAtPrice || 0,
+        cost: product.cost || 0,
         technicalSpecs: product.technicalSpecs || {},
         brandId: product.brandId || 'm2-labs', // Ensure M2 Labs brand is always set
-        variants: product.variants || [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
-        images: product.images || [],
-        categories: product.categories || [],
+        sku: product.sku || '',
+        weight: product.weight || '',
+        dimensions: product.dimensions || '',
         // Enhanced fields with defaults
         youtubeVideoId: product.youtubeVideoId || '',
         features: product.features || [],
         toggleOptions: product.toggleOptions || {},
-        dimensions: product.dimensions || '',
-        weight: product.weight || '',
         powerConsumption: product.powerConsumption || '',
-        relatedProducts: product.relatedProducts || []
+        relatedProducts: product.relatedProducts || [],
+        seoTitle: product.seoTitle || '',
+        seoDescription: product.seoDescription || '',
+        metaKeywords: product.metaKeywords || '',
+        variants: product.variants || [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
+        images: product.images || [],
+        categories: product.categories || []
       });
     }
   }, [product]);
