@@ -86,7 +86,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating distributor:', error);
     
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
       return NextResponse.json(
         { error: 'Email or username already exists' },
         { status: 409 }
