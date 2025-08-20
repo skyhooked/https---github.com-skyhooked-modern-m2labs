@@ -62,6 +62,12 @@ export interface Product {
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
+  // Enhanced fields inspired by JHS Pedals
+  youtubeVideoId?: string;
+  features?: string[];
+  toggleOptions?: Record<string, string>;
+  powerConsumption?: string;
+  relatedProducts?: string[];
   seoTitle?: string;
   seoDescription?: string;
   metaKeywords?: string;
@@ -648,8 +654,9 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
     INSERT INTO products (
       id, name, slug, description, shortDescription, brandId, sku, basePrice, compareAtPrice, cost,
       isActive, isFeatured, weight, dimensions, powerRequirements, compatibility, technicalSpecs,
-      seoTitle, seoDescription, metaKeywords, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      seoTitle, seoDescription, metaKeywords, youtubeVideoId, features, toggleOptions, powerConsumption, relatedProducts,
+      createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     product.id, product.name, product.slug, product.description, product.shortDescription,
     product.brandId, product.sku, product.basePrice, product.compareAtPrice, product.cost,
@@ -658,6 +665,11 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
     product.powerRequirements, product.compatibility,
     product.technicalSpecs ? JSON.stringify(product.technicalSpecs) : null,
     product.seoTitle, product.seoDescription, product.metaKeywords,
+    product.youtubeVideoId,
+    product.features ? JSON.stringify(product.features) : null,
+    product.toggleOptions ? JSON.stringify(product.toggleOptions) : null,
+    product.powerConsumption,
+    product.relatedProducts ? JSON.stringify(product.relatedProducts) : null,
     product.createdAt, product.updatedAt
   ).run();
   
@@ -1308,7 +1320,9 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     images: [],
     variants: [],
     technicalSpecs: result.technicalSpecs ? JSON.parse(result.technicalSpecs) : {},
-    tags: result.tags ? JSON.parse(result.tags) : [],
+    features: result.features ? JSON.parse(result.features) : [],
+    toggleOptions: result.toggleOptions ? JSON.parse(result.toggleOptions) : {},
+    relatedProducts: result.relatedProducts ? JSON.parse(result.relatedProducts) : [],
     brand: result.brandId ? { 
       id: result.brandId, 
       name: result.brandName || 'Unknown', 
@@ -1670,6 +1684,20 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
     if (data.powerRequirements !== undefined) { updateFields.push('powerRequirements = ?'); values.push(data.powerRequirements); }
     if (data.compatibility !== undefined) { updateFields.push('compatibility = ?'); values.push(data.compatibility); }
     if (data.technicalSpecs !== undefined) { updateFields.push('technicalSpecs = ?'); values.push(JSON.stringify(data.technicalSpecs)); }
+    if (data.youtubeVideoId !== undefined) { updateFields.push('youtubeVideoId = ?'); values.push(data.youtubeVideoId); }
+    if (data.features !== undefined) {
+      updateFields.push('features = ?');
+      values.push(data.features ? JSON.stringify(data.features) : null);
+    }
+    if (data.toggleOptions !== undefined) {
+      updateFields.push('toggleOptions = ?');
+      values.push(data.toggleOptions ? JSON.stringify(data.toggleOptions) : null);
+    }
+    if (data.powerConsumption !== undefined) { updateFields.push('powerConsumption = ?'); values.push(data.powerConsumption); }
+    if (data.relatedProducts !== undefined) {
+      updateFields.push('relatedProducts = ?');
+      values.push(data.relatedProducts ? JSON.stringify(data.relatedProducts) : null);
+    }
     
     updateFields.push('updatedAt = ?');
     values.push(now);
@@ -1798,6 +1826,11 @@ export const initializeEcommerceDatabase = async (): Promise<void> => {
         powerRequirements TEXT,
         compatibility TEXT,
         technicalSpecs TEXT,
+        youtubeVideoId TEXT,
+        features TEXT,
+        toggleOptions TEXT,
+        powerConsumption TEXT,
+        relatedProducts TEXT,
         seoTitle TEXT,
         seoDescription TEXT,
         metaKeywords TEXT,

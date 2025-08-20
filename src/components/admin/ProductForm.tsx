@@ -46,6 +46,14 @@ interface Product {
   variants?: ProductVariant[];
   images?: ProductImage[];
   categories?: Category[];
+  // New enhanced fields inspired by JHS Pedals
+  youtubeVideoId?: string;
+  features?: string[]; // Array of feature bullet points
+  toggleOptions?: Record<string, string>; // For explaining different settings/options
+  dimensions?: string;
+  weight?: string;
+  powerConsumption?: string;
+  relatedProducts?: string[]; // Product IDs
 }
 
 interface ProductFormProps {
@@ -70,7 +78,15 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     brandId: 'm2-labs', // Default to M2 Labs brand
     variants: [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
     images: [],
-    categories: []
+    categories: [],
+    // New enhanced fields
+    youtubeVideoId: '',
+    features: [],
+    toggleOptions: {},
+    dimensions: '',
+    weight: '',
+    powerConsumption: '',
+    relatedProducts: []
   });
 
 
@@ -91,7 +107,15 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         brandId: product.brandId || 'm2-labs', // Ensure M2 Labs brand is always set
         variants: product.variants || [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
         images: product.images || [],
-        categories: product.categories || []
+        categories: product.categories || [],
+        // Enhanced fields with defaults
+        youtubeVideoId: product.youtubeVideoId || '',
+        features: product.features || [],
+        toggleOptions: product.toggleOptions || {},
+        dimensions: product.dimensions || '',
+        weight: product.weight || '',
+        powerConsumption: product.powerConsumption || '',
+        relatedProducts: product.relatedProducts || []
       });
     }
   }, [product]);
@@ -657,6 +681,185 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
                 placeholder="Electric guitar, bass guitar"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Product Details */}
+        <div className="bg-white rounded-lg border shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Enhanced Details</h2>
+          
+          <div className="space-y-6">
+            {/* YouTube Video */}
+            <div>
+              <label htmlFor="youtubeVideoId" className="block text-sm font-medium text-gray-700 mb-2">
+                YouTube Video ID
+              </label>
+              <input
+                type="text"
+                id="youtubeVideoId"
+                name="youtubeVideoId"
+                value={formData.youtubeVideoId || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                placeholder="dQw4w9WgXcQ (just the video ID from YouTube URL)"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Extract the video ID from YouTube URL: youtube.com/watch?v=<strong>VIDEO_ID</strong>
+              </p>
+            </div>
+
+            {/* Physical Specifications */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label htmlFor="dimensions" className="block text-sm font-medium text-gray-700 mb-2">
+                  Dimensions
+                </label>
+                <input
+                  type="text"
+                  id="dimensions"
+                  name="dimensions"
+                  value={formData.dimensions || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                  placeholder="2.6&quot; x 4.8&quot; x 1.6&quot;"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-2">
+                  Weight
+                </label>
+                <input
+                  type="text"
+                  id="weight"
+                  name="weight"
+                  value={formData.weight || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                  placeholder="1.2 lbs"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="powerConsumption" className="block text-sm font-medium text-gray-700 mb-2">
+                  Power Consumption
+                </label>
+                <input
+                  type="text"
+                  id="powerConsumption"
+                  name="powerConsumption"
+                  value={formData.powerConsumption || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                  placeholder="64mA"
+                />
+              </div>
+            </div>
+
+            {/* Product Features */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Key Features
+              </label>
+              <div className="space-y-2">
+                {(formData.features || []).map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => {
+                        const newFeatures = [...(formData.features || [])];
+                        newFeatures[index] = e.target.value;
+                        setFormData({...formData, features: newFeatures});
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                      placeholder="Feature description"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newFeatures = [...(formData.features || [])];
+                        newFeatures.splice(index, 1);
+                        setFormData({...formData, features: newFeatures});
+                      }}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFeatures = [...(formData.features || []), ''];
+                    setFormData({...formData, features: newFeatures});
+                  }}
+                  className="px-4 py-2 bg-[#FF8A3D] text-black rounded-lg hover:bg-[#FF8A3D]/80"
+                >
+                  Add Feature
+                </button>
+              </div>
+            </div>
+
+            {/* Toggle Options/Settings */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Toggle Options & Settings
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                Explain different switch positions, settings, or configuration options (like JHS Pedals toggle explanations)
+              </p>
+              <div className="space-y-2">
+                {Object.entries(formData.toggleOptions || {}).map(([key, value], index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={key}
+                      onChange={(e) => {
+                        const newOptions = {...(formData.toggleOptions || {})};
+                        delete newOptions[key];
+                        newOptions[e.target.value] = value;
+                        setFormData({...formData, toggleOptions: newOptions});
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                      placeholder="Setting name (e.g., 'Both toggles up')"
+                    />
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => {
+                        const newOptions = {...(formData.toggleOptions || {})};
+                        newOptions[key] = e.target.value;
+                        setFormData({...formData, toggleOptions: newOptions});
+                      }}
+                      className="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                      placeholder="Description of what this setting does"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newOptions = {...(formData.toggleOptions || {})};
+                        delete newOptions[key];
+                        setFormData({...formData, toggleOptions: newOptions});
+                      }}
+                      className="md:col-span-3 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Remove Setting
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newOptions = {...(formData.toggleOptions || {}), '': ''};
+                    setFormData({...formData, toggleOptions: newOptions});
+                  }}
+                  className="px-4 py-2 bg-[#FF8A3D] text-black rounded-lg hover:bg-[#FF8A3D]/80"
+                >
+                  Add Setting
+                </button>
+              </div>
             </div>
           </div>
         </div>
