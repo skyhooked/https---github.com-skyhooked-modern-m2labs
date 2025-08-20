@@ -329,6 +329,10 @@ export async function updateUserPassword(userId: string, currentPassword: string
     throw new Error('User not found');
   }
   
+  if (!user.password) {
+    throw new Error('User password not found');
+  }
+  
   const isCurrentValid = await verifyPassword(currentPassword, user.password);
   if (!isCurrentValid) {
     throw new Error('Invalid current password');
