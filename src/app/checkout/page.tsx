@@ -51,7 +51,7 @@ export default function Checkout() {
             price: item.unitPrice / 100, // Convert from cents
             quantity: item.quantity,
             variantId: item.variantId,
-            image: item.variant?.product?.image
+            image: item.variant?.product?.images?.[0]?.url
           })),
           subtotal: cart.subtotal,
           customerEmail: user?.email,
