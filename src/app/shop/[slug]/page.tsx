@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Layout from '@/components/Layout';
 import { useCart } from '@/components/cart/CartProvider';
 import { useWishlist } from '@/components/wishlist/WishlistProvider';
+import ReviewsList from '@/components/reviews/ReviewsList';
 
 interface Product {
   id: string;
@@ -376,6 +377,11 @@ export default function ProductDetail() {
                 </div>
               </div>
             )}
+
+            {/* Reviews Section */}
+            <div className="border-t border-gray-200 p-8">
+              <ReviewsList productId={product.id} />
+            </div>
           </div>
         </div>
       </section>

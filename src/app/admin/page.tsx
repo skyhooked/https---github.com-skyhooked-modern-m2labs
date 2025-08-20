@@ -136,13 +136,23 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Analytics & Reports',
-      description: 'View website traffic and engagement metrics',
-      icon: '📈',
-      disabled: true,
+      title: 'Coupon Management',
+      description: 'Create and manage discount codes',
+      icon: '🎫',
+      href: '/admin/coupons',
       stats: [
-        { label: 'Monthly Visits', value: '-' },
-        { label: 'Conversion Rate', value: '-' },
+        { label: 'Active Coupons', value: '0' },
+        { label: 'Total Uses', value: '0' },
+      ],
+    },
+    {
+      title: 'Analytics & Reports',
+      description: 'View sales analytics and business insights',
+      icon: '📈',
+      href: '/admin/analytics',
+      stats: [
+        { label: 'Total Revenue', value: '$0' },
+        { label: 'Orders', value: '0' },
       ],
     },
   ];
