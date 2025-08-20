@@ -982,6 +982,91 @@ export const getSupportTickets = async (params?: {
 };
 
 // ========================================
+// ORDER FUNCTIONS
+// ========================================
+
+export const getAllOrders = async (params?: {
+  status?: string;
+  userId?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Order[]> => {
+  const db = getDatabase();
+  
+  let query = 'SELECT * FROM orders_new';
+  const conditions: string[] = [];
+  const bindings: any[] = [];
+  
+  if (params?.status) {
+    conditions.push('status = ?');
+    bindings.push(params.status);
+  }
+  
+  if (params?.userId) {
+    conditions.push('userId = ?');
+    bindings.push(params.userId);
+  }
+  
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`;
+  }
+  
+  query += ' ORDER BY createdAt DESC';
+  
+  if (params?.limit) {
+    query += ` LIMIT ?`;
+    bindings.push(params.limit);
+    
+    if (params?.offset) {
+      query += ` OFFSET ?`;
+      bindings.push(params.offset);
+    }
+  }
+  
+  const result = await db.prepare(query).bind(...bindings).all();
+  
+  return (result.results || []).map(order => ({
+    ...order,
+    shippingAddress: JSON.parse(order.shippingAddress as string),
+    billingAddress: JSON.parse(order.billingAddress as string),
+  })) as Order[];
+};
+
+export const getOrderById = async (id: string): Promise<Order | null> => {
+  const db = getDatabase();
+  
+  const result = await db.prepare(`
+    SELECT * FROM orders_new 
+    WHERE id = ?
+  `).bind(id).first();
+  
+  if (!result) return null;
+  
+  // Parse JSON fields
+  const order = {
+    ...result,
+    shippingAddress: JSON.parse(result.shippingAddress as string),
+    billingAddress: JSON.parse(result.billingAddress as string),
+  } as Order;
+  
+  // Get order items
+  const itemsResult = await db.prepare(`
+    SELECT oi.*, pv.name as variantName, pv.sku
+    FROM order_items oi
+    LEFT JOIN product_variants pv ON oi.variantId = pv.id
+    WHERE oi.orderId = ?
+    ORDER BY oi.createdAt
+  `).bind(id).all();
+  
+  order.items = (itemsResult.results || []).map(item => ({
+    ...item,
+    productSnapshot: JSON.parse(item.productSnapshot as string)
+  })) as OrderItem[];
+  
+  return order;
+};
+
+// ========================================
 // WISHLIST FUNCTIONS
 // ========================================
 
