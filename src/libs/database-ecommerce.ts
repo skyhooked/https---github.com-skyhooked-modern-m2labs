@@ -1121,6 +1121,278 @@ export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
 };
 
 // ========================================
+// MISSING FUNCTIONS
+// ========================================
+
+export const getAllProducts = async (params?: {
+  limit?: number;
+  offset?: number;
+  category?: string;
+  brandId?: string;
+  search?: string;
+  isActive?: boolean;
+}): Promise<Product[]> => {
+  return await getProducts(params);
+};
+
+export const getProductById = async (id: string): Promise<Product | null> => {
+  const db = getDatabase();
+  
+  const result = await db.prepare(`
+    SELECT p.*, 
+           b.name as brandName, 
+           b.slug as brandSlug,
+           b.description as brandDescription,
+           b.logo as brandLogo,
+           b.website as brandWebsite,
+           b.isActive as brandIsActive,
+           b.createdAt as brandCreatedAt,
+           b.updatedAt as brandUpdatedAt
+    FROM products_new p
+    LEFT JOIN brands b ON p.brandId = b.id
+    WHERE p.id = ?
+  `).bind(id).first();
+  
+  if (!result) return null;
+  
+  return {
+    ...result,
+    basePrice: Number(result.basePrice),
+    compareAtPrice: result.compareAtPrice ? Number(result.compareAtPrice) : undefined,
+    images: [],
+    variants: [],
+    technicalSpecs: result.technicalSpecs ? JSON.parse(result.technicalSpecs) : {},
+    tags: result.tags ? JSON.parse(result.tags) : [],
+    brand: result.brandId ? { 
+      id: result.brandId, 
+      name: result.brandName || 'Unknown', 
+      slug: result.brandSlug || result.brandId,
+      description: result.brandDescription || '',
+      logo: result.brandLogo || '',
+      website: result.brandWebsite || '',
+      isActive: result.brandIsActive || false,
+      createdAt: result.brandCreatedAt || '',
+      updatedAt: result.brandUpdatedAt || ''
+    } : undefined
+  } as Product;
+};
+
+export const deleteProduct = async (id: string): Promise<boolean> => {
+  const db = getDatabase();
+  try {
+    const result = await db.prepare('DELETE FROM products_new WHERE id = ?').bind(id).run();
+    return result.changes > 0;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return false;
+  }
+};
+
+export const createProductVariant = async (data: Omit<ProductVariant, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariant> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO product_variants (id, productId, name, price, stock, sku, isDefault, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, data.productId, data.name, data.price, data.stock || 0, 
+    data.sku || '', data.isDefault || false, now, now
+  ).run();
+  
+  return {
+    id,
+    ...data,
+    stock: data.stock || 0,
+    sku: data.sku || '',
+    isDefault: data.isDefault || false,
+    createdAt: now,
+    updatedAt: now
+  };
+};
+
+export const createProductImage = async (data: Omit<ProductImage, 'id' | 'createdAt'>): Promise<ProductImage> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO product_images (id, productId, url, alt, sortOrder, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, data.productId, data.url, data.alt || '', 
+    data.sortOrder || 0, now
+  ).run();
+  
+  return {
+    id,
+    ...data,
+    alt: data.alt || '',
+    sortOrder: data.sortOrder || 0,
+    createdAt: now
+  };
+};
+
+export const updateInventory = async (productId: string, variantId: string, quantity: number): Promise<boolean> => {
+  const db = getDatabase();
+  try {
+    const result = await db.prepare(`
+      UPDATE product_variants 
+      SET stock = ?, updatedAt = ?
+      WHERE id = ? AND productId = ?
+    `).bind(quantity, new Date().toISOString(), variantId, productId).run();
+    return result.changes > 0;
+  } catch (error) {
+    console.error('Error updating inventory:', error);
+    return false;
+  }
+};
+
+export const getAllBrands = async (): Promise<Brand[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM brands ORDER BY name ASC').all();
+  return result.results || [];
+};
+
+export const createBrand = async (data: Omit<Brand, 'id' | 'createdAt' | 'updatedAt'>): Promise<Brand> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO brands (id, name, slug, description, logo, website, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, data.name, data.slug, data.description || '', 
+    data.logo || '', data.website || '', now, now
+  ).run();
+  
+  return { id, ...data, description: data.description || '', logo: data.logo || '', website: data.website || '', createdAt: now, updatedAt: now };
+};
+
+export const getAllCategories = async (): Promise<Category[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM categories ORDER BY name ASC').all();
+  return result.results || [];
+};
+
+export const createCategory = async (data: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO categories (id, name, slug, description, parentId, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, data.name, data.slug, data.description || '', data.parentId || null, now, now).run();
+  
+  return { id, ...data, description: data.description || '', parentId: data.parentId || null, createdAt: now, updatedAt: now };
+};
+
+export const getAllCoupons = async (): Promise<Coupon[]> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM coupons ORDER BY createdAt DESC').all();
+  return result.results?.map((coupon: any) => ({
+    ...coupon,
+    value: Number(coupon.value),
+    minimumAmount: coupon.minimumAmount ? Number(coupon.minimumAmount) : undefined,
+    usageLimit: coupon.usageLimit ? Number(coupon.usageLimit) : undefined,
+    usedCount: Number(coupon.usedCount || 0)
+  })) || [];
+};
+
+export const createCoupon = async (data: Omit<Coupon, 'id' | 'createdAt' | 'updatedAt'>): Promise<Coupon> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO coupons (id, code, type, value, minimumAmount, usageLimit, usedCount, startsAt, expiresAt, isActive, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, data.code, data.type, data.value, data.minimumAmount || null,
+    data.usageLimit || null, 0, data.startsAt || null, 
+    data.expiresAt || null, data.isActive !== false, now, now
+  ).run();
+  
+  return { id, ...data, usedCount: 0, isActive: data.isActive !== false, createdAt: now, updatedAt: now };
+};
+
+export const getProductReviews = async (productId: string): Promise<ProductReview[]> => {
+  const db = getDatabase();
+  const result = await db.prepare(`
+    SELECT * FROM product_reviews WHERE productId = ? AND isApproved = true ORDER BY createdAt DESC
+  `).bind(productId).all();
+  return result.results?.map((review: any) => ({
+    ...review,
+    rating: Number(review.rating),
+    helpfulVotes: Number(review.helpfulVotes || 0)
+  })) || [];
+};
+
+export const createProductReview = async (data: Omit<ProductReview, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductReview> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO product_reviews (id, productId, userId, userName, rating, title, content, isApproved, helpfulVotes, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, data.productId, data.userId, data.userName, data.rating, data.title, data.content, data.isApproved || false, 0, now, now).run();
+  
+  return { id, ...data, isApproved: data.isApproved || false, helpfulVotes: 0, createdAt: now, updatedAt: now };
+};
+
+export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolean> => {
+  const db = getDatabase();
+  try {
+    const result = await db.prepare(`
+      UPDATE product_reviews SET helpfulVotes = helpfulVotes + 1, updatedAt = ? WHERE id = ?
+    `).bind(new Date().toISOString(), reviewId).run();
+    return result.changes > 0;
+  } catch (error) {
+    console.error('Error updating review helpful votes:', error);
+    return false;
+  }
+};
+
+export const getSupportTicketById = async (id: string): Promise<SupportTicket | null> => {
+  const db = getDatabase();
+  const result = await db.prepare('SELECT * FROM support_tickets WHERE id = ?').bind(id).first();
+  return result ? result as SupportTicket : null;
+};
+
+export const updateSupportTicket = async (id: string, data: Partial<SupportTicket>): Promise<SupportTicket | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  try {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    
+    if (data.status !== undefined) { updateFields.push('status = ?'); values.push(data.status); }
+    if (data.priority !== undefined) { updateFields.push('priority = ?'); values.push(data.priority); }
+    if (data.assignedTo !== undefined) { updateFields.push('assignedTo = ?'); values.push(data.assignedTo); }
+    
+    if (updateFields.length === 0) return await getSupportTicketById(id);
+    
+    updateFields.push('updatedAt = ?');
+    values.push(now, id);
+    
+    await db.prepare(`UPDATE support_tickets SET ${updateFields.join(', ')} WHERE id = ?`).bind(...values).run();
+    return await getSupportTicketById(id);
+  } catch (error) {
+    console.error('Error updating support ticket:', error);
+    return null;
+  }
+};
+
+export const getWishlistItems = async (userId: string): Promise<WishlistItem[]> => {
+  return await getWishlist(userId);
+};
+
+// ========================================
 // UPDATE FUNCTIONS
 // ========================================
 

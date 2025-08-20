@@ -3,7 +3,7 @@ import {
   getProductReviews, 
   createProductReview 
 } from '@/libs/database-ecommerce';
-import { verifyToken } from '@/libs/database-d1';
+import { verifyToken } from '@/libs/auth';
 
 export const runtime = 'edge';
 
