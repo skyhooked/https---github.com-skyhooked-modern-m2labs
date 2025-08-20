@@ -362,8 +362,8 @@ function DistributorForm({ distributor, onSave, onCancel }: DistributorFormProps
     discountRate: 0,
     creditLimit: 0,
     currentBalance: 0,
-    status: 'active' as const,
-    tier: 'standard' as const,
+    status: 'active' as 'active' | 'inactive' | 'suspended' | 'pending',
+    tier: 'standard' as 'standard' | 'premium' | 'exclusive',
     notes: '',
     isVerified: false
   });
