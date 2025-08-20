@@ -63,6 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
+  const [lastUpdated, setLastUpdated] = useState<number>(0);
 
   // Generate or get session ID for guest users
   useEffect(() => {
@@ -76,10 +77,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  // Load cart when user or sessionId changes
+  // Load cart when user or sessionId changes (but not immediately after updates)
   useEffect(() => {
     if (user || sessionId) {
-      refreshCart();
+      const now = Date.now();
+      // Only refresh if it's been more than 1 second since last update
+      if (now - lastUpdated > 1000) {
+        refreshCart();
+      }
     }
   }, [user, sessionId]);
 
@@ -97,13 +102,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('RefreshCart response:', data);
         const cart = data.cart || emptyCart;
         // Ensure items is always an array
         if (cart && !cart.items) {
           cart.items = [];
         }
-        console.log('Setting cart state from refresh:', cart);
         setCart(cart);
       } else {
         console.error('Failed to fetch cart');
@@ -135,14 +138,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('AddToCart response:', data);
         const cart = data.cart;
         // Ensure items is always an array
         if (cart && !cart.items) {
           cart.items = [];
         }
-        console.log('Setting cart state:', cart);
         setCart(cart);
+        setLastUpdated(Date.now());
         
         // Show success feedback
         setIsCartOpen(true);
@@ -167,6 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
+        setLastUpdated(Date.now());
         await refreshCart();
       } else {
         const error = await response.json();
@@ -185,6 +188,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
+        setLastUpdated(Date.now());
         await refreshCart();
       } else {
         const error = await response.json();

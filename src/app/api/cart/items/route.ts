@@ -58,24 +58,18 @@ export async function POST(request: NextRequest) {
     // Get updated cart with items
     const updatedCart = user ? await getCartByUserId(user.id) : await getCartBySessionId(sessionId || cart.sessionId);
     
-    console.log('Updated cart from DB:', updatedCart);
-    
     // Calculate totals
     const subtotal = updatedCart?.items?.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) || 0;
     const itemCount = updatedCart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
     
-    const responseCart = {
-      ...updatedCart,
-      subtotal: subtotal / 100,
-      itemCount,
-    };
-    
-    console.log('Sending cart response:', responseCart);
-    
     return NextResponse.json({
       success: true,
       cartItem,
-      cart: responseCart
+      cart: {
+        ...updatedCart,
+        subtotal: subtotal / 100,
+        itemCount,
+      }
     });
     
   } catch (error) {
