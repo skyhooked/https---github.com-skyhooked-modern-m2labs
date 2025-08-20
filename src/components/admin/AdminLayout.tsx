@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Coupon Management', href: '/admin/coupons', icon: '🎫', disabled: true },
     { name: 'Analytics & Reports', href: '/admin/analytics', icon: '📈' },
     { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
+    { name: 'Database Migration', href: '/admin/migrate', icon: '🔄' },
   ];
 
   return (
