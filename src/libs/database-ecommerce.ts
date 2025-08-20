@@ -740,7 +740,16 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
            pv.continueSellingWhenOutOfStock as variant_continueSellingWhenOutOfStock,
            pv.requiresShipping as variant_requiresShipping, pv.taxable as variant_taxable,
            pv.createdAt as variant_createdAt, pv.updatedAt as variant_updatedAt,
-           p.name as product_name, p.slug as product_slug, p.basePrice as product_basePrice
+           p.id as product_id, p.name as product_name, p.slug as product_slug, 
+           p.brandId as product_brandId, p.sku as product_sku, p.basePrice as product_basePrice,
+           p.compareAtPrice as product_compareAtPrice, p.cost as product_cost, 
+           p.isActive as product_isActive, p.isFeatured as product_isFeatured,
+           p.description as product_description, p.shortDescription as product_shortDescription,
+           p.weight as product_weight, p.dimensions as product_dimensions,
+           p.powerRequirements as product_powerRequirements, p.compatibility as product_compatibility,
+           p.technicalSpecs as product_technicalSpecs, p.seoTitle as product_seoTitle,
+           p.seoDescription as product_seoDescription, p.metaKeywords as product_metaKeywords,
+           p.createdAt as product_createdAt, p.updatedAt as product_updatedAt
     FROM cart_items ci
     INNER JOIN product_variants pv ON ci.variantId = pv.id
     INNER JOIN products p ON pv.productId = p.id
@@ -774,10 +783,28 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
       createdAt: row.variant_createdAt,
       updatedAt: row.variant_updatedAt,
       product: {
-        id: row.productId,
+        id: row.product_id,
         name: row.product_name,
         slug: row.product_slug,
-        basePrice: row.product_basePrice
+        description: row.product_description,
+        shortDescription: row.product_shortDescription,
+        brandId: row.product_brandId,
+        sku: row.product_sku,
+        basePrice: row.product_basePrice,
+        compareAtPrice: row.product_compareAtPrice,
+        cost: row.product_cost,
+        isActive: Boolean(row.product_isActive),
+        isFeatured: Boolean(row.product_isFeatured),
+        weight: row.product_weight,
+        dimensions: row.product_dimensions ? JSON.parse(row.product_dimensions) : undefined,
+        powerRequirements: row.product_powerRequirements,
+        compatibility: row.product_compatibility,
+        technicalSpecs: row.product_technicalSpecs,
+        seoTitle: row.product_seoTitle,
+        seoDescription: row.product_seoDescription,
+        metaKeywords: row.product_metaKeywords,
+        createdAt: row.product_createdAt,
+        updatedAt: row.product_updatedAt
       }
     }
   }));
