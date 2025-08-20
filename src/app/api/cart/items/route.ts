@@ -18,6 +18,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { variantId, quantity, unitPrice, cartId, sessionId } = body;
     
+    console.log('🔍 ADD TO CART DEBUG:');
+    console.log('  - User:', user ? `${user.id} (${user.email})` : 'Guest');
+    console.log('  - SessionId:', sessionId);
+    console.log('  - VariantId:', variantId);
+    console.log('  - Quantity:', quantity);
+    
     // Validate required fields
     if (!variantId || !quantity || !unitPrice) {
       return NextResponse.json(
@@ -31,29 +37,38 @@ export async function POST(request: NextRequest) {
     // Get or create cart
     if (cartId) {
       // Try to use provided cart ID
+      console.log('  - Looking for cart by cartId:', cartId);
       cart = user ? await getCartByUserId(user.id) : await getCartBySessionId(cartId);
     } else if (user) {
+      console.log('  - Looking for cart by userId:', user.id);
       cart = await getCartByUserId(user.id);
     } else if (sessionId) {
+      console.log('  - Looking for cart by sessionId:', sessionId);
       cart = await getCartBySessionId(sessionId);
     }
     
+    console.log('  - Found existing cart:', cart ? cart.id : 'None');
+    
     if (!cart) {
       // Create new cart
+      console.log('  - Creating new cart...');
       cart = await createCart({
         userId: user?.id,
         sessionId: !user ? sessionId : undefined,
         currency: 'USD',
       });
+      console.log('  - Created cart:', cart.id);
     }
     
     // Add item to cart
+    console.log('  - Adding to cart:', { cartId: cart.id, variantId, quantity: parseInt(quantity.toString()) });
     const cartItem = await addToCart({
       cartId: cart.id,
       variantId,
       quantity: parseInt(quantity.toString()),
       unitPrice: Math.round(parseFloat(unitPrice.toString()) * 100), // Convert to cents
     });
+    console.log('  - Add result:', cartItem);
     
     // Get updated cart with items
     const updatedCart = user ? await getCartByUserId(user.id) : await getCartBySessionId(sessionId || cart.sessionId);
