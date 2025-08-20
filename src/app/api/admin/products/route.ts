@@ -47,6 +47,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize e-commerce database if needed
+    try {
+      const { initializeEcommerceDatabase } = await import('@/libs/database-ecommerce');
+      await initializeEcommerceDatabase();
+    } catch (initError) {
+      console.log('E-commerce database may already be initialized or init failed:', initError);
+    }
+
     const data = await request.json();
 
     // Validate required fields
@@ -152,8 +160,23 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating product:', error);
+    
+    // More detailed error information
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      error: error
+    });
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to create product' },
+      { 
+        success: false, 
+        error: 'Failed to create product',
+        details: errorMessage
+      },
       { status: 500 }
     );
   }
