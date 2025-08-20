@@ -177,9 +177,11 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = typeof invoice.subscription === 'string' 
-      ? invoice.subscription 
-      : invoice.subscription?.id;
+    // Type assertion to access subscription property
+    const invoiceWithSub = invoice as any;
+    const subscriptionId = typeof invoiceWithSub.subscription === 'string' 
+      ? invoiceWithSub.subscription 
+      : invoiceWithSub.subscription?.id;
     const customerId = typeof invoice.customer === 'string' 
       ? invoice.customer 
       : invoice.customer?.id;
