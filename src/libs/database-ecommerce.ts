@@ -458,21 +458,10 @@ export interface SupportMessage {
 // ========================================
 
 // Get database instance from global binding or environment
-function getDatabase(): D1Database {
-  // @ts-ignore - Cloudflare bindings are injected at runtime
-  const globalAny = globalThis as any;
-  
-  const db = globalAny.DB || 
-             globalAny.env?.DB || 
-             globalAny.__env?.DB ||
-             globalAny.ASSETS?.env?.DB ||
-             globalAny.context?.env?.DB;
-  
-  if (!db) {
-    throw new Error('D1 Database binding not found');
-  }
-  
-  return db;
+async function getDatabase(): Promise<D1Database> {
+  // Import and use the working getDatabase function from database-d1
+  const { getDatabase: getD1Database } = await import('./database-d1');
+  return getD1Database();
 }
 
 // ========================================
@@ -488,7 +477,7 @@ export const getProducts = async (params?: {
   offset?: number;
   searchTerm?: string;
 }): Promise<Product[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   let query = `
     SELECT p.*, b.name as brand_name, b.slug as brand_slug
@@ -554,7 +543,7 @@ export const getProducts = async (params?: {
 };
 
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT p.*, b.name as brand_name, b.slug as brand_slug
@@ -589,7 +578,7 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
 };
 
 export const getProductVariants = async (productId: string): Promise<ProductVariant[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT * FROM product_variants
@@ -601,7 +590,7 @@ export const getProductVariants = async (productId: string): Promise<ProductVari
 };
 
 export const getProductImages = async (productId: string): Promise<ProductImage[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT * FROM product_images
@@ -613,7 +602,7 @@ export const getProductImages = async (productId: string): Promise<ProductImage[
 };
 
 export const getProductCategories = async (productId: string): Promise<ProductCategory[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT c.* FROM product_categories c
@@ -626,7 +615,7 @@ export const getProductCategories = async (productId: string): Promise<ProductCa
 };
 
 export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -662,7 +651,7 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
 // ========================================
 
 export const getCartByUserId = async (userId: string): Promise<ShoppingCart | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const cart = await db.prepare(`
     SELECT * FROM shopping_carts
@@ -682,7 +671,7 @@ export const getCartByUserId = async (userId: string): Promise<ShoppingCart | nu
 };
 
 export const getCartBySessionId = async (sessionId: string): Promise<ShoppingCart | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const cart = await db.prepare(`
     SELECT * FROM shopping_carts
@@ -706,7 +695,7 @@ export const createCart = async (data: {
   sessionId?: string;
   currency?: string;
 }): Promise<ShoppingCart> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -729,7 +718,7 @@ export const createCart = async (data: {
 };
 
 export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT ci.*, 
@@ -816,7 +805,7 @@ export const addToCart = async (data: {
   quantity: number;
   unitPrice: number;
 }): Promise<CartItem> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   // Check if item already exists in cart
@@ -861,7 +850,7 @@ export const addToCart = async (data: {
 };
 
 export const updateCartItem = async (itemId: string, quantity: number): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   if (quantity <= 0) {
@@ -876,14 +865,14 @@ export const updateCartItem = async (itemId: string, quantity: number): Promise<
 };
 
 export const removeFromCart = async (itemId: string): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   await db.prepare('DELETE FROM cart_items WHERE id = ?').bind(itemId).run();
   return true;
 };
 
 export const clearCart = async (cartId: string): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   await db.prepare('DELETE FROM cart_items WHERE cartId = ?').bind(cartId).run();
   return true;
@@ -894,7 +883,7 @@ export const clearCart = async (cartId: string): Promise<boolean> => {
 // ========================================
 
 export const createOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 'createdAt' | 'updatedAt'>): Promise<Order> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -930,7 +919,7 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 
 };
 
 export const createOrderItem = async (data: Omit<OrderItem, 'id' | 'createdAt'>): Promise<OrderItem> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -952,7 +941,7 @@ export const createOrderItem = async (data: Omit<OrderItem, 'id' | 'createdAt'>)
 };
 
 export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT * FROM orders_new WHERE userId = ? ORDER BY createdAt DESC
@@ -970,7 +959,7 @@ export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
 // ========================================
 
 export const createSupportTicket = async (data: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt'>): Promise<SupportTicket> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -1000,7 +989,7 @@ export const createSupportTicket = async (data: Omit<SupportTicket, 'id' | 'tick
 };
 
 export const createSupportMessage = async (data: Omit<SupportMessage, 'id' | 'createdAt'>): Promise<SupportMessage> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   const id = generateId();
   
@@ -1027,7 +1016,7 @@ export const getSupportTickets = async (params?: {
   status?: string;
   category?: string;
 }): Promise<SupportTicket[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   let query = 'SELECT * FROM support_tickets';
   const conditions: string[] = [];
@@ -1068,7 +1057,7 @@ export const getAllOrders = async (params?: {
   limit?: number;
   offset?: number;
 }): Promise<Order[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   let query = 'SELECT * FROM orders_new';
   const conditions: string[] = [];
@@ -1110,7 +1099,7 @@ export const getAllOrders = async (params?: {
 };
 
 export const getOrderById = async (id: string): Promise<Order | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT * FROM orders_new 
@@ -1148,7 +1137,7 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 // ========================================
 
 export const addToWishlist = async (userId: string, productId: string): Promise<WishlistItem> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   // Find or create default wishlist for user
@@ -1181,7 +1170,7 @@ export const addToWishlist = async (userId: string, productId: string): Promise<
 };
 
 export const removeFromWishlist = async (userId: string, productId: string): Promise<void> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   await db.prepare(`
     DELETE FROM wishlist_items 
@@ -1192,7 +1181,7 @@ export const removeFromWishlist = async (userId: string, productId: string): Pro
 };
 
 export const clearWishlist = async (userId: string): Promise<void> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   await db.prepare(`
     DELETE FROM wishlist_items 
@@ -1203,7 +1192,7 @@ export const clearWishlist = async (userId: string): Promise<void> => {
 };
 
 export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT wi.*, p.name as productName, p.basePrice, p.slug
@@ -1256,7 +1245,7 @@ export const getAllProducts = async (params?: {
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const result = await db.prepare(`
     SELECT p.*, 
@@ -1298,7 +1287,7 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   try {
     const result = await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
     return result.meta?.changes > 0;
@@ -1309,7 +1298,7 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
 };
 
 export const createProductVariant = async (data: Omit<ProductVariant, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariant> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1336,7 +1325,7 @@ export const createProductVariant = async (data: Omit<ProductVariant, 'id' | 'cr
 };
 
 export const createProductImage = async (data: Omit<ProductImage, 'id' | 'createdAt'>): Promise<ProductImage> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1356,7 +1345,7 @@ export const createProductImage = async (data: Omit<ProductImage, 'id' | 'create
 };
 
 export const updateInventory = async (variantId: string, quantity: number, locationId?: string): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   try {
     // Get default location if none specified
     if (!locationId) {
@@ -1387,13 +1376,13 @@ export const updateInventory = async (variantId: string, quantity: number, locat
 };
 
 export const getAllBrands = async (): Promise<Brand[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const result = await db.prepare('SELECT * FROM brands ORDER BY name ASC').all();
   return result.results || [];
 };
 
 export const createBrand = async (data: Omit<Brand, 'id' | 'createdAt' | 'updatedAt'>): Promise<Brand> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1409,13 +1398,13 @@ export const createBrand = async (data: Omit<Brand, 'id' | 'createdAt' | 'update
 };
 
 export const getAllCategories = async (): Promise<ProductCategory[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const result = await db.prepare('SELECT * FROM product_categories ORDER BY sortOrder ASC, name ASC').all();
   return result.results || [];
 };
 
 export const createCategory = async (data: Omit<ProductCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductCategory> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1441,7 +1430,7 @@ export const getAllCoupons = async (params?: {
   limit?: number;
   offset?: number;
 }): Promise<Coupon[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   let query = 'SELECT * FROM coupons';
   const conditions: string[] = [];
@@ -1481,7 +1470,7 @@ export const getAllCoupons = async (params?: {
 };
 
 export const createCoupon = async (data: Omit<Coupon, 'id' | 'usageCount' | 'createdAt' | 'updatedAt'>): Promise<Coupon> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1518,7 +1507,7 @@ export const getProductReviews = async (
     userId?: string;
   }
 ): Promise<ProductReview[]> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   let query = `
     SELECT * FROM product_reviews 
@@ -1557,7 +1546,7 @@ export const getProductReviews = async (
 };
 
 export const createProductReview = async (data: Omit<ProductReview, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductReview> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
@@ -1570,7 +1559,7 @@ export const createProductReview = async (data: Omit<ProductReview, 'id' | 'crea
 };
 
 export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolean> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   try {
     const result = await db.prepare(`
       UPDATE product_reviews SET helpfulVotes = helpfulVotes + 1, updatedAt = ? WHERE id = ?
@@ -1583,13 +1572,13 @@ export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolea
 };
 
 export const getSupportTicketById = async (id: string): Promise<SupportTicket | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const result = await db.prepare('SELECT * FROM support_tickets WHERE id = ?').bind(id).first();
   return result ? result as SupportTicket : null;
 };
 
 export const updateSupportTicket = async (id: string, data: Partial<SupportTicket>): Promise<SupportTicket | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   try {
@@ -1622,7 +1611,7 @@ export const getWishlistItems = async (userId: string): Promise<WishlistItem[]> 
 // ========================================
 
 export const updateProduct = async (id: string, data: Partial<Product>): Promise<Product | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   try {
@@ -1666,7 +1655,7 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
 };
 
 export const updateOrder = async (id: string, data: Partial<Order>): Promise<Order | null> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   const now = new Date().toISOString();
   
   try {
@@ -1719,7 +1708,7 @@ export const updateOrder = async (id: string, data: Partial<Order>): Promise<Ord
 // ========================================
 
 export const initializeEcommerceDatabase = async (): Promise<void> => {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   try {
     // Execute the e-commerce schema first
