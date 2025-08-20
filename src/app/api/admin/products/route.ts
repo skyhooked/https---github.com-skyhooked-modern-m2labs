@@ -47,12 +47,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Initialize e-commerce database if needed
-    try {
-      const { initializeEcommerceDatabase } = await import('@/libs/database-ecommerce');
-      await initializeEcommerceDatabase();
-    } catch (initError) {
-      console.log('E-commerce database may already be initialized or init failed:', initError);
+    // Ensure default brand exists
+    const { getDatabase } = await import('@/libs/database-d1');
+    const db = await getDatabase();
+    
+    const brandExists = await db.prepare('SELECT COUNT(*) as count FROM brands WHERE id = ?').bind('brand-m2labs').first();
+    if (brandExists && brandExists.count === 0) {
+      await db.prepare(`
+        INSERT INTO brands (id, name, slug, description, isActive, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        'brand-m2labs',
+        'M2 Labs',
+        'm2-labs',
+        'Premium guitar effects pedals with transferable lifetime warranty',
+        true,
+        new Date().toISOString(),
+        new Date().toISOString()
+      ).run();
     }
 
     const data = await request.json();
