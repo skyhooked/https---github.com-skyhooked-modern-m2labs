@@ -27,7 +27,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message,
+      data: message,
       message: 'Message sent successfully'
     });
   } catch (error) {
