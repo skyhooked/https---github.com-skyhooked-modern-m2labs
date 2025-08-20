@@ -14,14 +14,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: '📊' },
-    { name: 'User Management', href: '/admin/users', icon: '👥', disabled: false },
-    { name: 'Warranty Claims', href: '/admin/warranty', icon: '🛡️', disabled: false },
+    { name: 'User Management', href: '/admin/users', icon: '👥' },
+    { name: 'Warranty Claims', href: '/admin/warranty', icon: '🛡️' },
     { name: 'News Management', href: '/admin/news', icon: '📰' },
-    { name: 'Product Management', href: '/admin/products', icon: '🎸', disabled: false },
-    { name: 'Newsletter', href: '/admin/newsletter', icon: '📧', disabled: false },
-    { name: 'Artist Management', href: '/admin/artists', icon: '🎤', disabled: false },
-    { name: 'Analytics', href: '/admin/analytics', icon: '📈', disabled: false },
-    { name: 'Settings', href: '/admin/settings', icon: '⚙️', disabled: true },
+    { name: 'Artist Management', href: '/admin/artists', icon: '🎤' },
+    { name: 'Product Management', href: '/admin/products', icon: '🎸' },
+    { name: 'Newsletter', href: '/admin/newsletter', icon: '📧' },
+    { name: 'Order Management', href: '/admin/orders', icon: '📦', disabled: true },
+    { name: 'Support Management', href: '/admin/support', icon: '💬', disabled: true },
+    { name: 'Coupon Management', href: '/admin/coupons', icon: '🎫', disabled: true },
+    { name: 'Analytics & Reports', href: '/admin/analytics', icon: '📈' },
+    { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
   ];
 
   return (
@@ -114,12 +117,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <h2 className="text-lg font-semibold text-gray-900">
                 {pathname === '/admin' && 'Dashboard'}
-                {pathname === '/admin/news' && 'News Management'}
-                {pathname.includes('/admin/news/') && 'Edit News Post'}
-                {pathname === '/admin/newsletter' && 'Newsletter Management'}
                 {pathname === '/admin/users' && 'User Management'}
                 {pathname === '/admin/warranty' && 'Warranty Claims'}
+                {pathname === '/admin/news' && 'News Management'}
+                {pathname.includes('/admin/news/') && 'Edit News Post'}
                 {pathname === '/admin/artists' && 'Artist Management'}
+                {pathname === '/admin/products' && 'Product Management'}
+                {pathname === '/admin/newsletter' && 'Newsletter Management'}
+                {pathname === '/admin/orders' && 'Order Management'}
+                {pathname === '/admin/support' && 'Support Management'}
+                {pathname === '/admin/coupons' && 'Coupon Management'}
+                {pathname === '/admin/analytics' && 'Analytics & Reports'}
+                {pathname === '/admin/settings' && 'Settings'}
               </h2>
             </div>
             <div className="ml-auto flex items-center gap-x-4 lg:gap-x-6">

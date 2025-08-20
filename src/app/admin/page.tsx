@@ -120,6 +120,7 @@ export default function AdminDashboard() {
       description: 'Process and track customer orders',
       icon: '📦',
       href: '/admin/orders',
+      disabled: true,
       stats: [
         { label: 'Total Orders', value: '0' },
         { label: 'Pending', value: '0' },
@@ -130,6 +131,7 @@ export default function AdminDashboard() {
       description: 'Manage customer support tickets and inquiries',
       icon: '💬',
       href: '/admin/support',
+      disabled: true,
       stats: [
         { label: 'Open Tickets', value: '0' },
         { label: 'Resolved', value: '0' },
@@ -140,9 +142,20 @@ export default function AdminDashboard() {
       description: 'Create and manage discount codes',
       icon: '🎫',
       href: '/admin/coupons',
+      disabled: true,
       stats: [
         { label: 'Active Coupons', value: '0' },
         { label: 'Total Uses', value: '0' },
+      ],
+    },
+    {
+      title: 'Admin Settings',
+      description: 'Configure site settings and preferences',
+      icon: '⚙️',
+      href: '/admin/settings',
+      stats: [
+        { label: 'Site Config', value: 'Active' },
+        { label: 'Security', value: 'Enabled' },
       ],
     },
     {
@@ -200,33 +213,87 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">Authentication system deployed with Ecwid SSO</span>
+        {/* Recent Activity & System Status */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activity */}
+          <div className="bg-white rounded-lg border p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Enhanced product fields added for JHS-style layout</span>
+                </div>
+                <span className="text-xs text-gray-500">Just now</span>
               </div>
-              <span className="text-xs text-gray-500">Just now</span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">User management and warranty system activated</span>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-[#FF8A3D] rounded-full"></div>
+                  <span className="text-sm text-gray-700">Admin settings module implemented</span>
+                </div>
+                <span className="text-xs text-gray-500">Just now</span>
               </div>
-              <span className="text-xs text-gray-500">Just now</span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">News post "The Bomber Has Landed" published</span>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">E-commerce system with cart functionality deployed</span>
+                </div>
+                <span className="text-xs text-gray-500">Today</span>
               </div>
-              <span className="text-xs text-gray-500">2 days ago</span>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">News post "The Bomber Has Landed" published</span>
+                </div>
+                <span className="text-xs text-gray-500">2 days ago</span>
+              </div>
             </div>
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-500">Ready for customer registrations and orders!</p>
+          </div>
+
+          {/* System Status */}
+          <div className="bg-white rounded-lg border p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Database</span>
+                </div>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Operational</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Authentication</span>
+                </div>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Active</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">E-commerce</span>
+                </div>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Online</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Payment Processing</span>
+                </div>
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Setup Required</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Email System</span>
+                </div>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Configured</span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500 text-center">
+                🚀 System ready for production use
+              </p>
             </div>
           </div>
         </div>
