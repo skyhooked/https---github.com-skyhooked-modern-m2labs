@@ -2386,7 +2386,7 @@ export const getAllDistributors = async (params?: {
   query += ' ORDER BY companyName ASC';
   
   const result = await db.prepare(query).bind(...bindings).all();
-  return result.results.map((row: any) => ({
+  return (result.results || []).map((row: any) => ({
     ...row,
     discountRate: parseFloat(row.discountRate) || 0,
     creditLimit: parseFloat(row.creditLimit) || 0,
@@ -2546,7 +2546,7 @@ export const getInventoryRequests = async (params?: {
   query += ' ORDER BY requestedDate DESC';
   
   const result = await db.prepare(query).bind(...bindings).all();
-  return result.results.map((row: any) => ({
+  return (result.results || []).map((row: any) => ({
     ...row,
     requestedQuantity: parseInt(row.requestedQuantity) || 0,
     approvedQuantity: parseInt(row.approvedQuantity) || 0,
@@ -2668,5 +2668,5 @@ export const getDistributorInquiries = async (params?: {
   query += ' ORDER BY createdAt DESC';
   
   const result = await db.prepare(query).bind(...bindings).all();
-  return result.results;
+  return result.results || [];
 };
