@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching inventory requests:', error);
     
-    if (error.message.includes('No authentication token') || error.message.includes('Invalid token')) {
+    if (error instanceof Error && (error.message.includes('No authentication token') || error.message.includes('Invalid token'))) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating inventory request:', error);
     
-    if (error.message.includes('No authentication token') || error.message.includes('Invalid token')) {
+    if (error instanceof Error && (error.message.includes('No authentication token') || error.message.includes('Invalid token'))) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
