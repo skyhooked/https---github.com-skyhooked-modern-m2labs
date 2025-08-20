@@ -80,6 +80,8 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFileName, setImageFileName] = useState('');
 
   useEffect(() => {
     fetchBrands();
@@ -181,6 +183,75 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
   const removeVariant = (index: number) => {
     const updatedVariants = formData.variants?.filter((_, i) => i !== index) || [];
     setFormData(prev => ({ ...prev, variants: updatedVariants }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) {
+      alert('Upload failed: Invalid file type. Only JPEG, PNG, WebP, and SVG are allowed.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setImageFileName(file.name);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+      
+      // Add the uploaded image to the product images
+      const newImage: ProductImage = {
+        url: result.path,
+        altText: formData.name || 'Product image',
+        isMainImage: (formData.images?.length || 0) === 0, // First image is main
+        position: (formData.images?.length || 0)
+      };
+      
+      setFormData(prev => ({
+        ...prev,
+        images: [...(prev.images || []), newImage]
+      }));
+      
+      setImageFileName(`✅ ${file.name} (uploaded)`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'Upload failed');
+      setImageFileName('');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedImages = formData.images?.filter((_, i) => i !== index) || [];
+    // If we removed the main image, make the first remaining image the main one
+    if (updatedImages.length > 0 && !updatedImages.some(img => img.isMainImage)) {
+      updatedImages[0].isMainImage = true;
+    }
+    setFormData(prev => ({ ...prev, images: updatedImages }));
+  };
+
+  const setMainImage = (index: number) => {
+    const updatedImages = formData.images?.map((img, i) => ({
+      ...img,
+      isMainImage: i === index
+    })) || [];
+    setFormData(prev => ({ ...prev, images: updatedImages }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -405,6 +476,84 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
               placeholder="Detailed product description with features and specifications"
             />
           </div>
+        </div>
+
+        {/* Product Images */}
+        <div className="bg-white rounded-lg border shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Product Images</h2>
+          
+          {/* Upload Section */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              onChange={handleImageUpload}
+              disabled={uploadingImage}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#FF8A3D] file:text-black hover:file:bg-[#FF8A3D]/80"
+            />
+            {imageFileName && (
+              <p className="mt-1 text-xs text-black">Selected: {imageFileName}</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500">
+              JPEG, PNG, WebP, or SVG. First image will be the main product image.
+            </p>
+          </div>
+
+          {/* Images Grid */}
+          {formData.images && formData.images.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {formData.images.map((image, index) => (
+                <div key={index} className="relative border border-gray-200 rounded-lg p-2">
+                  <img
+                    src={image.url}
+                    alt={image.altText || 'Product image'}
+                    className="w-full h-32 object-cover rounded"
+                  />
+                  
+                  {/* Image Controls */}
+                  <div className="absolute top-1 right-1 flex gap-1">
+                    {!image.isMainImage && (
+                      <button
+                        type="button"
+                        onClick={() => setMainImage(index)}
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+                        title="Set as main image"
+                      >
+                        Main
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                      title="Remove image"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  {/* Main Image Badge */}
+                  {image.isMainImage && (
+                    <div className="absolute top-1 left-1 bg-green-600 text-white px-2 py-1 rounded text-xs">
+                      Main
+                    </div>
+                  )}
+                  
+                  {/* Image Info */}
+                  <div className="mt-2 text-xs text-gray-600">
+                    Position: {image.position + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {(!formData.images || formData.images.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              No images uploaded yet. Add some product images to showcase your product.
+            </div>
+          )}
         </div>
 
         {/* Product Variants */}
