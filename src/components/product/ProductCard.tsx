@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/components/cart/CartProvider';
+import { useWishlist } from '@/components/wishlist/WishlistProvider';
 
 interface Product {
   id: string;
@@ -40,7 +41,9 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, layout = 'grid' }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [wishlistLoading, setWishlistLoading] = React.useState(false);
 
   const mainImage = product.images?.find(img => img.isMainImage) || product.images?.[0];
   const price = product.defaultVariant?.price || product.basePrice;
@@ -75,6 +78,25 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
       // You could show a toast notification here
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setWishlistLoading(true);
+    try {
+      const inWishlist = isInWishlist(product.id, product.defaultVariant?.id);
+      if (inWishlist) {
+        await removeFromWishlist(product.id, product.defaultVariant?.id);
+      } else {
+        await addToWishlist(product.id, product.defaultVariant?.id);
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -180,6 +202,23 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
               </span>
             </div>
           )}
+          
+          {/* Wishlist Button */}
+          <div className="absolute top-3 right-3">
+            <button
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              className={`p-2 rounded-full transition-colors ${
+                isInWishlist(product.id, product.defaultVariant?.id)
+                  ? 'bg-[#FF8A3D] text-black'
+                  : 'bg-white/80 text-gray-600 hover:bg-white hover:text-[#FF8A3D]'
+              } disabled:opacity-50`}
+            >
+              <svg className="w-5 h-5" fill={isInWishlist(product.id, product.defaultVariant?.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+          </div>
           
           {/* Sale Badge */}
           {comparePrice && comparePrice > price && (

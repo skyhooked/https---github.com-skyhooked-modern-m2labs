@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/components/cart/CartProvider';
+import { WishlistProvider } from '@/components/wishlist/WishlistProvider';
 
 export const runtime = 'edge';
 
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body className="font-sans bg-background text-primary leading-relaxed antialiased">
         <AuthProvider>
           <CartProvider>
-            {children}
+            <WishlistProvider>
+              {children}
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

@@ -99,10 +99,10 @@ export default function AdminDashboard() {
       title: 'Product Management',
       description: 'Manage pedals, inventory, and product details',
       icon: '🎸',
-      disabled: true,
+      href: '/admin/products',
       stats: [
-        { label: 'Products', value: '-' },
-        { label: 'In Stock', value: '-' },
+        { label: 'Products', value: '0' },
+        { label: 'In Stock', value: '0' },
       ],
     },
     {
@@ -113,6 +113,26 @@ export default function AdminDashboard() {
       stats: [
         { label: 'Subscribers', value: '0' },
         { label: 'Campaigns', value: '0' },
+      ],
+    },
+    {
+      title: 'Order Management',
+      description: 'Process and track customer orders',
+      icon: '📦',
+      href: '/admin/orders',
+      stats: [
+        { label: 'Total Orders', value: '0' },
+        { label: 'Pending', value: '0' },
+      ],
+    },
+    {
+      title: 'Support Management',
+      description: 'Manage customer support tickets and inquiries',
+      icon: '💬',
+      href: '/admin/support',
+      stats: [
+        { label: 'Open Tickets', value: '0' },
+        { label: 'Resolved', value: '0' },
       ],
     },
     {
