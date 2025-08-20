@@ -37,7 +37,7 @@ interface D1ExecResult {
 }
 
 // Get D1 database from environment bindings
-function getDatabase(): D1Database {
+export function getDatabase(): D1Database {
   // @ts-ignore - Cloudflare bindings are injected at runtime
   const globalAny = globalThis as any;
   
