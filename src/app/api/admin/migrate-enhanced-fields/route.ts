@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
           results.push({ migration, status: 'already_exists' });
           console.log(`ℹ️ Column already exists: ${migration}`);
         } else {
-          results.push({ migration, status: 'error', error: error.message });
+          results.push({ migration, status: 'error', error: error instanceof Error ? error.message : 'Unknown error' });
           console.error(`❌ Migration failed: ${migration}`, error);
         }
       }
