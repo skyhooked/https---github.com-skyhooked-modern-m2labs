@@ -21,15 +21,16 @@ interface Product {
   isFeatured: boolean;
   isActive: boolean;
   weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-    unit: string;
-  };
+  dimensions?: string; // Keep as string for form compatibility
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
+  // Enhanced fields inspired by JHS Pedals
+  youtubeVideoId?: string;
+  features?: string[];
+  toggleOptions?: Record<string, string>;
+  powerConsumption?: string;
+  relatedProducts?: string[];
   seoTitle?: string;
   seoDescription?: string;
   metaKeywords?: string;

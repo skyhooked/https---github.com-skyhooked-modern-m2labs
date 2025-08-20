@@ -53,12 +53,7 @@ export interface Product {
   isActive: boolean;
   isFeatured: boolean;
   weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-    unit: string;
-  };
+  dimensions?: string; // String format like "2.6\" x 4.8\" x 1.6\""
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
@@ -661,7 +656,7 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
     product.id, product.name, product.slug, product.description, product.shortDescription,
     product.brandId, product.sku, product.basePrice, product.compareAtPrice, product.cost,
     product.isActive, product.isFeatured, product.weight,
-    product.dimensions ? JSON.stringify(product.dimensions) : null,
+    product.dimensions,
     product.powerRequirements, product.compatibility,
     product.technicalSpecs ? JSON.stringify(product.technicalSpecs) : null,
     product.seoTitle, product.seoDescription, product.metaKeywords,
@@ -1681,6 +1676,7 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
     if (data.isActive !== undefined) { updateFields.push('isActive = ?'); values.push(data.isActive); }
     if (data.isFeatured !== undefined) { updateFields.push('isFeatured = ?'); values.push(data.isFeatured); }
     if (data.weight !== undefined) { updateFields.push('weight = ?'); values.push(data.weight); }
+    if (data.dimensions !== undefined) { updateFields.push('dimensions = ?'); values.push(data.dimensions); }
     if (data.powerRequirements !== undefined) { updateFields.push('powerRequirements = ?'); values.push(data.powerRequirements); }
     if (data.compatibility !== undefined) { updateFields.push('compatibility = ?'); values.push(data.compatibility); }
     if (data.technicalSpecs !== undefined) { updateFields.push('technicalSpecs = ?'); values.push(JSON.stringify(data.technicalSpecs)); }
