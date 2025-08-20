@@ -1972,6 +1972,15 @@ export const initializeEcommerceDatabase = async (): Promise<void> => {
         updatedAt TEXT NOT NULL
       );
 
+      -- Product category relations (many-to-many)
+      CREATE TABLE IF NOT EXISTS product_category_relations (
+        productId TEXT NOT NULL,
+        categoryId TEXT NOT NULL,
+        PRIMARY KEY (productId, categoryId),
+        FOREIGN KEY (productId) REFERENCES products (id) ON DELETE CASCADE,
+        FOREIGN KEY (categoryId) REFERENCES product_categories (id) ON DELETE CASCADE
+      );
+
       -- Wishlists
       CREATE TABLE IF NOT EXISTS wishlists (
         id TEXT PRIMARY KEY,
@@ -1990,6 +1999,8 @@ export const initializeEcommerceDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_products_slug ON products (slug);
       CREATE INDEX IF NOT EXISTS idx_product_variants_productId ON product_variants (productId);
       CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON product_variants (sku);
+      CREATE INDEX IF NOT EXISTS idx_product_category_relations_productId ON product_category_relations (productId);
+      CREATE INDEX IF NOT EXISTS idx_product_category_relations_categoryId ON product_category_relations (categoryId);
       CREATE INDEX IF NOT EXISTS idx_shopping_carts_userId ON shopping_carts (userId);
       CREATE INDEX IF NOT EXISTS idx_shopping_carts_sessionId ON shopping_carts (sessionId);
       CREATE INDEX IF NOT EXISTS idx_cart_items_cartId ON cart_items (cartId);
