@@ -17,10 +17,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'User Management', href: '/admin/users', icon: '👥', disabled: false },
     { name: 'Warranty Claims', href: '/admin/warranty', icon: '🛡️', disabled: false },
     { name: 'News Management', href: '/admin/news', icon: '📰' },
-    { name: 'Product Management', href: '/admin/products', icon: '🎸', disabled: true },
+    { name: 'Product Management', href: '/admin/products', icon: '🎸', disabled: false },
     { name: 'Newsletter', href: '/admin/newsletter', icon: '📧', disabled: false },
     { name: 'Artist Management', href: '/admin/artists', icon: '🎤', disabled: false },
-    { name: 'Analytics', href: '/admin/analytics', icon: '📈', disabled: true },
+    { name: 'Analytics', href: '/admin/analytics', icon: '📈', disabled: false },
     { name: 'Settings', href: '/admin/settings', icon: '⚙️', disabled: true },
   ];
 
