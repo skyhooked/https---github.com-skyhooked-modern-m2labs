@@ -6,9 +6,9 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const category = searchParams.get('category');
-    const userId = searchParams.get('userId');
+    const status = searchParams.get('status') || undefined;
+    const category = searchParams.get('category') || undefined;
+    const userId = searchParams.get('userId') || undefined;
 
     const tickets = await getSupportTickets({
       status,
