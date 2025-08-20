@@ -91,12 +91,20 @@ export async function POST(request: NextRequest) {
             name: variantData.name,
             sku: variantData.sku,
             price: variantData.price ? Math.round(variantData.price) : undefined,
-            isDefault: variantData.isDefault || false
+            compareAtPrice: variantData.compareAtPrice ? Math.round(variantData.compareAtPrice) : undefined,
+            cost: variantData.cost ? Math.round(variantData.cost) : undefined,
+            position: variantData.position || 0,
+            isDefault: variantData.isDefault || false,
+            barcode: variantData.barcode,
+            trackInventory: variantData.trackInventory !== false,
+            continueSellingWhenOutOfStock: variantData.continueSellingWhenOutOfStock || false,
+            requiresShipping: variantData.requiresShipping !== false,
+            taxable: variantData.taxable !== false
           });
 
           // Set initial inventory
           if (variantData.inventory?.quantity > 0) {
-            await updateInventory(variant.id, variantData.inventory.quantity);
+            await updateInventory(product.id, variant.id, variantData.inventory.quantity);
           }
         }
       }
@@ -106,11 +114,20 @@ export async function POST(request: NextRequest) {
         productId: product.id,
         name: 'Standard',
         sku: `${data.slug.toUpperCase()}-STD`,
-        isDefault: true
+        price: undefined,
+        compareAtPrice: undefined,
+        cost: undefined,
+        position: 0,
+        isDefault: true,
+        barcode: undefined,
+        trackInventory: true,
+        continueSellingWhenOutOfStock: false,
+        requiresShipping: true,
+        taxable: true
       });
 
       // Set initial inventory to 0
-      await updateInventory(defaultVariant.id, 0);
+      await updateInventory(product.id, defaultVariant.id, 0);
     }
 
     // Create product images (if provided)
