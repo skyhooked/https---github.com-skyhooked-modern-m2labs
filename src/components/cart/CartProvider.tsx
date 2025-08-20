@@ -97,11 +97,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('RefreshCart response:', data);
         const cart = data.cart || emptyCart;
         // Ensure items is always an array
         if (cart && !cart.items) {
           cart.items = [];
         }
+        console.log('Setting cart state from refresh:', cart);
         setCart(cart);
       } else {
         console.error('Failed to fetch cart');
@@ -133,11 +135,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('AddToCart response:', data);
         const cart = data.cart;
         // Ensure items is always an array
         if (cart && !cart.items) {
           cart.items = [];
         }
+        console.log('Setting cart state:', cart);
         setCart(cart);
         
         // Show success feedback
