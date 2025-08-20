@@ -90,6 +90,16 @@ export default function AdminDashboard() {
       ],
     },
     {
+      title: 'Distributor Management',
+      description: 'Manage distributor accounts, territories, and business relationships',
+      icon: '🏢',
+      href: '/admin/distributors',
+      stats: [
+        { label: 'Total Distributors', value: loading ? '...' : (stats?.distributors?.totalDistributors || '0') },
+        { label: 'Active', value: loading ? '...' : (stats?.distributors?.activeDistributors || '0') },
+      ],
+    },
+    {
       title: 'Warranty Claims',
       description: 'Process and manage warranty claim requests',
       icon: '🛡️',

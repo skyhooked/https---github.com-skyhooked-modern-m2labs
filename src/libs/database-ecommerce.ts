@@ -2137,9 +2137,536 @@ export const initializeEcommerceDatabase = async (): Promise<void> => {
       ).run();
     }
     
+    // Initialize distributor tables
+    await initializeDistributorTables(db);
+    
     console.log('E-commerce database initialized successfully');
   } catch (error) {
     console.error('Failed to initialize e-commerce database:', error);
     throw error;
   }
+};
+
+// Initialize distributor-specific tables
+const initializeDistributorTables = async (db: any) => {
+  // Distributors table
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS distributors (
+      id TEXT PRIMARY KEY,
+      companyName TEXT NOT NULL,
+      contactName TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      address TEXT,
+      city TEXT,
+      state TEXT,
+      postalCode TEXT,
+      country TEXT DEFAULT 'US',
+      username TEXT UNIQUE NOT NULL,
+      passwordHash TEXT NOT NULL,
+      territory TEXT,
+      discountRate REAL DEFAULT 0.0,
+      creditLimit REAL DEFAULT 0.0,
+      currentBalance REAL DEFAULT 0.0,
+      status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended', 'pending')),
+      tier TEXT DEFAULT 'standard' CHECK (tier IN ('standard', 'premium', 'exclusive')),
+      notes TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      lastLoginAt TEXT,
+      createdBy TEXT,
+      isVerified BOOLEAN DEFAULT FALSE
+    )
+  `).run();
+
+  // Distributor inventory requests
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS distributor_inventory_requests (
+      id TEXT PRIMARY KEY,
+      distributorId TEXT NOT NULL,
+      productId TEXT NOT NULL,
+      variantId TEXT,
+      requestedQuantity INTEGER NOT NULL,
+      approvedQuantity INTEGER DEFAULT 0,
+      unitPrice REAL,
+      totalAmount REAL,
+      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'fulfilled', 'cancelled')),
+      priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+      requestNotes TEXT,
+      adminNotes TEXT,
+      requestedDate TEXT DEFAULT CURRENT_TIMESTAMP,
+      approvedDate TEXT,
+      fulfilledDate TEXT,
+      approvedBy TEXT,
+      rejectionReason TEXT,
+      FOREIGN KEY (distributorId) REFERENCES distributors(id),
+      FOREIGN KEY (productId) REFERENCES products(id)
+    )
+  `).run();
+
+  // Distributor inquiries
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS distributor_inquiries (
+      id TEXT PRIMARY KEY,
+      distributorId TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      category TEXT DEFAULT 'general' CHECK (category IN ('general', 'inventory', 'pricing', 'shipping', 'technical', 'billing', 'returns')),
+      priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+      status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'waiting_for_distributor', 'resolved', 'closed')),
+      message TEXT NOT NULL,
+      distributorResponse TEXT,
+      adminResponse TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      resolvedAt TEXT,
+      resolvedBy TEXT,
+      FOREIGN KEY (distributorId) REFERENCES distributors(id)
+    )
+  `).run();
+
+  // Create indexes
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributors_email ON distributors(email)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributors_username ON distributors(username)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributors_status ON distributors(status)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributor_requests_distributor ON distributor_inventory_requests(distributorId)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributor_requests_status ON distributor_inventory_requests(status)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributor_inquiries_distributor ON distributor_inquiries(distributorId)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_distributor_inquiries_status ON distributor_inquiries(status)').run();
+};
+
+// =============================================================================
+// DISTRIBUTOR INTERFACES
+// =============================================================================
+
+export interface Distributor {
+  id: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  username: string;
+  territory?: string;
+  discountRate: number;
+  creditLimit: number;
+  currentBalance: number;
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
+  tier: 'standard' | 'premium' | 'exclusive';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+  createdBy?: string;
+  isVerified: boolean;
+}
+
+export interface DistributorInventoryRequest {
+  id: string;
+  distributorId: string;
+  productId: string;
+  variantId?: string;
+  requestedQuantity: number;
+  approvedQuantity: number;
+  unitPrice?: number;
+  totalAmount?: number;
+  status: 'pending' | 'approved' | 'rejected' | 'fulfilled' | 'cancelled';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  requestNotes?: string;
+  adminNotes?: string;
+  requestedDate: string;
+  approvedDate?: string;
+  fulfilledDate?: string;
+  approvedBy?: string;
+  rejectionReason?: string;
+}
+
+export interface DistributorInquiry {
+  id: string;
+  distributorId: string;
+  subject: string;
+  category: 'general' | 'inventory' | 'pricing' | 'shipping' | 'technical' | 'billing' | 'returns';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'waiting_for_distributor' | 'resolved' | 'closed';
+  message: string;
+  distributorResponse?: string;
+  adminResponse?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
+// =============================================================================
+// DISTRIBUTOR FUNCTIONS
+// =============================================================================
+
+// Create a new distributor
+export const createDistributor = async (distributorData: Omit<Distributor, 'id' | 'createdAt' | 'updatedAt'> & { passwordHash: string }): Promise<Distributor> => {
+  const db = await getDatabase();
+  
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  
+  const result = await db.prepare(`
+    INSERT INTO distributors (
+      id, companyName, contactName, email, phone, address, city, state, 
+      postalCode, country, username, passwordHash, territory, discountRate, 
+      creditLimit, currentBalance, status, tier, notes, createdAt, updatedAt, 
+      lastLoginAt, createdBy, isVerified
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    distributorData.companyName,
+    distributorData.contactName,
+    distributorData.email,
+    distributorData.phone || null,
+    distributorData.address || null,
+    distributorData.city || null,
+    distributorData.state || null,
+    distributorData.postalCode || null,
+    distributorData.country || 'US',
+    distributorData.username,
+    distributorData.passwordHash,
+    distributorData.territory || null,
+    distributorData.discountRate,
+    distributorData.creditLimit,
+    distributorData.currentBalance,
+    distributorData.status,
+    distributorData.tier,
+    distributorData.notes || null,
+    now,
+    now,
+    distributorData.lastLoginAt || null,
+    distributorData.createdBy || null,
+    distributorData.isVerified
+  ).run();
+
+  if (!result.success) {
+    throw new Error('Failed to create distributor');
+  }
+
+  return {
+    ...distributorData,
+    id,
+    createdAt: now,
+    updatedAt: now
+  };
+};
+
+// Get all distributors with optional filtering
+export const getAllDistributors = async (params?: {
+  status?: string;
+  tier?: string;
+  territory?: string;
+}): Promise<Distributor[]> => {
+  const db = await getDatabase();
+  
+  let query = 'SELECT * FROM distributors WHERE 1=1';
+  const bindings: any[] = [];
+  
+  if (params?.status) {
+    query += ' AND status = ?';
+    bindings.push(params.status);
+  }
+  
+  if (params?.tier) {
+    query += ' AND tier = ?';
+    bindings.push(params.tier);
+  }
+  
+  if (params?.territory) {
+    query += ' AND territory = ?';
+    bindings.push(params.territory);
+  }
+  
+  query += ' ORDER BY companyName ASC';
+  
+  const result = await db.prepare(query).bind(...bindings).all();
+  return result.results.map((row: any) => ({
+    ...row,
+    discountRate: parseFloat(row.discountRate) || 0,
+    creditLimit: parseFloat(row.creditLimit) || 0,
+    currentBalance: parseFloat(row.currentBalance) || 0,
+    isVerified: Boolean(row.isVerified)
+  }));
+};
+
+// Get distributor by ID
+export const getDistributorById = async (id: string): Promise<Distributor | null> => {
+  const db = await getDatabase();
+  
+  const result = await db.prepare('SELECT * FROM distributors WHERE id = ?').bind(id).first();
+  
+  if (!result) return null;
+  
+  return {
+    ...result,
+    discountRate: parseFloat(result.discountRate) || 0,
+    creditLimit: parseFloat(result.creditLimit) || 0,
+    currentBalance: parseFloat(result.currentBalance) || 0,
+    isVerified: Boolean(result.isVerified)
+  };
+};
+
+// Get distributor by username (for login)
+export const getDistributorByUsername = async (username: string): Promise<Distributor | null> => {
+  const db = await getDatabase();
+  
+  const result = await db.prepare('SELECT * FROM distributors WHERE username = ?').bind(username).first();
+  
+  if (!result) return null;
+  
+  return {
+    ...result,
+    discountRate: parseFloat(result.discountRate) || 0,
+    creditLimit: parseFloat(result.creditLimit) || 0,
+    currentBalance: parseFloat(result.currentBalance) || 0,
+    isVerified: Boolean(result.isVerified)
+  };
+};
+
+// Update distributor
+export const updateDistributor = async (id: string, updates: Partial<Omit<Distributor, 'id' | 'createdAt'>>): Promise<Distributor | null> => {
+  const db = await getDatabase();
+  
+  const setClauses: string[] = [];
+  const bindings: any[] = [];
+  
+  Object.entries(updates).forEach(([key, value]) => {
+    if (key !== 'id' && key !== 'createdAt' && value !== undefined) {
+      setClauses.push(`${key} = ?`);
+      bindings.push(value);
+    }
+  });
+  
+  if (setClauses.length === 0) {
+    return getDistributorById(id);
+  }
+  
+  setClauses.push('updatedAt = ?');
+  bindings.push(new Date().toISOString());
+  bindings.push(id);
+  
+  const result = await db.prepare(`
+    UPDATE distributors 
+    SET ${setClauses.join(', ')} 
+    WHERE id = ?
+  `).bind(...bindings).run();
+  
+  if (!result.success) {
+    throw new Error('Failed to update distributor');
+  }
+  
+  return getDistributorById(id);
+};
+
+// Delete distributor
+export const deleteDistributor = async (id: string): Promise<boolean> => {
+  const db = await getDatabase();
+  
+  const result = await db.prepare('DELETE FROM distributors WHERE id = ?').bind(id).run();
+  return result.success;
+};
+
+// Create inventory request
+export const createInventoryRequest = async (requestData: Omit<DistributorInventoryRequest, 'id' | 'requestedDate'>): Promise<DistributorInventoryRequest> => {
+  const db = await getDatabase();
+  
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  
+  const result = await db.prepare(`
+    INSERT INTO distributor_inventory_requests (
+      id, distributorId, productId, variantId, requestedQuantity, 
+      approvedQuantity, unitPrice, totalAmount, status, priority, 
+      requestNotes, adminNotes, requestedDate, approvedDate, 
+      fulfilledDate, approvedBy, rejectionReason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    requestData.distributorId,
+    requestData.productId,
+    requestData.variantId || null,
+    requestData.requestedQuantity,
+    requestData.approvedQuantity,
+    requestData.unitPrice || null,
+    requestData.totalAmount || null,
+    requestData.status,
+    requestData.priority,
+    requestData.requestNotes || null,
+    requestData.adminNotes || null,
+    now,
+    requestData.approvedDate || null,
+    requestData.fulfilledDate || null,
+    requestData.approvedBy || null,
+    requestData.rejectionReason || null
+  ).run();
+
+  if (!result.success) {
+    throw new Error('Failed to create inventory request');
+  }
+
+  return {
+    ...requestData,
+    id,
+    requestedDate: now
+  };
+};
+
+// Get inventory requests
+export const getInventoryRequests = async (params?: {
+  distributorId?: string;
+  status?: string;
+  priority?: string;
+}): Promise<DistributorInventoryRequest[]> => {
+  const db = await getDatabase();
+  
+  let query = 'SELECT * FROM distributor_inventory_requests WHERE 1=1';
+  const bindings: any[] = [];
+  
+  if (params?.distributorId) {
+    query += ' AND distributorId = ?';
+    bindings.push(params.distributorId);
+  }
+  
+  if (params?.status) {
+    query += ' AND status = ?';
+    bindings.push(params.status);
+  }
+  
+  if (params?.priority) {
+    query += ' AND priority = ?';
+    bindings.push(params.priority);
+  }
+  
+  query += ' ORDER BY requestedDate DESC';
+  
+  const result = await db.prepare(query).bind(...bindings).all();
+  return result.results.map((row: any) => ({
+    ...row,
+    requestedQuantity: parseInt(row.requestedQuantity) || 0,
+    approvedQuantity: parseInt(row.approvedQuantity) || 0,
+    unitPrice: row.unitPrice ? parseFloat(row.unitPrice) : undefined,
+    totalAmount: row.totalAmount ? parseFloat(row.totalAmount) : undefined
+  }));
+};
+
+// Update inventory request
+export const updateInventoryRequest = async (id: string, updates: Partial<DistributorInventoryRequest>): Promise<DistributorInventoryRequest | null> => {
+  const db = await getDatabase();
+  
+  const setClauses: string[] = [];
+  const bindings: any[] = [];
+  
+  Object.entries(updates).forEach(([key, value]) => {
+    if (key !== 'id' && value !== undefined) {
+      setClauses.push(`${key} = ?`);
+      bindings.push(value);
+    }
+  });
+  
+  if (setClauses.length === 0) {
+    return null;
+  }
+  
+  bindings.push(id);
+  
+  const result = await db.prepare(`
+    UPDATE distributor_inventory_requests 
+    SET ${setClauses.join(', ')} 
+    WHERE id = ?
+  `).bind(...bindings).run();
+  
+  if (!result.success) {
+    throw new Error('Failed to update inventory request');
+  }
+  
+  const updated = await db.prepare('SELECT * FROM distributor_inventory_requests WHERE id = ?').bind(id).first();
+  
+  if (!updated) return null;
+  
+  return {
+    ...updated,
+    requestedQuantity: parseInt(updated.requestedQuantity) || 0,
+    approvedQuantity: parseInt(updated.approvedQuantity) || 0,
+    unitPrice: updated.unitPrice ? parseFloat(updated.unitPrice) : undefined,
+    totalAmount: updated.totalAmount ? parseFloat(updated.totalAmount) : undefined
+  };
+};
+
+// Create distributor inquiry
+export const createDistributorInquiry = async (inquiryData: Omit<DistributorInquiry, 'id' | 'createdAt' | 'updatedAt'>): Promise<DistributorInquiry> => {
+  const db = await getDatabase();
+  
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  
+  const result = await db.prepare(`
+    INSERT INTO distributor_inquiries (
+      id, distributorId, subject, category, priority, status, message,
+      distributorResponse, adminResponse, createdAt, updatedAt, 
+      resolvedAt, resolvedBy
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    inquiryData.distributorId,
+    inquiryData.subject,
+    inquiryData.category,
+    inquiryData.priority,
+    inquiryData.status,
+    inquiryData.message,
+    inquiryData.distributorResponse || null,
+    inquiryData.adminResponse || null,
+    now,
+    now,
+    inquiryData.resolvedAt || null,
+    inquiryData.resolvedBy || null
+  ).run();
+
+  if (!result.success) {
+    throw new Error('Failed to create distributor inquiry');
+  }
+
+  return {
+    ...inquiryData,
+    id,
+    createdAt: now,
+    updatedAt: now
+  };
+};
+
+// Get distributor inquiries
+export const getDistributorInquiries = async (params?: {
+  distributorId?: string;
+  status?: string;
+  category?: string;
+}): Promise<DistributorInquiry[]> => {
+  const db = await getDatabase();
+  
+  let query = 'SELECT * FROM distributor_inquiries WHERE 1=1';
+  const bindings: any[] = [];
+  
+  if (params?.distributorId) {
+    query += ' AND distributorId = ?';
+    bindings.push(params.distributorId);
+  }
+  
+  if (params?.status) {
+    query += ' AND status = ?';
+    bindings.push(params.status);
+  }
+  
+  if (params?.category) {
+    query += ' AND category = ?';
+    bindings.push(params.category);
+  }
+  
+  query += ' ORDER BY createdAt DESC';
+  
+  const result = await db.prepare(query).bind(...bindings).all();
+  return result.results;
 };
