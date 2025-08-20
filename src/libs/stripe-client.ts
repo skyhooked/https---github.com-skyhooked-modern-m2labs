@@ -17,44 +17,7 @@ const getStripe = (): Promise<Stripe | null> => {
       return Promise.resolve(null);
     }
     
-    stripePromise = loadStripe(publishableKey, {
-      appearance: {
-        theme: 'stripe',
-        variables: {
-          colorPrimary: '#FF8A3D', // M2 Labs orange CTA color
-          colorBackground: '#ffffff',
-          colorText: '#36454F', // M2 Labs primary color
-          colorDanger: '#df1b41',
-          fontFamily: 'Helvetica Neue, Arial, sans-serif',
-          spacingUnit: '4px',
-          borderRadius: '6px',
-        },
-        rules: {
-          '.Tab': {
-            borderColor: '#E0E0E0',
-            boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(18, 42, 66, 0.02)',
-          },
-          '.Tab:hover': {
-            color: '#FF8A3D',
-          },
-          '.Tab--selected': {
-            borderColor: '#FF8A3D',
-            color: '#FF8A3D',
-          },
-          '.Input': {
-            boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(18, 42, 66, 0.02)',
-          },
-          '.Input:focus': {
-            borderColor: '#FF8A3D',
-            boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(18, 42, 66, 0.02), 0 0 0 2px rgba(255, 138, 61, 0.2)',
-          },
-          '.Label': {
-            color: '#36454F',
-            fontWeight: '500',
-          },
-        },
-      },
-    });
+    stripePromise = loadStripe(publishableKey);
   }
   
   return stripePromise;
