@@ -11,8 +11,6 @@ export async function GET(
   try {
     const { slug } = await params;
     
-    console.log('🔍 Looking for product with slug:', slug);
-    
     if (!slug) {
       return NextResponse.json(
         { error: 'Product slug is required' },
@@ -21,8 +19,6 @@ export async function GET(
     }
     
     const product = await getProductBySlug(slug);
-    
-    console.log('📦 Product result:', product ? 'Found' : 'Not found');
     
     if (!product) {
       return NextResponse.json(

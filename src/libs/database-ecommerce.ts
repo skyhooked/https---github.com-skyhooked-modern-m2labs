@@ -489,13 +489,13 @@ export const getProducts = async (params?: {
   const bindings: any[] = [];
   
   if (params?.isActive !== undefined) {
-    conditions.push('p.isActive = ?');
-    bindings.push(params.isActive);
+    conditions.push('(p.isActive = ? OR p.isActive = ?)');
+    bindings.push(params.isActive, params.isActive.toString());
   }
   
   if (params?.isFeatured !== undefined) {
-    conditions.push('p.isFeatured = ?');
-    bindings.push(params.isFeatured);
+    conditions.push('(p.isFeatured = ? OR p.isFeatured = ?)');
+    bindings.push(params.isFeatured, params.isFeatured.toString());
   }
   
   if (params?.brandId) {
@@ -553,20 +553,12 @@ export const getProducts = async (params?: {
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
   const db = await getDatabase();
   
-  console.log('🔍 getProductBySlug called with slug:', slug);
-  
-  // First, let's see what products exist in the database
-  const allProducts = await db.prepare(`SELECT slug, name, isActive FROM products LIMIT 10`).all();
-  console.log('📋 Available products in database:', allProducts.results?.map(p => ({ slug: p.slug, name: p.name, isActive: p.isActive })));
-  
   const result = await db.prepare(`
     SELECT p.*, b.name as brand_name, b.slug as brand_slug
     FROM products p
     LEFT JOIN brands b ON p.brandId = b.id
-    WHERE p.slug = ? AND p.isActive = true
+    WHERE p.slug = ? AND (p.isActive = true OR p.isActive = 'true')
   `).bind(slug).first();
-  
-  console.log('📊 Database query result:', result ? 'Found product' : 'No product found');
   
   if (!result) return null;
   

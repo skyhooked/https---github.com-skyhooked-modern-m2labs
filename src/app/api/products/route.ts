@@ -21,9 +21,6 @@ export async function GET(request: NextRequest) {
     
     const products = await getProducts(params);
     
-    console.log('📋 Found', products.length, 'products total');
-    console.log('🏷️ Product slugs:', products.map(p => p.slug));
-    
     return NextResponse.json({
       products,
       count: products.length,
