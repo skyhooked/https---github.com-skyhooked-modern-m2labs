@@ -733,7 +733,13 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
   
   const result = await db.prepare(`
     SELECT ci.*, 
-           pv.name as variant_name, pv.sku as variant_sku, pv.price as variant_price,
+           pv.id as variant_id, pv.productId, pv.name as variant_name, pv.sku as variant_sku, 
+           pv.price as variant_price, pv.compareAtPrice as variant_compareAtPrice,
+           pv.cost as variant_cost, pv.position as variant_position, pv.isDefault as variant_isDefault,
+           pv.barcode as variant_barcode, pv.trackInventory as variant_trackInventory,
+           pv.continueSellingWhenOutOfStock as variant_continueSellingWhenOutOfStock,
+           pv.requiresShipping as variant_requiresShipping, pv.taxable as variant_taxable,
+           pv.createdAt as variant_createdAt, pv.updatedAt as variant_updatedAt,
            p.name as product_name, p.slug as product_slug, p.basePrice as product_basePrice
     FROM cart_items ci
     INNER JOIN product_variants pv ON ci.variantId = pv.id
@@ -751,10 +757,22 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
     addedAt: row.addedAt,
     updatedAt: row.updatedAt,
     variant: {
-      id: row.variantId,
+      id: row.variant_id,
+      productId: row.productId,
       name: row.variant_name,
       sku: row.variant_sku,
       price: row.variant_price,
+      compareAtPrice: row.variant_compareAtPrice,
+      cost: row.variant_cost,
+      position: row.variant_position,
+      isDefault: Boolean(row.variant_isDefault),
+      barcode: row.variant_barcode,
+      trackInventory: Boolean(row.variant_trackInventory),
+      continueSellingWhenOutOfStock: Boolean(row.variant_continueSellingWhenOutOfStock),
+      requiresShipping: Boolean(row.variant_requiresShipping),
+      taxable: Boolean(row.variant_taxable),
+      createdAt: row.variant_createdAt,
+      updatedAt: row.variant_updatedAt,
       product: {
         id: row.productId,
         name: row.product_name,
