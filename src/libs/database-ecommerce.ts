@@ -1290,9 +1290,39 @@ export const createCategory = async (data: Omit<Category, 'id' | 'createdAt' | '
   return { id, ...data, description: data.description || '', parentId: data.parentId || null, createdAt: now, updatedAt: now };
 };
 
-export const getAllCoupons = async (): Promise<Coupon[]> => {
+export const getAllCoupons = async (params?: {
+  isActive?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<Coupon[]> => {
   const db = getDatabase();
-  const result = await db.prepare('SELECT * FROM coupons ORDER BY createdAt DESC').all();
+  
+  let query = 'SELECT * FROM coupons';
+  const conditions: string[] = [];
+  const bindings: any[] = [];
+  
+  if (params?.isActive !== undefined) {
+    conditions.push('isActive = ?');
+    bindings.push(params.isActive);
+  }
+  
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`;
+  }
+  
+  query += ' ORDER BY createdAt DESC';
+  
+  if (params?.limit) {
+    query += ' LIMIT ?';
+    bindings.push(params.limit);
+    
+    if (params?.offset) {
+      query += ' OFFSET ?';
+      bindings.push(params.offset);
+    }
+  }
+  
+  const result = await db.prepare(query).bind(...bindings).all();
   return result.results?.map((coupon: any) => ({
     ...coupon,
     value: Number(coupon.value),
