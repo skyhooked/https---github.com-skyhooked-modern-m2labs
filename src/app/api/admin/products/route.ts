@@ -68,14 +68,22 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
+    console.log('Received product data:', JSON.stringify(data, null, 2));
 
     // Validate required fields
     if (!data.name || !data.slug || !data.basePrice) {
+      console.log('Validation failed - missing required fields:', {
+        name: !!data.name,
+        slug: !!data.slug,
+        basePrice: !!data.basePrice
+      });
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
+
+    console.log('Validation passed, creating product...');
 
     // Create the product
     const productData = {
@@ -106,7 +114,9 @@ export async function POST(request: NextRequest) {
       metaKeywords: data.metaKeywords
     };
 
+    console.log('Creating product with data:', JSON.stringify(productData, null, 2));
     const product = await createProduct(productData);
+    console.log('Product created successfully:', product.id);
 
     // Create variants
     if (data.variants && data.variants.length > 0) {
