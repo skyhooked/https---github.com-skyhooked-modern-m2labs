@@ -1,8 +1,8 @@
 // Edge-safe auth utilities (no Node 'crypto' or 'jsonwebtoken' deps)
 import type { NextRequest } from 'next/server';
 
-// Import database function
-import { getDatabase } from './database-d1';
+// Import database functions
+import { getDatabase, getUserById } from './database-d1';
 
 /** ---------- Domain Models ---------- */
 export type Role = 'customer' | 'admin';
