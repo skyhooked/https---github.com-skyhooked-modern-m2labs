@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
     console.log('Received product data:', JSON.stringify(data, null, 2));
 
     // Validate required fields
-    if (!data.name || !data.slug || !data.basePrice) {
+    if (!data.name || !data.slug || data.basePrice === undefined || data.basePrice === null) {
       console.log('Validation failed - missing required fields:', {
         name: !!data.name,
         slug: !!data.slug,
-        basePrice: !!data.basePrice
+        basePrice: data.basePrice !== undefined && data.basePrice !== null
       });
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
       slug: data.slug,
       description: data.description,
       shortDescription: data.shortDescription,
-      brandId: data.brandId || 'brand-m2labs', // Default to M2 Labs
+      brandId: data.brandId === 'm2-labs' ? 'brand-m2labs' : (data.brandId || 'brand-m2labs'), // Map form brandId to database brandId
       sku: data.sku || `M2-${Date.now()}`, // Generate SKU if not provided
-      basePrice: Math.round(data.basePrice), // Ensure it's in cents
+      basePrice: Math.round(data.basePrice || 0), // Allow 0 as valid price
       compareAtPrice: data.compareAtPrice ? Math.round(data.compareAtPrice) : undefined,
       cost: data.cost ? Math.round(data.cost) : undefined,
       isFeatured: data.isFeatured || false,
