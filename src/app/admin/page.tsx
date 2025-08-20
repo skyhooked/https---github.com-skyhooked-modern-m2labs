@@ -1,7 +1,11 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import Link from 'next/link';
 import { getAllArtists } from '@/data/artistData';
+
 export const runtime = 'edge'
 
 interface ModuleCardProps {
@@ -53,6 +57,26 @@ function ModuleCard({ title, description, icon, href, disabled, stats }: ModuleC
 
 export default function AdminDashboard() {
   const artists = getAllArtists();
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const modules = [
     {
@@ -61,8 +85,8 @@ export default function AdminDashboard() {
       icon: '👥',
       href: '/admin/users',
       stats: [
-        { label: 'Total Users', value: '0' },
-        { label: 'Verified', value: '0' },
+        { label: 'Total Users', value: loading ? '...' : (stats?.users?.totalUsers || '0') },
+        { label: 'Verified', value: loading ? '...' : (stats?.users?.verifiedUsers || '0') },
       ],
     },
     {
@@ -71,8 +95,8 @@ export default function AdminDashboard() {
       icon: '🛡️',
       href: '/admin/warranty',
       stats: [
-        { label: 'Open Claims', value: '0' },
-        { label: 'Processed', value: '0' },
+        { label: 'Open Claims', value: loading ? '...' : (stats?.warranty?.openClaims || '0') },
+        { label: 'Processed', value: loading ? '...' : (stats?.warranty?.processedClaims || '0') },
       ],
     },
     {
@@ -101,8 +125,8 @@ export default function AdminDashboard() {
       icon: '🎸',
       href: '/admin/products',
       stats: [
-        { label: 'Products', value: '0' },
-        { label: 'In Stock', value: '0' },
+        { label: 'Products', value: loading ? '...' : (stats?.products?.totalProducts || '0') },
+        { label: 'Active', value: loading ? '...' : (stats?.products?.activeProducts || '0') },
       ],
     },
     {
@@ -111,8 +135,8 @@ export default function AdminDashboard() {
       icon: '📧',
       href: '/admin/newsletter',
       stats: [
-        { label: 'Subscribers', value: '0' },
-        { label: 'Campaigns', value: '0' },
+        { label: 'Subscribers', value: loading ? '...' : (stats?.newsletter?.subscribers || '0') },
+        { label: 'Campaigns', value: loading ? '...' : (stats?.newsletter?.campaigns || '0') },
       ],
     },
     {
@@ -122,8 +146,8 @@ export default function AdminDashboard() {
       href: '/admin/orders',
       disabled: true,
       stats: [
-        { label: 'Total Orders', value: '0' },
-        { label: 'Pending', value: '0' },
+        { label: 'Total Orders', value: loading ? '...' : (stats?.orders?.totalOrders || '0') },
+        { label: 'Pending', value: loading ? '...' : (stats?.orders?.pendingOrders || '0') },
       ],
     },
     {
@@ -131,10 +155,9 @@ export default function AdminDashboard() {
       description: 'Manage customer support tickets and inquiries',
       icon: '💬',
       href: '/admin/support',
-      disabled: true,
       stats: [
-        { label: 'Open Tickets', value: '0' },
-        { label: 'Resolved', value: '0' },
+        { label: 'Open Tickets', value: loading ? '...' : (stats?.support?.openTickets || '0') },
+        { label: 'Resolved', value: loading ? '...' : (stats?.support?.resolvedTickets || '0') },
       ],
     },
     {
@@ -165,16 +188,32 @@ export default function AdminDashboard() {
       href: '/admin/analytics',
       stats: [
         { label: 'Total Revenue', value: '$0' },
-        { label: 'Orders', value: '0' },
+        { label: 'Orders', value: loading ? '...' : (stats?.orders?.totalOrders || '0') },
       ],
     },
   ];
 
   const quickStats = [
-    { label: 'Registered Users', value: '0', color: 'text-blue-600' },
-    { label: 'Warranty Claims', value: '0', color: 'text-green-600' },
-    { label: 'News Posts', value: '5', color: 'text-purple-600' },
-    { label: 'Artist Profiles', value: artists.length.toString(), color: 'text-orange-600' },
+    { 
+      label: 'Registered Users', 
+      value: loading ? '...' : (stats?.users?.totalUsers?.toString() || '0'), 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Support Tickets', 
+      value: loading ? '...' : (stats?.support?.totalTickets?.toString() || '0'), 
+      color: 'text-green-600' 
+    },
+    { 
+      label: 'Active Products', 
+      value: loading ? '...' : (stats?.products?.activeProducts?.toString() || '0'), 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Artist Profiles', 
+      value: artists.length.toString(), 
+      color: 'text-orange-600' 
+    },
   ];
 
   return (

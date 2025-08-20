@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Product Management', href: '/admin/products', icon: '🎸' },
     { name: 'Newsletter', href: '/admin/newsletter', icon: '📧' },
     { name: 'Order Management', href: '/admin/orders', icon: '📦', disabled: true },
-    { name: 'Support Management', href: '/admin/support', icon: '💬', disabled: true },
+    { name: 'Support Management', href: '/admin/support', icon: '💬' },
     { name: 'Coupon Management', href: '/admin/coupons', icon: '🎫', disabled: true },
     { name: 'Analytics & Reports', href: '/admin/analytics', icon: '📈' },
     { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
