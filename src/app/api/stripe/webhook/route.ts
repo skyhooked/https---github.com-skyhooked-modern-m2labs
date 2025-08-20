@@ -177,10 +177,16 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = invoice.subscription as string;
-    const customerId = invoice.customer as string;
+    const subscriptionId = typeof invoice.subscription === 'string' 
+      ? invoice.subscription 
+      : invoice.subscription?.id;
+    const customerId = typeof invoice.customer === 'string' 
+      ? invoice.customer 
+      : invoice.customer?.id;
     
-    console.log(`Invoice paid for subscription ${subscriptionId}`);
+    if (subscriptionId) {
+      console.log(`Invoice paid for subscription ${subscriptionId}`);
+    }
     
     // TODO: Update subscription status
     // TODO: Send invoice receipt email
@@ -192,9 +198,13 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
 async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
   try {
-    const customerId = subscription.customer as string;
+    const customerId = typeof subscription.customer === 'string' 
+      ? subscription.customer 
+      : subscription.customer?.id;
     
-    console.log(`Subscription canceled for customer ${customerId}`);
+    if (customerId) {
+      console.log(`Subscription canceled for customer ${customerId}`);
+    }
     
     // TODO: Update subscription status in database
     // TODO: Send cancellation confirmation email
