@@ -708,6 +708,25 @@ export const getCartBySessionId = async (sessionId: string): Promise<ShoppingCar
   };
 };
 
+export const getCartById = async (cartId: string): Promise<ShoppingCart | null> => {
+  const db = await getDatabase();
+  
+  const cart = await db.prepare(`
+    SELECT * FROM shopping_carts
+    WHERE id = ? AND convertedAt IS NULL
+    LIMIT 1
+  `).bind(cartId).first();
+  
+  if (!cart) return null;
+  
+  const items = await getCartItems(cart.id);
+  
+  return {
+    ...cart,
+    items
+  };
+};
+
 export const createCart = async (data: {
   userId?: string;
   sessionId?: string;
