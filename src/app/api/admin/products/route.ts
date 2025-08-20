@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const products = await getAllProducts({
-      search,
-      categoryId: category,
-      brandId: brand,
+      search: search || undefined,
+      category: category || undefined,
+      brandId: brand || undefined,
       isFeatured: featured === 'true' ? true : undefined,
       isActive: active === 'true' ? true : undefined,
       limit,
