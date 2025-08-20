@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const productId = searchParams.get('productId');
-    const sortBy = searchParams.get('sortBy') || 'newest';
+    const sortByParam = searchParams.get('sortBy') || 'createdAt';
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -21,6 +21,12 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Validate sortBy parameter
+    const validSortOptions = ['createdAt', 'rating', 'helpfulVotes'] as const;
+    const sortBy = validSortOptions.includes(sortByParam as any) 
+      ? (sortByParam as 'createdAt' | 'rating' | 'helpfulVotes')
+      : 'createdAt';
 
     const reviews = await getProductReviews(productId, {
       sortBy,
