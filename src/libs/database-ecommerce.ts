@@ -1314,19 +1314,22 @@ export const createProductVariant = async (data: Omit<ProductVariant, 'id' | 'cr
   const now = new Date().toISOString();
   
   await db.prepare(`
-    INSERT INTO product_variants (id, productId, name, price, stock, sku, isDefault, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO product_variants (
+      id, productId, name, sku, price, compareAtPrice, cost, position, 
+      isDefault, barcode, trackInventory, continueSellingWhenOutOfStock, 
+      requiresShipping, taxable, createdAt, updatedAt
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, data.productId, data.name, data.price, data.stock || 0, 
-    data.sku || '', data.isDefault || false, now, now
+    id, data.productId, data.name, data.sku, data.price, data.compareAtPrice,
+    data.cost, data.position, data.isDefault, data.barcode, data.trackInventory,
+    data.continueSellingWhenOutOfStock, data.requiresShipping, data.taxable,
+    now, now
   ).run();
   
   return {
     id,
     ...data,
-    stock: data.stock || 0,
-    sku: data.sku || '',
-    isDefault: data.isDefault || false,
     createdAt: now,
     updatedAt: now
   };
@@ -1354,14 +1357,30 @@ export const createProductImage = async (data: Omit<ProductImage, 'id' | 'create
   };
 };
 
-export const updateInventory = async (productId: string, variantId: string, quantity: number): Promise<boolean> => {
+export const updateInventory = async (variantId: string, quantity: number, locationId?: string): Promise<boolean> => {
   const db = getDatabase();
   try {
+    // Get default location if none specified
+    if (!locationId) {
+      const defaultLocation = await db.prepare('SELECT id FROM inventory_locations WHERE isDefault = TRUE LIMIT 1').first();
+      locationId = defaultLocation?.id;
+      
+      // Create default location if none exists
+      if (!locationId) {
+        locationId = generateId();
+        await db.prepare(`
+          INSERT INTO inventory_locations (id, name, isDefault, isActive, createdAt, updatedAt)
+          VALUES (?, 'Default Location', TRUE, TRUE, ?, ?)
+        `).bind(locationId, new Date().toISOString(), new Date().toISOString()).run();
+      }
+    }
+    
+    const now = new Date().toISOString();
     const result = await db.prepare(`
-      UPDATE product_variants 
-      SET stock = ?, updatedAt = ?
-      WHERE id = ? AND productId = ?
-    `).bind(quantity, new Date().toISOString(), variantId, productId).run();
+      INSERT OR REPLACE INTO inventory_items (id, variantId, locationId, quantity, updatedAt)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(generateId(), variantId, locationId, quantity, now).run();
+    
     return result.meta?.changes > 0;
   } catch (error) {
     console.error('Error updating inventory:', error);

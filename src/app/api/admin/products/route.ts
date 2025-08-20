@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
           // Set initial inventory
           if (variantData.inventory?.quantity > 0) {
-            await updateInventory(product.id, variant.id, variantData.inventory.quantity);
+            await updateInventory(variant.id, variantData.inventory.quantity);
           }
         }
       }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Set initial inventory to 0
-      await updateInventory(product.id, defaultVariant.id, 0);
+      await updateInventory(defaultVariant.id, 0);
     }
 
     // Create product images (if provided)
