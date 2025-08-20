@@ -20,6 +20,13 @@ interface Product {
   brand?: {
     id: string;
     name: string;
+    slug: string;
+    description?: string;
+    logo?: string;
+    website?: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
   variants?: Array<{
     id: string;
