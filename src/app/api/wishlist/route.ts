@@ -70,11 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const item = await addToWishlist({
-      userId: decoded.sub,
-      productId,
-      variantId
-    });
+    const item = await addToWishlist(decoded.sub, productId);
 
     return NextResponse.json({
       success: true,
@@ -118,10 +114,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = await removeFromWishlist(decoded.sub, productId, variantId);
+    await removeFromWishlist(decoded.sub, productId);
 
     return NextResponse.json({
-      success,
+      success: true,
       message: 'Removed from wishlist'
     });
   } catch (error) {
