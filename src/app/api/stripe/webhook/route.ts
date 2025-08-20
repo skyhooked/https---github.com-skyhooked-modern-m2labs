@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent } from '@/libs/stripe';
+import { updateOrder } from '@/libs/database-ecommerce';
 import Stripe from 'stripe';
 
 export const runtime = 'edge';
@@ -97,9 +98,16 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       return;
     }
     
-    // TODO: Update order status to 'processing' and payment status to 'paid'
-    // This requires adding an updateOrder function to database-ecommerce.ts
-    console.log(`Payment succeeded for order ${orderId}`);
+    // Update order status to 'processing' and payment status to 'paid'
+    await updateOrder(orderId, {
+      status: 'processing',
+      paymentStatus: 'paid',
+      stripePaymentIntentId: paymentIntent.id,
+      stripeChargeId: paymentIntent.latest_charge as string,
+      paymentMethod: paymentIntent.payment_method_types[0]
+    });
+    
+    console.log(`Payment succeeded for order ${orderId} - order updated`);
     
     // TODO: Clear user's cart if cartId is provided
     // TODO: Send order confirmation email

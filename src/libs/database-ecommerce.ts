@@ -982,6 +982,60 @@ export const getSupportTickets = async (params?: {
 };
 
 // ========================================
+// WISHLIST FUNCTIONS
+// ========================================
+
+export const addToWishlist = async (userId: string, productId: string): Promise<WishlistItem> => {
+  const db = getDatabase();
+  const id = generateId();
+  const now = new Date().toISOString();
+  
+  await db.prepare(`
+    INSERT INTO wishlists (id, userId, productId, addedAt)
+    VALUES (?, ?, ?, ?)
+  `).bind(id, userId, productId, now).run();
+  
+  return {
+    id,
+    userId,
+    productId,
+    addedAt: now
+  };
+};
+
+export const removeFromWishlist = async (userId: string, productId: string): Promise<void> => {
+  const db = getDatabase();
+  
+  await db.prepare(`
+    DELETE FROM wishlists 
+    WHERE userId = ? AND productId = ?
+  `).bind(userId, productId).run();
+};
+
+export const clearWishlist = async (userId: string): Promise<void> => {
+  const db = getDatabase();
+  
+  await db.prepare(`
+    DELETE FROM wishlists 
+    WHERE userId = ?
+  `).bind(userId).run();
+};
+
+export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
+  const db = getDatabase();
+  
+  const result = await db.prepare(`
+    SELECT w.*, p.name as productName, p.basePrice, p.slug
+    FROM wishlists w
+    LEFT JOIN products p ON w.productId = p.id
+    WHERE w.userId = ?
+    ORDER BY w.addedAt DESC
+  `).bind(userId).all();
+  
+  return result.results || [];
+};
+
+// ========================================
 // UPDATE FUNCTIONS
 // ========================================
 
@@ -1327,6 +1381,17 @@ export const initializeEcommerceDatabase = async (): Promise<void> => {
         sortOrder INTEGER DEFAULT 0,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
+      );
+
+      -- Wishlists
+      CREATE TABLE IF NOT EXISTS wishlists (
+        id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        productId TEXT NOT NULL,
+        addedAt TEXT NOT NULL,
+        UNIQUE(userId, productId),
+        FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (productId) REFERENCES products (id) ON DELETE CASCADE
       );
 
       -- Create indexes for performance

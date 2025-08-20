@@ -317,6 +317,36 @@ export function generateEcwidSSOToken(input: {
   return b64urlEncode(json);
 }
 
+export async function updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  const db = getDatabase();
+  
+  // First verify the current password
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  
+  const isCurrentValid = await verifyPassword(currentPassword, user.password);
+  if (!isCurrentValid) {
+    throw new Error('Invalid current password');
+  }
+  
+  // Hash the new password
+  const hashedNewPassword = await hashPassword(newPassword);
+  
+  try {
+    await db.prepare(`
+      UPDATE users 
+      SET password = ?, updatedAt = ?
+      WHERE id = ?
+    `).bind(hashedNewPassword, new Date().toISOString(), userId).run();
+    
+  } catch (error) {
+    console.error('Error updating user password:', error);
+    throw error;
+  }
+}
+
 /** ---------- Small utility for IDs (mirrors database.ts usage) ---------- */
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
