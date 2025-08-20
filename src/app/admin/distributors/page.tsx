@@ -406,19 +406,19 @@ function DistributorForm({ distributor, onSave, onCancel }: DistributorFormProps
       
       const method = distributor ? 'PUT' : 'POST';
       
-      const submitData = { ...formData };
+      const { password, ...submitData } = formData;
       
       // Only include password if it's set (for new distributors or password changes)
-      if (!submitData.password && distributor) {
-        delete submitData.password;
-      }
+      const finalSubmitData = (!password && distributor) 
+        ? submitData 
+        : { ...submitData, password };
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(finalSubmitData),
       });
 
       if (response.ok) {
