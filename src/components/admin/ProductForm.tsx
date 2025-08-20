@@ -73,7 +73,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     slug: '',
     description: '',
     shortDescription: '',
-    brandId: 'm2-labs', // Default to M2 Labs brand
+    brandId: 'brand-m2labs', // Default to M2 Labs brand (using database ID)
     sku: '',
     basePrice: 0,
     compareAtPrice: 0,
@@ -115,7 +115,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         compareAtPrice: product.compareAtPrice || 0,
         cost: product.cost || 0,
         technicalSpecs: product.technicalSpecs || {},
-        brandId: product.brandId || 'm2-labs', // Ensure M2 Labs brand is always set
+        brandId: product.brandId || 'brand-m2labs', // Ensure M2 Labs brand is always set (using database ID)
         sku: product.sku || '',
         weight: product.weight || '',
         dimensions: product.dimensions || '',

@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       slug: data.slug,
       description: data.description,
       shortDescription: data.shortDescription,
-      brandId: data.brandId === 'm2-labs' ? 'brand-m2labs' : (data.brandId || 'brand-m2labs'), // Map form brandId to database brandId
+      brandId: data.brandId || 'brand-m2labs', // Default to M2 Labs brand
       sku: data.sku || `M2-${Date.now()}`, // Generate SKU if not provided
       basePrice: Math.round(data.basePrice || 0), // Allow 0 as valid price
       compareAtPrice: data.compareAtPrice ? Math.round(data.compareAtPrice) : undefined,
