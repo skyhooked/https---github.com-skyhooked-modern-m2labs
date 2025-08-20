@@ -97,7 +97,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         const data = await response.json();
-        setCart(data.cart || emptyCart);
+        const cart = data.cart || emptyCart;
+        // Ensure items is always an array
+        if (cart && !cart.items) {
+          cart.items = [];
+        }
+        setCart(cart);
       } else {
         console.error('Failed to fetch cart');
         setCart(emptyCart);
@@ -128,7 +133,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setCart(data.cart);
+        const cart = data.cart;
+        // Ensure items is always an array
+        if (cart && !cart.items) {
+          cart.items = [];
+        }
+        setCart(cart);
         
         // Show success feedback
         setIsCartOpen(true);
@@ -185,8 +195,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = async () => {
     try {
       // Remove all items from cart
-      const promises = cart.items.map(item => removeFromCart(item.id));
-      await Promise.all(promises);
+      if (cart.items && cart.items.length > 0) {
+        const promises = cart.items.map(item => removeFromCart(item.id));
+        await Promise.all(promises);
+      }
       setCart(emptyCart);
     } catch (error) {
       console.error('Error clearing cart:', error);

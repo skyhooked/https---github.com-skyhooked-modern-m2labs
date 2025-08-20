@@ -49,7 +49,7 @@ export default function CartSidebar() {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A3D]"></div>
               </div>
-            ) : cart.items.length === 0 ? (
+            ) : !cart.items || cart.items.length === 0 ? (
               <div className="text-center py-8">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -70,7 +70,7 @@ export default function CartSidebar() {
               </div>
             ) : (
               <div className="space-y-4">
-                {cart.items.map((item) => (
+                {(cart.items || []).map((item) => (
                   <CartItem
                     key={item.id}
                     item={item}
