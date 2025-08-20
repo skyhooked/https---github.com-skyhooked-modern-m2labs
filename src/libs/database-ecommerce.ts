@@ -553,12 +553,20 @@ export const getProducts = async (params?: {
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
   const db = await getDatabase();
   
+  console.log('🔍 getProductBySlug called with slug:', slug);
+  
+  // First, let's see what products exist in the database
+  const allProducts = await db.prepare(`SELECT slug, name, isActive FROM products LIMIT 10`).all();
+  console.log('📋 Available products in database:', allProducts.results?.map(p => ({ slug: p.slug, name: p.name, isActive: p.isActive })));
+  
   const result = await db.prepare(`
     SELECT p.*, b.name as brand_name, b.slug as brand_slug
     FROM products p
     LEFT JOIN brands b ON p.brandId = b.id
     WHERE p.slug = ? AND p.isActive = true
   `).bind(slug).first();
+  
+  console.log('📊 Database query result:', result ? 'Found product' : 'No product found');
   
   if (!result) return null;
   
