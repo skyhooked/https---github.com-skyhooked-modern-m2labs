@@ -78,6 +78,25 @@ interface Product {
   categories?: Array<{
     id: string;
     name: string;
+    slug: string;
+    description?: string;
+    parentId?: string;
+    sortOrder: number;
+    isActive: boolean;
+    seoTitle?: string;
+    seoDescription?: string;
+    createdAt: string;
+    updatedAt: string;
+    children?: Array<{
+      id: string;
+      name: string;
+      slug: string;
+    }>;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+    };
   }>;
   createdAt: string;
   updatedAt: string;
