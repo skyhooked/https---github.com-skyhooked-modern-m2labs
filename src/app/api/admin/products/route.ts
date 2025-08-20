@@ -83,6 +83,12 @@ export async function POST(request: NextRequest) {
       powerRequirements: data.powerRequirements,
       compatibility: data.compatibility,
       technicalSpecs: data.technicalSpecs || {},
+      // Enhanced fields
+      youtubeVideoId: data.youtubeVideoId,
+      features: data.features,
+      toggleOptions: data.toggleOptions,
+      powerConsumption: data.powerConsumption,
+      relatedProducts: data.relatedProducts,
       seoTitle: data.seoTitle,
       seoDescription: data.seoDescription,
       metaKeywords: data.metaKeywords
