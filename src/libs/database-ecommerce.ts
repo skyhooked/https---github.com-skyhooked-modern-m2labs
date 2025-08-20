@@ -530,16 +530,24 @@ export const getProducts = async (params?: {
   
   const result = await db.prepare(query).bind(...bindings).all();
   
-  return (result.results || []).map(row => ({
-    ...row,
-    dimensions: row.dimensions ? JSON.parse(row.dimensions) : undefined,
-    technicalSpecs: row.technicalSpecs ? JSON.parse(row.technicalSpecs) : undefined,
-    brand: row.brand_name ? {
-      id: row.brandId,
-      name: row.brand_name,
-      slug: row.brand_slug
-    } : undefined
+  // Fetch images for each product
+  const products = await Promise.all((result.results || []).map(async row => {
+    const images = await getProductImages(row.id);
+    
+    return {
+      ...row,
+      dimensions: row.dimensions ? JSON.parse(row.dimensions) : undefined,
+      technicalSpecs: row.technicalSpecs ? JSON.parse(row.technicalSpecs) : undefined,
+      brand: row.brand_name ? {
+        id: row.brandId,
+        name: row.brand_name,
+        slug: row.brand_slug
+      } : undefined,
+      images
+    };
   }));
+  
+  return products;
 };
 
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
