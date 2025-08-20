@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const items = await getWishlistItems(decoded.userId);
+    const items = await getWishlistItems(decoded.sub);
 
     return NextResponse.json({
       success: true,
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const item = await addToWishlist({
-      userId: decoded.userId,
+      userId: decoded.sub,
       productId,
       variantId
     });
@@ -118,7 +118,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = await removeFromWishlist(decoded.userId, productId, variantId);
+    const success = await removeFromWishlist(decoded.sub, productId, variantId);
 
     return NextResponse.json({
       success,
