@@ -9,10 +9,11 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const product = await getProductById(params.id);
+    const { id } = await params;
+    const product = await getProductById(id);
 
     if (!product) {
       return NextResponse.json(
@@ -36,9 +37,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
     // Validate required fields
@@ -64,7 +66,7 @@ export async function PUT(
       technicalSpecs: data.technicalSpecs || {}
     };
 
-    const product = await updateProduct(params.id, updateData);
+    const product = await updateProduct(id, updateData);
 
     if (!product) {
       return NextResponse.json(
@@ -89,12 +91,13 @@ export async function PUT(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
-    const product = await updateProduct(params.id, data);
+    const product = await updateProduct(id, data);
 
     if (!product) {
       return NextResponse.json(
@@ -119,10 +122,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const success = await deleteProduct(params.id);
+    const { id } = await params;
+    const success = await deleteProduct(id);
 
     if (!success) {
       return NextResponse.json(

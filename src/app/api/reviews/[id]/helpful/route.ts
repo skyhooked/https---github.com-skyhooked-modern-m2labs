@@ -5,10 +5,11 @@ export const runtime = 'edge';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const success = await updateReviewHelpfulVotes(params.id);
+    const { id } = await params;
+    const success = await updateReviewHelpfulVotes(id);
 
     if (!success) {
       return NextResponse.json(

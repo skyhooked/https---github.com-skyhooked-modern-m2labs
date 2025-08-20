@@ -5,9 +5,10 @@ export const runtime = 'edge';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
     if (!data.message) {
@@ -18,7 +19,7 @@ export async function POST(
     }
 
     const message = await createSupportMessage({
-      ticketId: params.id,
+      ticketId: id,
       message: data.message,
       isInternal: data.isInternal || false,
       userId: data.userId

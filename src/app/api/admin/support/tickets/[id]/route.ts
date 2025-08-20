@@ -5,10 +5,11 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticket = await getSupportTicketById(params.id);
+    const { id } = await params;
+    const ticket = await getSupportTicketById(id);
 
     if (!ticket) {
       return NextResponse.json(
@@ -32,12 +33,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
-    const ticket = await updateSupportTicket(params.id, data);
+    const ticket = await updateSupportTicket(id, data);
 
     if (!ticket) {
       return NextResponse.json(
