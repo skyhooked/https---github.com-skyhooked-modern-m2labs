@@ -13,10 +13,26 @@ interface Product {
   slug: string;
   description?: string;
   shortDescription?: string;
+  brandId: string;
+  sku: string;
   basePrice: number;
   compareAtPrice?: number;
+  cost?: number;
   isFeatured: boolean;
   isActive: boolean;
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+    unit: string;
+  };
+  powerRequirements?: string;
+  compatibility?: string;
+  technicalSpecs?: Record<string, any>;
+  seoTitle?: string;
+  seoDescription?: string;
+  metaKeywords?: string;
   brand?: {
     id: string;
     name: string;
@@ -30,19 +46,34 @@ interface Product {
   };
   variants?: Array<{
     id: string;
+    productId: string;
     name: string;
     sku: string;
     price?: number;
+    compareAtPrice?: number;
+    cost?: number;
+    position: number;
     isDefault: boolean;
+    barcode?: string;
+    trackInventory: boolean;
+    continueSellingWhenOutOfStock: boolean;
+    requiresShipping: boolean;
+    taxable: boolean;
+    createdAt: string;
+    updatedAt: string;
     inventory?: {
       quantity: number;
     };
   }>;
   images?: Array<{
     id: string;
+    productId: string;
+    variantId?: string;
     url: string;
     altText?: string;
+    position: number;
     isMainImage: boolean;
+    createdAt: string;
   }>;
   categories?: Array<{
     id: string;
