@@ -1131,8 +1131,13 @@ export const getAllProducts = async (params?: {
   brandId?: string;
   search?: string;
   isActive?: boolean;
+  isFeatured?: boolean;
 }): Promise<Product[]> => {
-  return await getProducts(params);
+  return await getProducts({
+    ...params,
+    categoryId: params?.category,
+    searchTerm: params?.search
+  });
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {
