@@ -12,7 +12,7 @@ interface Coupon {
   code: string;
   name: string;
   description?: string;
-  type: 'percentage' | 'fixed_amount' | 'free_shipping';
+  type: 'percentage' | 'fixed_amount' | 'free_shipping' | 'bundle_deal';
   value: number;
   minimumOrderAmount?: number;
   maximumDiscountAmount?: number;
@@ -124,6 +124,8 @@ export default function CouponManagement() {
         return `$${(coupon.value / 100).toFixed(2)}`;
       case 'free_shipping':
         return 'Free Shipping';
+      case 'bundle_deal':
+        return `Buy ${coupon.value}, Get 1 Free`;
       default:
         return coupon.value.toString();
     }

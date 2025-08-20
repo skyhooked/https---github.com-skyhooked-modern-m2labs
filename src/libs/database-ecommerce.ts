@@ -982,6 +982,103 @@ export const getSupportTickets = async (params?: {
 };
 
 // ========================================
+// UPDATE FUNCTIONS
+// ========================================
+
+export const updateProduct = async (id: string, data: Partial<Product>): Promise<Product | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  try {
+    // Build update query dynamically based on provided fields
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    
+    if (data.name !== undefined) { updateFields.push('name = ?'); values.push(data.name); }
+    if (data.slug !== undefined) { updateFields.push('slug = ?'); values.push(data.slug); }
+    if (data.description !== undefined) { updateFields.push('description = ?'); values.push(data.description); }
+    if (data.shortDescription !== undefined) { updateFields.push('shortDescription = ?'); values.push(data.shortDescription); }
+    if (data.brandId !== undefined) { updateFields.push('brandId = ?'); values.push(data.brandId); }
+    if (data.basePrice !== undefined) { updateFields.push('basePrice = ?'); values.push(data.basePrice); }
+    if (data.compareAtPrice !== undefined) { updateFields.push('compareAtPrice = ?'); values.push(data.compareAtPrice); }
+    if (data.cost !== undefined) { updateFields.push('cost = ?'); values.push(data.cost); }
+    if (data.isActive !== undefined) { updateFields.push('isActive = ?'); values.push(data.isActive); }
+    if (data.isFeatured !== undefined) { updateFields.push('isFeatured = ?'); values.push(data.isFeatured); }
+    if (data.weight !== undefined) { updateFields.push('weight = ?'); values.push(data.weight); }
+    if (data.powerRequirements !== undefined) { updateFields.push('powerRequirements = ?'); values.push(data.powerRequirements); }
+    if (data.compatibility !== undefined) { updateFields.push('compatibility = ?'); values.push(data.compatibility); }
+    if (data.technicalSpecs !== undefined) { updateFields.push('technicalSpecs = ?'); values.push(JSON.stringify(data.technicalSpecs)); }
+    
+    updateFields.push('updatedAt = ?');
+    values.push(now);
+    values.push(id);
+    
+    const query = `
+      UPDATE products 
+      SET ${updateFields.join(', ')}
+      WHERE id = ?
+    `;
+    
+    await db.prepare(query).bind(...values).run();
+    
+    // Return updated product
+    return await getProductById(id);
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw error;
+  }
+};
+
+export const updateOrder = async (id: string, data: Partial<Order>): Promise<Order | null> => {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  
+  try {
+    // Build update query dynamically based on provided fields
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    
+    if (data.status !== undefined) { updateFields.push('status = ?'); values.push(data.status); }
+    if (data.paymentStatus !== undefined) { updateFields.push('paymentStatus = ?'); values.push(data.paymentStatus); }
+    if (data.trackingNumber !== undefined) { updateFields.push('trackingNumber = ?'); values.push(data.trackingNumber); }
+    if (data.shippingMethod !== undefined) { updateFields.push('shippingMethod = ?'); values.push(data.shippingMethod); }
+    if (data.notes !== undefined) { updateFields.push('notes = ?'); values.push(data.notes); }
+    if (data.adminNotes !== undefined) { updateFields.push('adminNotes = ?'); values.push(data.adminNotes); }
+    if (data.stripePaymentIntentId !== undefined) { updateFields.push('stripePaymentIntentId = ?'); values.push(data.stripePaymentIntentId); }
+    if (data.stripeChargeId !== undefined) { updateFields.push('stripeChargeId = ?'); values.push(data.stripeChargeId); }
+    if (data.paymentMethod !== undefined) { updateFields.push('paymentMethod = ?'); values.push(data.paymentMethod); }
+    
+    // Handle special timestamp fields
+    if (data.status === 'shipped' && !data.shippedAt) {
+      updateFields.push('shippedAt = ?');
+      values.push(now);
+    }
+    if (data.status === 'delivered' && !data.deliveredAt) {
+      updateFields.push('deliveredAt = ?');
+      values.push(now);
+    }
+    
+    updateFields.push('updatedAt = ?');
+    values.push(now);
+    values.push(id);
+    
+    const query = `
+      UPDATE orders_new 
+      SET ${updateFields.join(', ')}
+      WHERE id = ?
+    `;
+    
+    await db.prepare(query).bind(...values).run();
+    
+    // Return updated order
+    return await getOrderById(id);
+  } catch (error) {
+    console.error('Error updating order:', error);
+    throw error;
+  }
+};
+
+// ========================================
 // INITIALIZATION
 // ========================================
 

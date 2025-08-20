@@ -7,7 +7,7 @@ interface Coupon {
   code: string;
   name: string;
   description?: string;
-  type: 'percentage' | 'fixed_amount' | 'free_shipping';
+  type: 'percentage' | 'fixed_amount' | 'free_shipping' | 'bundle_deal';
   value: number;
   minimumOrderAmount?: number;
   maximumDiscountAmount?: number;
@@ -106,6 +106,10 @@ export default function CouponForm({ coupon, onSave, onCancel }: CouponFormProps
 
     if (formData.type === 'percentage' && formData.value > 100) {
       newErrors.value = 'Percentage cannot exceed 100%';
+    }
+
+    if (formData.type === 'bundle_deal' && formData.value < 2) {
+      newErrors.value = 'Bundle deals must require at least 2 items';
     }
 
     if (!formData.validFrom) {
@@ -286,10 +290,11 @@ export default function CouponForm({ coupon, onSave, onCancel }: CouponFormProps
                 <option value="percentage">Percentage Discount</option>
                 <option value="fixed_amount">Fixed Amount</option>
                 <option value="free_shipping">Free Shipping</option>
+                <option value="bundle_deal">Bundle Deal</option>
               </select>
             </div>
 
-            {formData.type !== 'free_shipping' && (
+            {formData.type !== 'free_shipping' && formData.type !== 'bundle_deal' && (
               <div>
                 <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
                   {formData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'} *
@@ -307,6 +312,29 @@ export default function CouponForm({ coupon, onSave, onCancel }: CouponFormProps
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
                   placeholder={formData.type === 'percentage' ? '20' : '10.00'}
                 />
+                {errors.value && <p className="text-red-600 text-sm mt-1">{errors.value}</p>}
+              </div>
+            )}
+
+            {formData.type === 'bundle_deal' && (
+              <div>
+                <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
+                  Buy Quantity *
+                </label>
+                <input
+                  type="number"
+                  id="value"
+                  name="value"
+                  value={formData.value}
+                  onChange={handleInputChange}
+                  min="2"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
+                  placeholder="3"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Customer must buy this many items to trigger the bundle deal
+                </p>
                 {errors.value && <p className="text-red-600 text-sm mt-1">{errors.value}</p>}
               </div>
             )}

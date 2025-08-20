@@ -59,6 +59,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (data.type === 'bundle_deal' && data.value < 2) {
+      return NextResponse.json(
+        { success: false, error: 'Bundle deals must require at least 2 items' },
+        { status: 400 }
+      );
+    }
+
     // Create the coupon
     const couponData = {
       code: data.code.toUpperCase().trim(),
