@@ -276,7 +276,10 @@ export const createPaymentRequest = (
     currency: data.currency,
     total: data.total,
     displayItems: data.displayItems,
-    shippingOptions: data.shippingOptions,
+    shippingOptions: data.shippingOptions?.map(option => ({
+      ...option,
+      detail: option.detail || '' // Ensure detail is always a string
+    })),
     requestPayerName: true,
     requestPayerEmail: true,
     requestPayerPhone: true,
