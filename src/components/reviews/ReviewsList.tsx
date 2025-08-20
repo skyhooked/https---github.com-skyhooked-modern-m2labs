@@ -100,7 +100,7 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
   };
 
   const distribution = getRatingDistribution();
-  const averageRating = parseFloat(getAverageRating());
+  const averageRating = parseFloat(getAverageRating().toString());
 
   return (
     <div className="space-y-8">
