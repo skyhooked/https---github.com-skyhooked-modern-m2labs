@@ -1341,18 +1341,16 @@ export const createProductImage = async (data: Omit<ProductImage, 'id' | 'create
   const now = new Date().toISOString();
   
   await db.prepare(`
-    INSERT INTO product_images (id, productId, url, alt, sortOrder, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO product_images (id, productId, variantId, url, altText, position, isMainImage, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, data.productId, data.url, data.alt || '', 
-    data.sortOrder || 0, now
+    id, data.productId, data.variantId, data.url, data.altText || '', 
+    data.position, data.isMainImage, now
   ).run();
   
   return {
     id,
     ...data,
-    alt: data.alt || '',
-    sortOrder: data.sortOrder || 0,
     createdAt: now
   };
 };
