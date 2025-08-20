@@ -1327,26 +1327,40 @@ export const getAllCoupons = async (params?: {
     ...coupon,
     value: Number(coupon.value),
     minimumAmount: coupon.minimumAmount ? Number(coupon.minimumAmount) : undefined,
+    maximumDiscount: coupon.maximumDiscount ? Number(coupon.maximumDiscount) : undefined,
     usageLimit: coupon.usageLimit ? Number(coupon.usageLimit) : undefined,
-    usedCount: Number(coupon.usedCount || 0)
+    usageCount: Number(coupon.usageCount || 0),
+    perCustomerLimit: coupon.perCustomerLimit ? Number(coupon.perCustomerLimit) : undefined
   })) || [];
 };
 
-export const createCoupon = async (data: Omit<Coupon, 'id' | 'createdAt' | 'updatedAt'>): Promise<Coupon> => {
+export const createCoupon = async (data: Omit<Coupon, 'id' | 'usageCount' | 'createdAt' | 'updatedAt'>): Promise<Coupon> => {
   const db = getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
   await db.prepare(`
-    INSERT INTO coupons (id, code, type, value, minimumAmount, usageLimit, usedCount, startsAt, expiresAt, isActive, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO coupons (
+      id, code, name, description, type, value, minimumAmount, maximumDiscount, 
+      usageLimit, usageCount, perCustomerLimit, isActive, startsAt, expiresAt, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, data.code, data.type, data.value, data.minimumAmount || null,
-    data.usageLimit || null, 0, data.startsAt || null, 
-    data.expiresAt || null, data.isActive !== false, now, now
+    id, data.code, data.name || '', data.description || null, data.type, data.value, 
+    data.minimumAmount || null, data.maximumDiscount || null, data.usageLimit || null, 
+    0, data.perCustomerLimit || null, data.isActive !== false, 
+    data.startsAt || null, data.expiresAt || null, now, now
   ).run();
   
-  return { id, ...data, usedCount: 0, isActive: data.isActive !== false, createdAt: now, updatedAt: now };
+  return { 
+    id, 
+    ...data, 
+    name: data.name || '',
+    description: data.description || undefined,
+    usageCount: 0, 
+    isActive: data.isActive !== false, 
+    createdAt: now, 
+    updatedAt: now 
+  };
 };
 
 export const getProductReviews = async (productId: string): Promise<ProductReview[]> => {

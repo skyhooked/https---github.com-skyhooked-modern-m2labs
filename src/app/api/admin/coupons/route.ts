@@ -73,12 +73,15 @@ export async function POST(request: NextRequest) {
       description: data.description?.trim(),
       type: data.type,
       value: data.type === 'free_shipping' ? 0 : (data.type === 'fixed_amount' ? Math.round(data.value * 100) : data.value),
-      minimumOrderAmount: data.minimumOrderAmount ? Math.round(data.minimumOrderAmount * 100) : null,
-      maximumDiscountAmount: data.maximumDiscountAmount ? Math.round(data.maximumDiscountAmount * 100) : null,
-      usageLimit: data.usageLimit || null,
+      minimumAmount: data.minimumOrderAmount ? Math.round(data.minimumOrderAmount * 100) : undefined,
+      maximumDiscount: data.maximumDiscountAmount ? Math.round(data.maximumDiscountAmount * 100) : undefined,
+      usageLimit: data.usageLimit || undefined,
+      perCustomerLimit: data.perCustomerLimit || undefined,
       isActive: data.isActive !== false,
-      validFrom: data.validFrom,
-      validUntil: data.validUntil || null
+      startsAt: data.validFrom,
+      expiresAt: data.validUntil || undefined,
+      applicableToProductIds: data.applicableToProductIds || undefined,
+      applicableToCategoryIds: data.applicableToCategoryIds || undefined
     };
 
     const coupon = await createCoupon(couponData);
