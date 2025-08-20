@@ -4,9 +4,9 @@ import {
   createProduct, 
   createProductVariant,
   createProductImage,
-  updateInventory,
-  generateId 
+  updateInventory
 } from '@/libs/database-ecommerce';
+import { generateId } from '@/libs/auth';
 
 export const runtime = 'edge';
 
