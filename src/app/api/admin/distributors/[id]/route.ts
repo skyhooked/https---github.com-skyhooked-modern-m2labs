@@ -7,9 +7,10 @@ export const runtime = 'edge';
 // GET /api/admin/distributors/[id] - Get distributor by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const { id } = params;
     const distributor = await getDistributorById(id);
 
@@ -39,9 +40,10 @@ export async function GET(
 // PUT /api/admin/distributors/[id] - Update distributor
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const { id } = params;
     const body = await request.json();
     
@@ -101,9 +103,10 @@ export async function PUT(
 // DELETE /api/admin/distributors/[id] - Delete distributor
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const { id } = params;
     const success = await deleteDistributor(id);
 
