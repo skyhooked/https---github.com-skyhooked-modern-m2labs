@@ -1300,8 +1300,8 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 export const deleteProduct = async (id: string): Promise<boolean> => {
   const db = getDatabase();
   try {
-    const result = await db.prepare('DELETE FROM products_new WHERE id = ?').bind(id).run();
-    return result.changes > 0;
+    const result = await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+    return result.meta?.changes > 0;
   } catch (error) {
     console.error('Error deleting product:', error);
     return false;
@@ -1362,7 +1362,7 @@ export const updateInventory = async (productId: string, variantId: string, quan
       SET stock = ?, updatedAt = ?
       WHERE id = ? AND productId = ?
     `).bind(quantity, new Date().toISOString(), variantId, productId).run();
-    return result.changes > 0;
+    return result.meta?.changes > 0;
   } catch (error) {
     console.error('Error updating inventory:', error);
     return false;
@@ -1549,7 +1549,7 @@ export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolea
     const result = await db.prepare(`
       UPDATE product_reviews SET helpfulVotes = helpfulVotes + 1, updatedAt = ? WHERE id = ?
     `).bind(new Date().toISOString(), reviewId).run();
-    return result.changes > 0;
+    return result.meta?.changes > 0;
   } catch (error) {
     console.error('Error updating review helpful votes:', error);
     return false;
