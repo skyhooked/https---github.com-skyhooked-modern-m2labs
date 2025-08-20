@@ -96,7 +96,10 @@ export async function POST(request: NextRequest) {
       userId: decoded.sub,
       rating,
       title,
-      content
+      content,
+      helpfulVotes: 0,
+      isVerified: false,
+      isPublished: true
     });
 
     return NextResponse.json({

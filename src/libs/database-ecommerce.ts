@@ -1381,7 +1381,7 @@ export const getProductReviews = async (
   
   let query = `
     SELECT * FROM product_reviews 
-    WHERE productId = ? AND isApproved = true
+    WHERE productId = ? AND isPublished = true
   `;
   const params = [productId];
   
@@ -1421,11 +1421,11 @@ export const createProductReview = async (data: Omit<ProductReview, 'id' | 'crea
   const now = new Date().toISOString();
   
   await db.prepare(`
-    INSERT INTO product_reviews (id, productId, userId, userName, rating, title, content, isApproved, helpfulVotes, createdAt, updatedAt)
+    INSERT INTO product_reviews (id, productId, userId, rating, title, content, isVerified, isPublished, helpfulVotes, createdAt, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(id, data.productId, data.userId, data.userName, data.rating, data.title, data.content, data.isApproved || false, 0, now, now).run();
+  `).bind(id, data.productId, data.userId, data.rating, data.title, data.content, data.isVerified || false, data.isPublished || false, data.helpfulVotes || 0, now, now).run();
   
-  return { id, ...data, isApproved: data.isApproved || false, helpfulVotes: 0, createdAt: now, updatedAt: now };
+  return { id, ...data, helpfulVotes: data.helpfulVotes || 0, createdAt: now, updatedAt: now };
 };
 
 export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolean> => {
