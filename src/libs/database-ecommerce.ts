@@ -1368,11 +1368,46 @@ export const createCoupon = async (data: Omit<Coupon, 'id' | 'usageCount' | 'cre
   };
 };
 
-export const getProductReviews = async (productId: string): Promise<ProductReview[]> => {
+export const getProductReviews = async (
+  productId: string, 
+  options?: {
+    sortBy?: 'createdAt' | 'rating' | 'helpfulVotes';
+    limit?: number;
+    offset?: number;
+    userId?: string;
+  }
+): Promise<ProductReview[]> => {
   const db = getDatabase();
-  const result = await db.prepare(`
-    SELECT * FROM product_reviews WHERE productId = ? AND isApproved = true ORDER BY createdAt DESC
-  `).bind(productId).all();
+  
+  let query = `
+    SELECT * FROM product_reviews 
+    WHERE productId = ? AND isApproved = true
+  `;
+  const params = [productId];
+  
+  // Add user filter if provided
+  if (options?.userId) {
+    query += ` AND userId = ?`;
+    params.push(options.userId);
+  }
+  
+  // Add sorting
+  const sortBy = options?.sortBy || 'createdAt';
+  const sortOrder = sortBy === 'rating' ? 'DESC' : (sortBy === 'helpfulVotes' ? 'DESC' : 'DESC');
+  query += ` ORDER BY ${sortBy} ${sortOrder}`;
+  
+  // Add pagination
+  if (options?.limit) {
+    query += ` LIMIT ?`;
+    params.push(options.limit.toString());
+    
+    if (options?.offset) {
+      query += ` OFFSET ?`;
+      params.push(options.offset.toString());
+    }
+  }
+  
+  const result = await db.prepare(query).bind(...params).all();
   return result.results?.map((review: any) => ({
     ...review,
     rating: Number(review.rating),
