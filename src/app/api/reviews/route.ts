@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already reviewed this product
-    const existingReviews = await getProductReviews(productId, { userId: decoded.userId });
+    const existingReviews = await getProductReviews(productId, { userId: decoded.sub });
     if (existingReviews.length > 0) {
       return NextResponse.json(
         { success: false, error: 'You have already reviewed this product' },
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const review = await createProductReview({
       productId,
-      userId: decoded.userId,
+      userId: decoded.sub,
       rating,
       title,
       content
