@@ -594,7 +594,14 @@ export const getProductVariants = async (productId: string): Promise<ProductVari
     ORDER BY position ASC, isDefault DESC
   `).bind(productId).all();
   
-  return result.results || [];
+  return (result.results || []).map(variant => ({
+    ...variant,
+    isDefault: variant.isDefault === true || variant.isDefault === 'true',
+    trackInventory: variant.trackInventory === true || variant.trackInventory === 'true',
+    continueSellingWhenOutOfStock: variant.continueSellingWhenOutOfStock === true || variant.continueSellingWhenOutOfStock === 'true',
+    requiresShipping: variant.requiresShipping === true || variant.requiresShipping === 'true',
+    taxable: variant.taxable === true || variant.taxable === 'true'
+  }));
 };
 
 export const getProductImages = async (productId: string): Promise<ProductImage[]> => {
@@ -606,7 +613,10 @@ export const getProductImages = async (productId: string): Promise<ProductImage[
     ORDER BY position ASC, isMainImage DESC
   `).bind(productId).all();
   
-  return result.results || [];
+  return (result.results || []).map(image => ({
+    ...image,
+    isMainImage: image.isMainImage === true || image.isMainImage === 'true'
+  }));
 };
 
 export const getProductCategories = async (productId: string): Promise<ProductCategory[]> => {
@@ -1357,7 +1367,7 @@ export const updateInventory = async (variantId: string, quantity: number, locat
   try {
     // Get default location if none specified
     if (!locationId) {
-      const defaultLocation = await db.prepare('SELECT id FROM inventory_locations WHERE isDefault = TRUE LIMIT 1').first();
+      const defaultLocation = await db.prepare('SELECT id FROM inventory_locations WHERE (isDefault = TRUE OR isDefault = "true") LIMIT 1').first();
       locationId = defaultLocation?.id;
       
       // Create default location if none exists
@@ -1445,8 +1455,8 @@ export const getAllCoupons = async (params?: {
   const bindings: any[] = [];
   
   if (params?.isActive !== undefined) {
-    conditions.push('isActive = ?');
-    bindings.push(params.isActive);
+    conditions.push('(isActive = ? OR isActive = ?)');
+    bindings.push(params.isActive, params.isActive.toString());
   }
   
   if (conditions.length > 0) {
@@ -1519,7 +1529,7 @@ export const getProductReviews = async (
   
   let query = `
     SELECT * FROM product_reviews 
-    WHERE productId = ? AND isPublished = true
+    WHERE productId = ? AND (isPublished = true OR isPublished = 'true')
   `;
   const params = [productId];
   
