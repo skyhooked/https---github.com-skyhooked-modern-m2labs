@@ -64,13 +64,20 @@ export async function POST(request: NextRequest) {
       description: data.description,
       shortDescription: data.shortDescription,
       brandId: data.brandId || 'brand-m2labs', // Default to M2 Labs
+      sku: data.sku || `M2-${Date.now()}`, // Generate SKU if not provided
       basePrice: Math.round(data.basePrice), // Ensure it's in cents
       compareAtPrice: data.compareAtPrice ? Math.round(data.compareAtPrice) : undefined,
+      cost: data.cost ? Math.round(data.cost) : undefined,
       isFeatured: data.isFeatured || false,
       isActive: data.isActive !== false, // Default to true
+      weight: data.weight,
+      dimensions: data.dimensions,
       powerRequirements: data.powerRequirements,
       compatibility: data.compatibility,
-      technicalSpecs: data.technicalSpecs || {}
+      technicalSpecs: data.technicalSpecs || {},
+      seoTitle: data.seoTitle,
+      seoDescription: data.seoDescription,
+      metaKeywords: data.metaKeywords
     };
 
     const product = await createProduct(productData);
