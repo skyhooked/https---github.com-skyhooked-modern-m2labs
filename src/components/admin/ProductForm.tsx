@@ -2,11 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-}
+
 
 interface Category {
   id: string;
@@ -46,7 +42,7 @@ interface Product {
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
-  brand?: Brand;
+  brandId?: string;
   variants?: ProductVariant[];
   images?: ProductImage[];
   categories?: Category[];
@@ -71,12 +67,13 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     powerRequirements: '',
     compatibility: '',
     technicalSpecs: {},
+    brandId: 'm2-labs', // Default to M2 Labs brand
     variants: [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
     images: [],
     categories: []
   });
 
-  const [brands, setBrands] = useState<Brand[]>([]);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -84,7 +81,6 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
   const [imageFileName, setImageFileName] = useState('');
 
   useEffect(() => {
-    fetchBrands();
     fetchCategories();
     
     if (product) {
@@ -92,6 +88,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         ...product,
         compareAtPrice: product.compareAtPrice || 0,
         technicalSpecs: product.technicalSpecs || {},
+        brandId: product.brandId || 'm2-labs', // Ensure M2 Labs brand is always set
         variants: product.variants || [{ name: 'Standard', sku: '', isDefault: true, inventory: { quantity: 0 } }],
         images: product.images || [],
         categories: product.categories || []
@@ -99,17 +96,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     }
   }, [product]);
 
-  const fetchBrands = async () => {
-    try {
-      const response = await fetch('/api/admin/brands');
-      if (response.ok) {
-        const data = await response.json();
-        setBrands(data.brands || []);
-      }
-    } catch (error) {
-      console.error('Error fetching brands:', error);
-    }
-  };
+
 
   const fetchCategories = async () => {
     try {
@@ -399,23 +386,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
               />
             </div>
 
-            <div>
-              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
-                Brand
-              </label>
-              <select
-                id="brand"
-                name="brandId"
-                value={formData.brand?.id || ''}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
-              >
-                <option value="">Select a brand</option>
-                {brands.map(brand => (
-                  <option key={brand.id} value={brand.id}>{brand.name}</option>
-                ))}
-              </select>
-            </div>
+
 
             <div className="flex items-center space-x-6">
               <div className="flex items-center">

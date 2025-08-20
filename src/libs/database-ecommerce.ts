@@ -1265,7 +1265,7 @@ export const getProductById = async (id: string): Promise<Product | null> => {
            b.isActive as brandIsActive,
            b.createdAt as brandCreatedAt,
            b.updatedAt as brandUpdatedAt
-    FROM products_new p
+    FROM products p
     LEFT JOIN brands b ON p.brandId = b.id
     WHERE p.id = ?
   `).bind(id).first();
