@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Remove sensitive data
-    const { passwordHash, ...safeDistributor } = distributor;
+    // Remove sensitive data (if it exists)
+    const { passwordHash, ...safeDistributor } = distributor as any;
 
     return NextResponse.json({
       success: true,

@@ -18,8 +18,11 @@ export async function GET(request: NextRequest) {
       territory
     });
 
-    // Remove passwordHash from response
-    const safeDistributors = distributors.map(({ passwordHash, ...distributor }) => distributor);
+    // Remove passwordHash from response (if it exists)
+    const safeDistributors = distributors.map((dist: any) => {
+      const { passwordHash, ...distributor } = dist;
+      return distributor;
+    });
 
     return NextResponse.json({
       success: true,
@@ -95,8 +98,8 @@ export async function POST(request: NextRequest) {
       isVerified: Boolean(isVerified)
     });
 
-    // Remove passwordHash from response
-    const { passwordHash: _, ...safeDistributor } = distributor;
+    // Remove passwordHash from response (if it exists)
+    const { passwordHash: _, ...safeDistributor } = distributor as any;
 
     return NextResponse.json({
       success: true,

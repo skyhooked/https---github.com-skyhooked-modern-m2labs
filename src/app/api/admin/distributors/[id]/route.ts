@@ -21,8 +21,8 @@ export async function GET(
       );
     }
 
-    // Remove passwordHash from response
-    const { passwordHash, ...safeDistributor } = distributor;
+    // Remove passwordHash from response (if it exists)
+    const { passwordHash, ...safeDistributor } = distributor as any;
 
     return NextResponse.json({
       success: true,
@@ -76,8 +76,8 @@ export async function PUT(
       );
     }
 
-    // Remove passwordHash from response
-    const { passwordHash, ...safeDistributor } = updatedDistributor;
+    // Remove passwordHash from response (if it exists)
+    const { passwordHash, ...safeDistributor } = updatedDistributor as any;
 
     return NextResponse.json({
       success: true,

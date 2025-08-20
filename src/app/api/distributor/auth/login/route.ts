@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('24h')
       .sign(JWT_SECRET);
 
-    // Remove sensitive data from response
-    const { passwordHash, ...safeDistributor } = distributor;
+    // Remove sensitive data from response (if it exists)
+    const { passwordHash, ...safeDistributor } = distributor as any;
 
     // Set HTTP-only cookie
     const response = NextResponse.json({
