@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const orders = await getAllOrders({
-      status,
-      customerId,
+      status: status || undefined,
+      userId: customerId || undefined,
       limit,
       offset
     });
