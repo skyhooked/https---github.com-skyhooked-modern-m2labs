@@ -93,7 +93,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating coupon:', error);
-    if (error.message?.includes('UNIQUE constraint failed')) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('UNIQUE constraint failed')) {
       return NextResponse.json(
         { success: false, error: 'A coupon with this code already exists' },
         { status: 400 }
