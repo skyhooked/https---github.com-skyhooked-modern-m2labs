@@ -1408,23 +1408,32 @@ export const createBrand = async (data: Omit<Brand, 'id' | 'createdAt' | 'update
   return { id, ...data, description: data.description || '', logo: data.logo || '', website: data.website || '', createdAt: now, updatedAt: now };
 };
 
-export const getAllCategories = async (): Promise<Category[]> => {
+export const getAllCategories = async (): Promise<ProductCategory[]> => {
   const db = getDatabase();
-  const result = await db.prepare('SELECT * FROM categories ORDER BY name ASC').all();
+  const result = await db.prepare('SELECT * FROM product_categories ORDER BY sortOrder ASC, name ASC').all();
   return result.results || [];
 };
 
-export const createCategory = async (data: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> => {
+export const createCategory = async (data: Omit<ProductCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductCategory> => {
   const db = getDatabase();
   const id = generateId();
   const now = new Date().toISOString();
   
   await db.prepare(`
-    INSERT INTO categories (id, name, slug, description, parentId, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(id, data.name, data.slug, data.description || '', data.parentId || null, now, now).run();
+    INSERT INTO product_categories (id, name, slug, description, parentId, sortOrder, isActive, seoTitle, seoDescription, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, data.name, data.slug, data.description, data.parentId, 
+    data.sortOrder, data.isActive, data.seoTitle, data.seoDescription, 
+    now, now
+  ).run();
   
-  return { id, ...data, description: data.description || '', parentId: data.parentId || null, createdAt: now, updatedAt: now };
+  return {
+    id,
+    ...data,
+    createdAt: now,
+    updatedAt: now
+  };
 };
 
 export const getAllCoupons = async (params?: {
