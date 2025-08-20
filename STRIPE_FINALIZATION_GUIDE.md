@@ -137,11 +137,11 @@ SENDGRID_FROM_EMAIL=orders@m2labs.com
 
 ## 🛡️ Warranty System Integration
 
-Your warranty system is fully integrated:
-- ✅ **Automatic warranty creation** on successful orders
+Your warranty system is integrated and ready:
 - ✅ **Customer warranty claims** via account portal
 - ✅ **Admin warranty management** interface
 - ✅ **Lifetime warranty tracking** per product
+- ⚠️ **Automatic warranty creation**: wire this in the Stripe webhook (`payment_intent.succeeded`) to auto-create warranty records after payment. The webhook scaffold exists; see “Post‑payment automation” below.
 
 ---
 
@@ -153,6 +153,32 @@ Available metrics in your admin dashboard:
 - 📦 **Top-selling products** analysis
 - 👥 **Customer acquisition** metrics
 - 🎫 **Coupon usage** and effectiveness
+
+---
+
+## ✅ Post‑payment automation (enable these)
+
+Implement these in `src/app/api/stripe/webhook/route.ts` inside `handlePaymentSuccess`:
+
+- [ ] Clear the customer cart after successful payment
+- [ ] Decrement inventory for each `order_item`
+- [ ] Create warranty records for eligible products
+- [ ] Send order confirmation email (hook up `EmailService`)
+
+Notes:
+- `updateOrder(...)` is already called to mark orders paid/processing
+- Email service is stubbed; connect Resend/SendGrid per the section below
+
+---
+
+## ⚠️ Remaining finalization tasks (non‑blocking)
+
+- **Checkout addresses**: Replace placeholder shipping/billing fields with a real form and pass through to `/api/stripe/create-payment-intent` (file: `src/app/checkout/page.tsx`).
+- **Shipping & Tax**: Current calculator is heuristic (`src/libs/stripe.ts`). Consider enabling Stripe Tax and/or a carrier API for accurate rates; otherwise configure fixed rates in DB.
+- **Email service**: `EmailService` is a stub. Add credentials and wire Resend/SendGrid. Set `FROM_EMAIL` and provider API keys.
+- **Admin auth**: `AdminLayout` uses a simple password gate (`AuthWrapper`). Replace with real role‑based auth before launch.
+- **Analytics – Top products**: The sample data can be upgraded to aggregate from `order_items` for production insights.
+- **Future endpoints (optional)**: `/api/stripe/create-subscription` and `/api/stripe/payment-methods` are referenced for future features and are intentionally not implemented yet.
 
 ---
 
