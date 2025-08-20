@@ -145,16 +145,31 @@ export const confirmPayment = async (
 // ========================================
 
 export const savePaymentMethod = async (
-  stripe: Stripe,
   paymentMethodId: string,
   customerId: string
 ): Promise<{ error?: any; paymentMethod?: any }> => {
-  const { error, paymentMethod } = await stripe.paymentMethods.attach(
-    paymentMethodId,
-    { customer: customerId }
-  );
-  
-  return { error, paymentMethod };
+  try {
+    const response = await fetch('/api/stripe/save-payment-method', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        paymentMethodId,
+        customerId,
+      }),
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      return { error: result.error || 'Failed to save payment method' };
+    }
+    
+    return { paymentMethod: result.paymentMethod };
+  } catch (error) {
+    return { error: 'Network error while saving payment method' };
+  }
 };
 
 export const getCustomerPaymentMethods = async (customerId: string): Promise<{
