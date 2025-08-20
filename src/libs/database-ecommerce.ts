@@ -1149,17 +1149,32 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 
 export const addToWishlist = async (userId: string, productId: string): Promise<WishlistItem> => {
   const db = getDatabase();
-  const id = generateId();
   const now = new Date().toISOString();
   
+  // Find or create default wishlist for user
+  let wishlist = await db.prepare(`
+    SELECT * FROM wishlists WHERE userId = ? AND name = 'My Wishlist'
+  `).bind(userId).first();
+  
+  if (!wishlist) {
+    const wishlistId = generateId();
+    await db.prepare(`
+      INSERT INTO wishlists (id, userId, name, isPublic, createdAt, updatedAt)
+      VALUES (?, ?, 'My Wishlist', FALSE, ?, ?)
+    `).bind(wishlistId, userId, now, now).run();
+    wishlist = { id: wishlistId };
+  }
+  
+  // Add item to wishlist
+  const itemId = generateId();
   await db.prepare(`
-    INSERT INTO wishlists (id, userId, productId, addedAt)
+    INSERT OR REPLACE INTO wishlist_items (id, wishlistId, productId, addedAt)
     VALUES (?, ?, ?, ?)
-  `).bind(id, userId, productId, now).run();
+  `).bind(itemId, wishlist.id, productId, now).run();
   
   return {
-    id,
-    userId,
+    id: itemId,
+    wishlistId: wishlist.id,
     productId,
     addedAt: now
   };
@@ -1169,8 +1184,10 @@ export const removeFromWishlist = async (userId: string, productId: string): Pro
   const db = getDatabase();
   
   await db.prepare(`
-    DELETE FROM wishlists 
-    WHERE userId = ? AND productId = ?
+    DELETE FROM wishlist_items 
+    WHERE wishlistId IN (
+      SELECT id FROM wishlists WHERE userId = ?
+    ) AND productId = ?
   `).bind(userId, productId).run();
 };
 
@@ -1178,8 +1195,10 @@ export const clearWishlist = async (userId: string): Promise<void> => {
   const db = getDatabase();
   
   await db.prepare(`
-    DELETE FROM wishlists 
-    WHERE userId = ?
+    DELETE FROM wishlist_items 
+    WHERE wishlistId IN (
+      SELECT id FROM wishlists WHERE userId = ?
+    )
   `).bind(userId).run();
 };
 
@@ -1187,14 +1206,33 @@ export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
   const db = getDatabase();
   
   const result = await db.prepare(`
-    SELECT w.*, p.name as productName, p.basePrice, p.slug
-    FROM wishlists w
-    LEFT JOIN products p ON w.productId = p.id
+    SELECT wi.*, p.name as productName, p.basePrice, p.slug
+    FROM wishlist_items wi
+    INNER JOIN wishlists w ON wi.wishlistId = w.id
+    LEFT JOIN products p ON wi.productId = p.id
     WHERE w.userId = ?
-    ORDER BY w.addedAt DESC
+    ORDER BY wi.addedAt DESC
   `).bind(userId).all();
   
-  return result.results || [];
+  return (result.results || []).map(row => ({
+    id: row.id,
+    wishlistId: row.wishlistId,
+    productId: row.productId,
+    variantId: row.variantId,
+    addedAt: row.addedAt,
+    product: row.productName ? {
+      id: row.productId,
+      name: row.productName,
+      slug: row.slug,
+      brandId: '', // Will be populated when needed
+      sku: '', // Will be populated when needed
+      basePrice: row.basePrice,
+      isActive: true,
+      isFeatured: false,
+      createdAt: '',
+      updatedAt: ''
+    } : undefined
+  }));
 };
 
 // ========================================
