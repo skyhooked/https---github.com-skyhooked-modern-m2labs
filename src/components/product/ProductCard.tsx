@@ -53,7 +53,7 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(price);
+    }).format(price / 100); // Convert from cents to dollars
   };
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -71,7 +71,7 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
       await addToCart(
         product.defaultVariant.id,
         1,
-        price
+        price / 100 // Convert from cents to dollars for cart
       );
     } catch (error) {
       console.error('Failed to add to cart:', error);
