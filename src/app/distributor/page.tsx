@@ -66,7 +66,7 @@ export default function DistributorLogin() {
 
       if (response.ok) {
         setDistributor(data.distributor);
-        router.push('/distributor/dashboard');
+        // Stay on the same page - no redirect needed
       } else {
         setError(data.error || 'Login failed');
       }
