@@ -39,16 +39,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Skip auth check for admin routes - they use their own AuthWrapper
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      console.log('AuthProvider: Skipping auth check for admin route:', window.location.pathname);
       setLoading(false);
       return;
     }
     
+    console.log('AuthProvider: Running auth check for route:', typeof window !== 'undefined' ? window.location.pathname : 'server');
     // Run auth check asynchronously without blocking render
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
+    // Double-check: Skip auth check for admin routes
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      console.log('AuthProvider: checkAuth() called but skipping for admin route');
+      return;
+    }
+    
     try {
+      console.log('AuthProvider: Making request to /api/auth/me');
       // Add timeout to prevent hanging
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
