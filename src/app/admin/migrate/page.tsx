@@ -142,6 +142,7 @@ export default function MigratePage() {
               If your database was created before these updates, you'll need to run this migration to add the missing columns.
             </div>
           </div>
+          </div>
           )}
         </div>
       </AdminLayout>
