@@ -755,13 +755,23 @@ export const getFeaturedArtists = async (count: number = 3): Promise<Artist[]> =
   const db = getDatabase();
   if (!db) throw new Error('Database not available');
   
+  console.log('🔍 getFeaturedArtists: Querying for featured artists...');
   const result = await db.prepare('SELECT * FROM artists WHERE featured = 1 ORDER BY order_position ASC LIMIT ?').bind(count).all();
-  return (result.results || []).map(artist => ({
+  console.log('📊 getFeaturedArtists: Raw query result:', {
+    success: result.success,
+    resultCount: result.results?.length || 0,
+    results: result.results?.map(r => ({ id: r.id, name: r.name, featured: r.featured }))
+  });
+  
+  const transformedArtists = (result.results || []).map(artist => ({
     ...artist,
     gear: JSON.parse(artist.gear || '[]'),
     customSections: JSON.parse(artist.customSections || '[]'),
     order: artist.order_position,
   }));
+  
+  console.log('✨ getFeaturedArtists: Returning', transformedArtists.length, 'featured artists');
+  return transformedArtists;
 };
 
 // ---------- Helper Functions ----------
