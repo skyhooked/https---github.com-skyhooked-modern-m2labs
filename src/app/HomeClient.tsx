@@ -382,7 +382,7 @@ export default function HomeClient() {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               disabled={newsletterStatus === 'loading'}
-              className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent disabled:opacity-50"
+              className="flex-1 w-full sm:w-auto px-4 py-3 border border-secondary/30 rounded focus:outline-none focus:border-accent disabled:opacity-50 text-[#F5F5F5] placeholder-gray-400"
             />
             <button
               type="submit"
