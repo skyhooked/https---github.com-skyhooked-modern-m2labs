@@ -18,6 +18,7 @@ interface SupportTicket {
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
+  messageCount?: number;
   messages?: Array<{
     id: string;
     message: string;
@@ -438,7 +439,7 @@ export default function SupportManagement() {
                           <div>
                             <div className="text-sm font-medium text-gray-900">{ticket.subject}</div>
                             <div className="text-sm text-gray-500">
-                              {ticket.messages?.length || 0} message{(ticket.messages?.length || 0) !== 1 ? 's' : ''}
+                              {ticket.messageCount || 0} message{(ticket.messageCount || 0) !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </td>

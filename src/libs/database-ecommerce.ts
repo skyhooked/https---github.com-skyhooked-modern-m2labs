@@ -1077,22 +1077,29 @@ export const getSupportTickets = async (params?: {
 }): Promise<SupportTicket[]> => {
   const db = await getDatabase();
   
-  let query = 'SELECT * FROM support_tickets';
+  let query = `
+    SELECT 
+      st.*,
+      COUNT(sm.id) as messageCount
+    FROM support_tickets st
+    LEFT JOIN support_messages sm ON st.id = sm.ticketId
+  `;
+  
   const conditions: string[] = [];
   const bindings: any[] = [];
   
   if (params?.userId) {
-    conditions.push('userId = ?');
+    conditions.push('st.userId = ?');
     bindings.push(params.userId);
   }
   
   if (params?.status) {
-    conditions.push('status = ?');
+    conditions.push('st.status = ?');
     bindings.push(params.status);
   }
   
   if (params?.category) {
-    conditions.push('category = ?');
+    conditions.push('st.category = ?');
     bindings.push(params.category);
   }
   
@@ -1100,7 +1107,7 @@ export const getSupportTickets = async (params?: {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
   
-  query += ' ORDER BY createdAt DESC';
+  query += ' GROUP BY st.id ORDER BY st.createdAt DESC';
   
   const result = await db.prepare(query).bind(...bindings).all();
   return result.results || [];
