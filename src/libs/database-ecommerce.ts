@@ -1055,6 +1055,21 @@ export const createSupportMessage = async (data: Omit<SupportMessage, 'id' | 'cr
   return message;
 };
 
+export const getSupportMessages = async (ticketId: string): Promise<SupportMessage[]> => {
+  const db = await getDatabase();
+  
+  const result = await db.prepare(`
+    SELECT * FROM support_messages 
+    WHERE ticketId = ? 
+    ORDER BY createdAt ASC
+  `).bind(ticketId).all();
+  
+  return (result.results || []).map(row => ({
+    ...row,
+    attachments: JSON.parse(row.attachments || '[]')
+  }));
+};
+
 export const getSupportTickets = async (params?: {
   userId?: string;
   status?: string;

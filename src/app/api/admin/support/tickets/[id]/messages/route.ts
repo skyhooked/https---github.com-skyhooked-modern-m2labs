@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupportMessage } from '@/libs/database-ecommerce';
+import { createSupportMessage, getSupportMessages } from '@/libs/database-ecommerce';
 
 export const runtime = 'edge';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const messages = await getSupportMessages(id);
+    
+    return NextResponse.json({
+      success: true,
+      data: messages
+    });
+  } catch (error) {
+    console.error('Error fetching support messages:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch messages' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +43,7 @@ export async function POST(
       ticketId: id,
       message: data.message,
       isInternal: data.isInternal || false,
-      userId: data.userId
+      userId: data.userId || null  // Handle undefined userId for admin messages
     });
 
     return NextResponse.json({

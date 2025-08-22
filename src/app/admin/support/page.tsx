@@ -79,6 +79,25 @@ export default function SupportManagement() {
     }
   };
 
+  const loadTicketMessages = async (ticket: SupportTicket) => {
+    try {
+      const response = await fetch(`/api/admin/support/tickets/${ticket.id}/messages`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedTicket({
+          ...ticket,
+          messages: data.data || []
+        });
+      } else {
+        console.error('Failed to load messages');
+        setSelectedTicket(ticket);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setSelectedTicket(ticket);
+    }
+  };
+
   const sendMessage = async () => {
     if (!selectedTicket || !newMessage.trim()) return;
 
@@ -99,7 +118,7 @@ export default function SupportManagement() {
         const data = await response.json();
         setSelectedTicket({
           ...selectedTicket,
-          messages: [...(selectedTicket.messages || []), data.message]
+          messages: [...(selectedTicket.messages || []), data.data]
         });
         setNewMessage('');
         
@@ -449,7 +468,7 @@ export default function SupportManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
-                            onClick={() => setSelectedTicket(ticket)}
+                            onClick={() => loadTicketMessages(ticket)}
                             className="text-[#FF8A3D] hover:text-[#FF8A3D]/80"
                           >
                             View & Reply
