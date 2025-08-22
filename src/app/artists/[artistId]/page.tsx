@@ -554,19 +554,25 @@ export default function ArtistProfile() {
               Meet More Artists
             </Link>
           </div>
-
-          {artist.showBandsintown && (
-            <div className="mt-12">
-              <BandsinTownWidget
-                artistName={artist.bandsintown?.artistName || artist.name}
-                appId="M2Labs"
-                maxEvents={10}
-                className=""
-              />
-            </div>
-          )}
         </div>
       </section>
+
+      {/* Bandsintown Events Section */}
+      {artist.showBandsintown && (
+        <section className="py-16 bg-white">
+          <div className="max-w-4xl mx-auto px-5">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+              Upcoming Shows
+            </h2>
+            <BandsinTownWidget
+              artistName={artist.bandsintown?.artistName || artist.name}
+              appId="M2Labs"
+              maxEvents={10}
+              className=""
+            />
+          </div>
+        </section>
+      )}
     </Layout>
   );
 }
