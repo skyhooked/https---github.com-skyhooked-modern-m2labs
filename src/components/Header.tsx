@@ -8,7 +8,7 @@ import logoSrc from '../assets/logos/H-Logo-white.svg';
 import SearchModal from './SearchModal';
 import CartIcon from './cart/CartIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAllArtists, loadArtistsFromServer, Artist } from '@/data/artistData';
+import { getAllArtists, Artist } from '@/libs/artists';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,8 +20,8 @@ export default function Header() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        await loadArtistsFromServer();
-        setArtists(getAllArtists());
+        const artistsData = await getAllArtists();
+        setArtists(artistsData);
       } catch (error) {
         console.error('Failed to load artists for header:', error);
       }
@@ -30,8 +30,13 @@ export default function Header() {
     loadData();
 
     // Refresh artists periodically to catch admin changes
-    const interval = setInterval(() => {
-      setArtists(getAllArtists());
+    const interval = setInterval(async () => {
+      try {
+        const freshArtists = await getAllArtists();
+        setArtists(freshArtists);
+      } catch (error) {
+        console.error('Failed to refresh artists:', error);
+      }
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(interval);

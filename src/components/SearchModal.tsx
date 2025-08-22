@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getAllArtists } from '@/data/artistData';
+import { getAllArtists } from '@/libs/artists';
 import { newsData } from '@/data/newsData';
 
 interface SearchModalProps {
@@ -27,13 +27,19 @@ export default function SearchModal({ onClose }: SearchModalProps) {
     const searchLower = term.toLowerCase();
     
     // Search artists
-    const artists = getAllArtists().filter(artist => 
-      artist.name.toLowerCase().includes(searchLower) ||
-      artist.genre.toLowerCase().includes(searchLower) ||
-      artist.location.toLowerCase().includes(searchLower) ||
-      artist.bio.toLowerCase().includes(searchLower) ||
-      artist.gear.some(gear => gear.toLowerCase().includes(searchLower))
-    );
+    let artists: any[] = [];
+    try {
+      const allArtists = await getAllArtists();
+      artists = allArtists.filter(artist => 
+        artist.name.toLowerCase().includes(searchLower) ||
+        (artist.genre && artist.genre.toLowerCase().includes(searchLower)) ||
+        (artist.location && artist.location.toLowerCase().includes(searchLower)) ||
+        (artist.bio && artist.bio.toLowerCase().includes(searchLower)) ||
+        (artist.gear && artist.gear.some(gear => gear.toLowerCase().includes(searchLower)))
+      );
+    } catch (error) {
+      console.error('Error searching artists:', error);
+    }
 
     // Search news
     const news = newsData.filter(post =>

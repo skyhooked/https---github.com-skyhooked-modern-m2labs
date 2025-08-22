@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import Link from 'next/link';
-import { getAllArtists } from '@/data/artistData';
+// Remove artistData import - we'll get stats from the API instead
 
 export const runtime = 'edge'
 
@@ -56,7 +56,6 @@ function ModuleCard({ title, description, icon, href, disabled, stats }: ModuleC
 }
 
 export default function AdminDashboard() {
-  const artists = getAllArtists();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -125,8 +124,8 @@ export default function AdminDashboard() {
       icon: '🎤',
       href: '/admin/artists',
       stats: [
-        { label: 'Artists', value: artists.length },
-        { label: 'Featured', value: artists.filter(a => a.featured).length },
+        { label: 'Artists', value: loading ? '...' : (stats?.artists?.totalArtists || '0') },
+        { label: 'Featured', value: loading ? '...' : (stats?.artists?.featuredArtists || '0') },
       ],
     },
     {

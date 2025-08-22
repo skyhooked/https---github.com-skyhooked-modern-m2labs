@@ -7,7 +7,7 @@ import SectionDivider from '@/components/SectionDivider';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getLatestPosts, formatDate, loadNewsFromServer } from '@/data/newsData';
-import { getFeaturedArtists, loadArtistsFromServer } from '@/data/artistData';
+import { getFeaturedArtistsFromD1 } from '@/libs/artists';
 
 
 export default function HomeClient() {
@@ -18,41 +18,31 @@ export default function HomeClient() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
 
-  // Load data from server on mount and refresh periodically
+  // Load data from server on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        // First set fallback data immediately for faster render
-        setFeaturedArtists(getFeaturedArtists(3));
-        setLatestPosts(getLatestPosts(3));
-        setIsLoading(false);
+        setIsLoading(true);
         
-        // Then try to load fresh data from server
-        await Promise.all([
-          loadArtistsFromServer(),
+        // Load fresh data directly from D1 database
+        const [freshArtists, freshNews] = await Promise.all([
+          getFeaturedArtistsFromD1(3),
           loadNewsFromServer()
         ]);
-        setFeaturedArtists(getFeaturedArtists(3));
-        setLatestPosts(getLatestPosts(3));
+        
+        setFeaturedArtists(freshArtists);
+        
+        if (freshNews && freshNews.length > 0) {
+          setLatestPosts(freshNews.slice(0, 3));
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
-        // Ensure we still have fallback data even if server fails
-        setFeaturedArtists(getFeaturedArtists(3));
-        setLatestPosts(getLatestPosts(3));
+      } finally {
         setIsLoading(false);
       }
     };
 
-    // Load data initially
     loadData();
-
-    // Refresh data periodically to catch admin changes
-    const interval = setInterval(() => {
-      setFeaturedArtists(getFeaturedArtists(3));
-      setLatestPosts(getLatestPosts(3));
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
   }, []);
 
   // Newsletter signup handler

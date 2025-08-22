@@ -5,11 +5,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import ArtistForm from '@/components/admin/ArtistForm';
 import Image from 'next/image';
-import { getAllArtists, updateArtist, addArtist, deleteArtist, loadArtistsFromServer, reorderArtists, Artist } from '@/data/artistData';
+import { getAllArtists, Artist } from '@/libs/artists';
 export const runtime = 'edge'
 
 export default function ArtistManagement() {
-  const [artists, setArtists] = useState<Artist[]>(getAllArtists());
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -17,11 +17,11 @@ export default function ArtistManagement() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load artists from server on component mount
+  // Load artists from D1 database on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const serverArtists = await loadArtistsFromServer();
+        const serverArtists = await getAllArtists();
         setArtists(serverArtists);
       } catch (error) {
         console.error('Failed to load artists:', error);
@@ -37,27 +37,10 @@ export default function ArtistManagement() {
   const handleSubmitArtist = async (artistData: any) => {
     setSubmitting(true);
     try {
-      let updatedArtists: Artist[];
-      let newArtist: Artist | null = null;
-      
-      if (editingArtist) {
-        const success = updateArtist(editingArtist.id, artistData);
-        if (success) {
-          updatedArtists = [...getAllArtists()];
-        } else {
-          alert('Failed to update artist');
-          return;
-        }
-      } else {
-        newArtist = addArtist(artistData);
-        updatedArtists = [...getAllArtists()];
-        console.log('Added artist with order:', newArtist.order);
-      }
-
-      // Persist to server - send individual artist for creation/update
+      // Prepare artist data for API
       const artistToSend = editingArtist 
-        ? { ...artistData, id: editingArtist.id, order: editingArtist.order } 
-        : { ...artistData, id: newArtist!.id, order: newArtist!.order };
+        ? { ...artistData, id: editingArtist.id } 
+        : { ...artistData };
       
       console.log('Sending artist data:', JSON.stringify(artistToSend, null, 2));
       
@@ -66,7 +49,7 @@ export default function ArtistManagement() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(artistToSend), // Send single artist instead of array
+        body: JSON.stringify(artistToSend),
       });
 
       if (!response.ok) {
@@ -75,6 +58,8 @@ export default function ArtistManagement() {
         throw new Error(`Failed to save to server: ${response.status} ${errorText}`);
       }
 
+      // Reload artists from database
+      const updatedArtists = await getAllArtists();
       setArtists(updatedArtists);
       setShowForm(false);
       setEditingArtist(null);
@@ -96,27 +81,17 @@ export default function ArtistManagement() {
     if (!confirm('Are you sure you want to delete this artist?')) return;
 
     try {
-      const success = deleteArtist(artistId);
-      if (!success) {
-        alert('Failed to delete artist');
-        return;
-      }
-
-      const updatedArtists = [...getAllArtists()];
-
-      // Persist to server
-      const response = await fetch('/api/admin/artists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedArtists),
+      // Delete artist via API (we'll need to implement DELETE method)
+      const response = await fetch(`/api/admin/artists/${artistId}`, {
+        method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save to server');
+        throw new Error('Failed to delete artist');
       }
 
+      // Reload artists from database
+      const updatedArtists = await getAllArtists();
       setArtists(updatedArtists);
       alert('Artist deleted successfully!');
     } catch (error) {
@@ -164,9 +139,11 @@ export default function ArtistManagement() {
       reorderedArtists.splice(dropIndex, 0, draggedArtist);
       
       // Update the order field for all artists
-      reorderArtists(reorderedArtists);
+      reorderedArtists.forEach((artist, index) => {
+        artist.order = index + 1;
+      });
       
-      // Persist to server
+      // Persist to server (bulk update)
       const response = await fetch('/api/admin/artists', {
         method: 'POST',
         headers: {
@@ -179,7 +156,9 @@ export default function ArtistManagement() {
         throw new Error('Failed to save reordered artists');
       }
 
-      setArtists(getAllArtists());
+      // Reload from database to ensure consistency
+      const updatedArtists = await getAllArtists();
+      setArtists(updatedArtists);
     } catch (error) {
       console.error('Error reordering artists:', error);
       alert('Failed to reorder artists');
