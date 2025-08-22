@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
       'ALTER TABLE products ADD COLUMN toggleOptions TEXT',
       'ALTER TABLE products ADD COLUMN powerConsumption TEXT',
       'ALTER TABLE products ADD COLUMN relatedProducts TEXT',
-      'ALTER TABLE artists ADD COLUMN imageStyle TEXT DEFAULT \'square\''
+      'ALTER TABLE artists ADD COLUMN imageStyle TEXT DEFAULT \'square\'',
+      'ALTER TABLE artists ADD COLUMN useCustomTemplate BOOLEAN DEFAULT FALSE',
+      'ALTER TABLE artists ADD COLUMN customTemplatePath TEXT',
+      'ALTER TABLE artists ADD COLUMN customSections TEXT DEFAULT \'[]\''
     ];
     
     const results = [];

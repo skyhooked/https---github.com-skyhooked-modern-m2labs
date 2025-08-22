@@ -93,6 +93,9 @@ export default function MigratePage() {
                   <h3 className="font-medium text-gray-900 mb-2">Artists table:</h3>
                   <ul className="list-disc list-inside text-gray-600 mb-4 space-y-1 ml-4">
                     <li>imageStyle (TEXT) - Image display style (square, portrait, landscape, circle)</li>
+                    <li>useCustomTemplate (BOOLEAN) - Whether to use custom page template</li>
+                    <li>customTemplatePath (TEXT) - Path to custom template file</li>
+                    <li>customSections (TEXT) - JSON array of custom page sections</li>
                   </ul>
                 </div>
 
