@@ -115,17 +115,31 @@ export default function SupportChatWidget() {
                 </div>
                 <h4 className="font-semibold text-gray-900 mb-2">Message Sent!</h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  We've received your message and will respond within 24 hours.
+                  {user 
+                    ? "We've received your message and will respond within 24 hours. You can track your ticket in your account."
+                    : "We've received your message and will respond within 24 hours via email."
+                  }
                 </p>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setIsOpen(false);
-                  }}
-                  className="text-[#FF8A3D] hover:underline text-sm"
-                >
-                  Send another message
-                </button>
+                <div className="space-y-2">
+                  {user && (
+                    <a
+                      href="/account/support"
+                      onClick={() => setIsOpen(false)}
+                      className="block text-[#FF8A3D] hover:underline text-sm font-medium"
+                    >
+                      View your tickets →
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSubmitted(false);
+                      setIsOpen(false);
+                    }}
+                    className="text-gray-500 hover:underline text-sm"
+                  >
+                    Send another message
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">

@@ -144,22 +144,22 @@ export default function Account() {
               </div>
             </Link>
 
-            {/* Support */}
+            {/* Support Tickets */}
             <Link
-              href="/contact"
+              href="/account/support"
               className="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-[#FF8A3D] rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.944l2.828 2.828M12 2.944L9.172 5.772M12 21.056l2.828-2.828M12 21.056l-2.828-2.828" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-primary">Support</h3>
-                  <p className="text-sm text-secondary">Get help with your order</p>
+                  <h3 className="text-lg font-medium text-primary">Support Tickets</h3>
+                  <p className="text-sm text-secondary">View and manage support requests</p>
                 </div>
               </div>
             </Link>
