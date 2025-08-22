@@ -43,6 +43,7 @@ export async function getAllArtists(): Promise<Artist[]> {
       genre: artist.genre || '',
       location: artist.location || '',
       image: artist.image || '',
+      imageStyle: (artist.imageStyle as 'square' | 'portrait' | 'landscape' | 'circle') || 'square',
       socialMedia: {
         instagram: artist.instagram,
         youtube: artist.youtube,
@@ -68,6 +69,7 @@ export async function getFeaturedArtistsFromD1(count: number = 3): Promise<Artis
       genre: artist.genre || '',
       location: artist.location || '',
       image: artist.image || '',
+      imageStyle: (artist.imageStyle as 'square' | 'portrait' | 'landscape' | 'circle') || 'square',
       socialMedia: {
         instagram: artist.instagram,
         youtube: artist.youtube,
