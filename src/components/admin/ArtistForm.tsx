@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { Artist, CustomSection, GalleryConfig } from '@/data/artistData';
+import type { Artist } from '@/libs/artists';
+import type { CustomSection, GalleryConfig } from '@/data/artistData';
 import { getImageStyleOptions, getRecommendedDimensions, type ImageStyle } from '@/utils/imageStyles';
 
 type Props = {
@@ -103,6 +104,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
       setValues({
         name: artist.name || '',
         image: artist.image || '',
+        imageStyle: artist.imageStyle || 'square',
         genre: artist.genre || '',
         featured: !!artist.featured,
         location: artist.location || '',
