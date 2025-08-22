@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { initializeDatabase, getArtists, createArtist, updateArtist, Artist } from '@/libs/database-d1'
+import { getArtists, createArtist, updateArtist, Artist } from '@/libs/database-d1'
 
 export const runtime = 'edge'
 
@@ -8,7 +8,6 @@ export const runtime = 'edge'
 // ===== Handlers =====
 export async function GET() {
   try {
-    await initializeDatabase()
     const artists = await getArtists()
     return NextResponse.json(artists)
   } catch (err: any) {
@@ -50,8 +49,6 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     console.log('🚀 Starting artist operation...')
-    await initializeDatabase()
-    console.log('🔧 Database initialization completed')
     const body = await req.json()
     
     console.log('Received data:', JSON.stringify(body, null, 2))
