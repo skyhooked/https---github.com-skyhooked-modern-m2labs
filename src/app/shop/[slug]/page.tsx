@@ -176,14 +176,15 @@ export default function ProductDetail() {
               {/* Product Images */}
               <div className="space-y-4">
                 {/* Main Image */}
-                <div className="aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden">
+                <div className="relative bg-gray-100 rounded-lg overflow-hidden min-h-[300px] max-h-[500px] flex items-center justify-center">
                   {selectedImage ? (
                     <Image
                       src={selectedImage.url}
                       alt={selectedImage.altText || product.name}
                       width={600}
                       height={600}
-                      className="w-full h-96 object-cover"
+                      className="w-full h-auto max-h-[500px] object-contain"
+                      style={{ objectFit: 'contain' }}
                     />
                   ) : (
                     <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
@@ -201,7 +202,7 @@ export default function ProductDetail() {
                       <button
                         key={image.id}
                         onClick={() => setSelectedImageIndex(index)}
-                        className={`aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden border-2 ${
+                        className={`relative bg-gray-100 rounded-lg overflow-hidden border-2 h-20 flex items-center justify-center ${
                           index === selectedImageIndex ? 'border-[#FF8A3D]' : 'border-transparent'
                         }`}
                       >
@@ -210,7 +211,8 @@ export default function ProductDetail() {
                           alt={image.altText || `${product.name} ${index + 1}`}
                           width={100}
                           height={100}
-                          className="w-full h-20 object-cover"
+                          className="w-full h-auto max-h-20 object-contain"
+                          style={{ objectFit: 'contain' }}
                         />
                       </button>
                     ))}

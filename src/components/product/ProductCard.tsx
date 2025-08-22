@@ -106,14 +106,15 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6">
           <div className="flex items-center space-x-6">
             {/* Product Image */}
-            <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+            <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
               {mainImage ? (
                 <Image
                   src={mainImage.url}
                   alt={mainImage.altText || product.name}
                   width={96}
                   height={96}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto max-h-24 object-contain"
+                  style={{ objectFit: 'contain' }}
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -177,17 +178,18 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
     <Link href={`/shop/${product.slug}`} className="block group">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
         {/* Product Image */}
-        <div className="aspect-w-1 aspect-h-1 bg-gray-100 overflow-hidden">
+        <div className="relative bg-gray-100 overflow-hidden min-h-[200px] max-h-[320px] flex items-center justify-center">
           {mainImage ? (
             <Image
               src={mainImage.url}
               alt={mainImage.altText || product.name}
               width={300}
               height={300}
-              className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-auto max-h-[320px] object-contain group-hover:scale-105 transition-transform duration-300"
+              style={{ objectFit: 'contain' }}
             />
           ) : (
-            <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+            <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
               <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
