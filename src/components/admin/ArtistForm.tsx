@@ -31,10 +31,7 @@ const emptyValues: FormValues = {
   },
   testimonial: '',
   showBandsintown: false,
-  bandsintown: {
-    artistName: '',
-    enabled: false,
-  },
+  bandsintown_artist_name: '',
   useCustomTemplate: false,
   customTemplatePath: '',
   customSections: [],
@@ -120,10 +117,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
         },
         testimonial: artist.testimonial || '',
         showBandsintown: artist.showBandsintown || false,
-        bandsintown: {
-          artistName: artist.bandsintown?.artistName || '',
-          enabled: artist.bandsintown?.enabled || false,
-        },
+        bandsintown_artist_name: artist.bandsintown_artist_name || '',
         useCustomTemplate: artist.useCustomTemplate || false,
         customTemplatePath: artist.customTemplatePath || '',
         customSections: artist.customSections || [],
@@ -589,11 +583,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
                   checked={values.showBandsintown || false}
                   onChange={(e) => setValues(v => ({ 
                     ...v, 
-                    showBandsintown: e.target.checked,
-                    bandsintown: {
-                      artistName: v.bandsintown?.artistName || '',
-                      enabled: e.target.checked
-                    }
+                    showBandsintown: e.target.checked
                   }))}
                   className="rounded border-gray-300 text-[#FF8A3D] focus:ring-[#FF8A3D]"
                 />
@@ -612,13 +602,10 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
                 <input
                   id="bandsintown-name"
                   type="text"
-                  value={values.bandsintown?.artistName || ''}
+                  value={values.bandsintown_artist_name || ''}
                   onChange={(e) => setValues(v => ({ 
                     ...v, 
-                    bandsintown: {
-                      artistName: e.target.value,
-                      enabled: v.bandsintown?.enabled || false
-                    }
+                    bandsintown_artist_name: e.target.value
                   }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   placeholder={`Leave blank to use "${values.name || 'artist name'}" or enter custom name...`}

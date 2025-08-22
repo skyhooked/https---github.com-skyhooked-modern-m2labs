@@ -564,7 +564,7 @@ export default function ArtistProfile() {
               Upcoming Shows
             </h2>
             <BandsinTownWidget
-              artistName={artist.bandsintown?.artistName || artist.name}
+              artistName={artist.bandsintown_artist_name || artist.name}
               appId="M2Labs"
               maxEvents={10}
               className=""
