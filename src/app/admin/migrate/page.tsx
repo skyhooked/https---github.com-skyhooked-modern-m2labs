@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import AdminLayout from '@/components/admin/AdminLayout';
+import DataMigration from './data-migration';
 
 export const runtime = 'edge'
 
 export default function MigratePage() {
   const [migrating, setMigrating] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'data' | 'schema'>('data');
 
   const runMigration = async () => {
     setMigrating(true);
@@ -37,11 +39,42 @@ export default function MigratePage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Database Migration</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Database Migration Tools</h1>
             <p className="text-gray-600 mt-2">
-              Run database migrations to add enhanced product fields
+              Migrate data and database schema
             </p>
           </div>
+
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('data')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'data'
+                    ? 'border-[#FF8A3D] text-[#FF8A3D]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Data Migration (JSON → D1)
+              </button>
+              <button
+                onClick={() => setActiveTab('schema')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'schema'
+                    ? 'border-[#FF8A3D] text-[#FF8A3D]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Schema Migration
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'data' ? (
+            <DataMigration />
+          ) : (
 
           <div className="bg-white rounded-lg border shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Enhanced Product Fields Migration</h2>
@@ -109,6 +142,7 @@ export default function MigratePage() {
               If your database was created before these updates, you'll need to run this migration to add the missing columns.
             </div>
           </div>
+          )}
         </div>
       </AdminLayout>
     </AuthWrapper>
