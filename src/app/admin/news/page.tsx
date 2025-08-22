@@ -33,10 +33,19 @@ export default function NewsManagement() {
   // Fetch posts
   const fetchPosts = async () => {
     try {
+      console.log('Fetching news posts...');
       const response = await fetch('/api/news');
+      console.log('News API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('News API data:', data);
+        console.log('Number of posts:', Array.isArray(data) ? data.length : 'Not an array');
         setPosts(data);
+      } else {
+        console.error('News API response not ok:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
