@@ -77,17 +77,24 @@ export default function MigratePage() {
           ) : (
             <div className="space-y-6">
               <div className="bg-white rounded-lg border shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Enhanced Product Fields Migration</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Enhanced Fields Migration</h2>
                 <p className="text-gray-600 mb-4">
-                  This migration adds the following columns to the products table:
+                  This migration adds the following missing columns:
                 </p>
-                <ul className="list-disc list-inside text-gray-600 mb-6 space-y-1">
-                  <li>youtubeVideoId (TEXT) - For embedding YouTube videos</li>
-                  <li>features (TEXT) - JSON array of product features</li>
-                  <li>toggleOptions (TEXT) - JSON object for toggle settings</li>
-                  <li>powerConsumption (TEXT) - Power consumption details</li>
-                  <li>relatedProducts (TEXT) - JSON array of related product IDs</li>
-                </ul>
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-2">Products table:</h3>
+                  <ul className="list-disc list-inside text-gray-600 mb-4 space-y-1 ml-4">
+                    <li>youtubeVideoId (TEXT) - For embedding YouTube videos</li>
+                    <li>features (TEXT) - JSON array of product features</li>
+                    <li>toggleOptions (TEXT) - JSON object for toggle settings</li>
+                    <li>powerConsumption (TEXT) - Power consumption details</li>
+                    <li>relatedProducts (TEXT) - JSON array of related product IDs</li>
+                  </ul>
+                  <h3 className="font-medium text-gray-900 mb-2">Artists table:</h3>
+                  <ul className="list-disc list-inside text-gray-600 mb-4 space-y-1 ml-4">
+                    <li>imageStyle (TEXT) - Image display style (square, portrait, landscape, circle)</li>
+                  </ul>
+                </div>
 
                 <button
                   onClick={runMigration}
@@ -138,8 +145,10 @@ export default function MigratePage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="text-blue-800 font-medium mb-2">ℹ️ What this fixes:</div>
                 <div className="text-blue-700 text-sm">
-                  Recent updates added enhanced product fields inspired by JHS Pedals (YouTube videos, features, toggle options, etc.). 
+                  Recent updates added enhanced product fields (YouTube videos, features, toggle options, etc.) and artist image styling options. 
                   If your database was created before these updates, you'll need to run this migration to add the missing columns.
+                  <br/><br/>
+                  <strong>This will specifically fix:</strong> "no such column: imageStyle" error when editing artists.
                 </div>
               </div>
             </div>

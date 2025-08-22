@@ -7,13 +7,14 @@ export async function POST(request: NextRequest) {
   try {
     const db = await getDatabase();
     
-    // Add the enhanced product fields to the products table
+    // Add the enhanced product fields to the products table and missing artist fields
     const migrations = [
       'ALTER TABLE products ADD COLUMN youtubeVideoId TEXT',
       'ALTER TABLE products ADD COLUMN features TEXT',
       'ALTER TABLE products ADD COLUMN toggleOptions TEXT',
       'ALTER TABLE products ADD COLUMN powerConsumption TEXT',
-      'ALTER TABLE products ADD COLUMN relatedProducts TEXT'
+      'ALTER TABLE products ADD COLUMN relatedProducts TEXT',
+      'ALTER TABLE artists ADD COLUMN imageStyle TEXT DEFAULT \'square\''
     ];
     
     const results = [];
