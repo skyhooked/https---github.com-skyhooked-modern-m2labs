@@ -1,5 +1,6 @@
 // Direct D1 artist functions - no JSON fallbacks
 import { getArtists, getFeaturedArtists } from './database-d1';
+import { CustomSection } from '@/data/artistData';
 
 // Artist interface matching both D1 schema and existing artistData interface
 export interface Artist {
@@ -26,6 +27,7 @@ export interface Artist {
   order: number;
   createdAt?: string;
   updatedAt?: string;
+  customSections?: CustomSection[];
 }
 
 // Get all artists from D1 database
