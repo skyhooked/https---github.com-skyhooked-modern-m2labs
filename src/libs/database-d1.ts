@@ -587,6 +587,9 @@ export interface Artist {
   showBandsintown?: boolean;
   bandsintown_artist_name?: string;
   order: number; // Renamed from order_position to match frontend
+  useCustomTemplate?: boolean;
+  customTemplatePath?: string;
+  customSections?: any[]; // Will be stored as JSON string in DB
   createdAt: string;
   updatedAt: string;
 }
@@ -599,6 +602,7 @@ export const getArtists = async (): Promise<Artist[]> => {
   return (result.results || []).map(artist => ({
     ...artist,
     gear: JSON.parse(artist.gear || '[]'),
+    customSections: JSON.parse(artist.customSections || '[]'),
     order: artist.order_position, // Map DB field to frontend field
   }));
 };
@@ -613,6 +617,7 @@ export const getArtistById = async (id: string): Promise<Artist | null> => {
   return {
     ...result,
     gear: JSON.parse(result.gear || '[]'),
+    customSections: JSON.parse(result.customSections || '[]'),
     order: result.order_position,
   };
 };
@@ -649,8 +654,8 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
     const result = await db.prepare(`
       INSERT INTO artists (
         id, name, bio, genre, location, image, imageStyle, website, instagram, youtube, spotify, bandcamp, tidal, 
-        gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, useCustomTemplate, customTemplatePath, customSections, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       newArtist.id,
       newArtist.name,
@@ -671,6 +676,9 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
       newArtist.showBandsintown || false,
       newArtist.bandsintown_artist_name || null,
       newArtist.order,
+      newArtist.useCustomTemplate || false,
+      newArtist.customTemplatePath || null,
+      JSON.stringify(newArtist.customSections || []),
       newArtist.createdAt,
       newArtist.updatedAt
     ).run();
@@ -704,7 +712,7 @@ export const updateArtist = async (id: string, updates: Partial<Artist>): Promis
     UPDATE artists 
     SET name = ?, bio = ?, genre = ?, location = ?, image = ?, imageStyle = ?, website = ?, instagram = ?, youtube = ?, 
         spotify = ?, bandcamp = ?, tidal = ?, gear = ?, testimonial = ?, featured = ?, showBandsintown = ?, 
-        bandsintown_artist_name = ?, order_position = ?, updatedAt = ?
+        bandsintown_artist_name = ?, order_position = ?, useCustomTemplate = ?, customTemplatePath = ?, customSections = ?, updatedAt = ?
     WHERE id = ?
   `).bind(
     updatedArtist.name,
@@ -725,6 +733,9 @@ export const updateArtist = async (id: string, updates: Partial<Artist>): Promis
     updatedArtist.showBandsintown || false,
     updatedArtist.bandsintown_artist_name || null,
     updatedArtist.order,
+    updatedArtist.useCustomTemplate || false,
+    updatedArtist.customTemplatePath || null,
+    JSON.stringify(updatedArtist.customSections || []),
     updatedArtist.updatedAt,
     id
   ).run();
@@ -866,6 +877,9 @@ export const initializeDatabase = async (): Promise<void> => {
         showBandsintown BOOLEAN NOT NULL DEFAULT FALSE,
         bandsintown_artist_name TEXT,
         order_position INTEGER NOT NULL DEFAULT 0,
+        useCustomTemplate BOOLEAN DEFAULT FALSE,
+        customTemplatePath TEXT,
+        customSections TEXT, -- JSON array as string
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
       );
@@ -1158,8 +1172,8 @@ export const initializeDatabase = async (): Promise<void> => {
         await db.prepare(`
           INSERT INTO artists (
             id, name, bio, genre, location, image, imageStyle, website, instagram, youtube, spotify, bandcamp, tidal,
-            gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, useCustomTemplate, customTemplatePath, customSections, createdAt, updatedAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
           artist.id,
           artist.name,
@@ -1180,6 +1194,9 @@ export const initializeDatabase = async (): Promise<void> => {
           false, // showBandsintown
           null, // bandsintown_artist_name
           artist.order_position,
+          false, // useCustomTemplate
+          null, // customTemplatePath
+          '[]', // customSections (empty array as JSON)
           now,
           now
         ).run();

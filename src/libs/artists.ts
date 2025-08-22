@@ -27,6 +27,8 @@ export interface Artist {
   order: number;
   createdAt?: string;
   updatedAt?: string;
+  useCustomTemplate?: boolean;
+  customTemplatePath?: string;
   customSections?: CustomSection[];
 }
 
