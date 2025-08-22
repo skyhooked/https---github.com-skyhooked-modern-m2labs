@@ -756,7 +756,7 @@ export const getFeaturedArtists = async (count: number = 3): Promise<Artist[]> =
   if (!db) throw new Error('Database not available');
   
   console.log('🔍 getFeaturedArtists: Querying for featured artists...');
-  const result = await db.prepare('SELECT * FROM artists WHERE featured = 1 ORDER BY order_position ASC LIMIT ?').bind(count).all();
+  const result = await db.prepare('SELECT * FROM artists WHERE (featured = 1 OR featured = "true") ORDER BY order_position ASC LIMIT ?').bind(count).all();
   console.log('📊 getFeaturedArtists: Raw query result:', {
     success: result.success,
     resultCount: result.results?.length || 0,
