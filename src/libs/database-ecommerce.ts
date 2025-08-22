@@ -847,7 +847,7 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
   for (const item of cartItems) {
     if (item.variant?.product?.id) {
       const images = await getProductImages(item.variant.product.id);
-      item.variant.product.images = images;
+      (item.variant.product as any).images = images;
     }
   }
 
