@@ -59,6 +59,14 @@ export async function PUT(
     }
     if (body.creditLimit !== undefined) {
       body.creditLimit = parseFloat(body.creditLimit) || 0;
+      
+      // Validate credit limit maximum
+      if (body.creditLimit > 30000) {
+        return NextResponse.json(
+          { error: 'Credit limit cannot exceed $30,000' },
+          { status: 400 }
+        );
+      }
     }
     if (body.currentBalance !== undefined) {
       body.currentBalance = parseFloat(body.currentBalance) || 0;

@@ -659,15 +659,25 @@ function DistributorForm({ distributor, onSave, onCancel }: DistributorFormProps
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Credit Limit ($)
+                <span className="text-xs text-gray-500 font-normal ml-1">(Maximum: $30,000)</span>
               </label>
               <input
                 type="number"
                 min="0"
+                max="30000"
                 step="0.01"
                 value={formData.creditLimit}
-                onChange={(e) => setFormData({ ...formData, creditLimit: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  if (value <= 30000) {
+                    setFormData({ ...formData, creditLimit: value });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#FF8A3D] focus:border-[#FF8A3D]"
               />
+              {formData.creditLimit > 30000 && (
+                <p className="text-red-500 text-xs mt-1">Credit limit cannot exceed $30,000</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

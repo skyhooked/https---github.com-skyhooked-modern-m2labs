@@ -72,6 +72,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate credit limit maximum
+    if (creditLimit > 30000) {
+      return NextResponse.json(
+        { error: 'Credit limit cannot exceed $30,000' },
+        { status: 400 }
+      );
+    }
+
     // Hash the password
     const passwordHash = await hash(password, 12);
 
