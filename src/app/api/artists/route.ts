@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       genre: artist.genre || '',
       location: artist.location || '',
       image: artist.image || '',
+      imageStyle: artist.imageStyle || 'square', // Include imageStyle field
       socialMedia: {
         instagram: artist.instagram,
         youtube: artist.youtube,

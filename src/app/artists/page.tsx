@@ -134,14 +134,14 @@ export default function Artists() {
                             <img
                               src={src}
                               alt={artist.name}
-                              className="w-full h-full object-contain absolute inset-0"
+                              className="w-full h-full object-cover absolute inset-0"
                             />
                           ) : (
                             <Image
                               src={src}
                               alt={artist.name}
                               fill
-                              className="object-contain"
+                              className="object-cover"
                               sizes="(max-width: 768px) 100vw, 50vw"
                             />
                           )}
@@ -265,14 +265,14 @@ export default function Artists() {
                             <img
                               src={src}
                               alt={artist.name}
-                              className="w-full h-full object-contain absolute inset-0"
+                              className="w-full h-full object-cover absolute inset-0"
                             />
                           ) : (
                             <Image
                               src={src}
                               alt={artist.name}
                               fill
-                              className="object-contain"
+                              className="object-cover"
                               sizes="(max-width: 768px) 100vw, 50vw"
                             />
                           )}
