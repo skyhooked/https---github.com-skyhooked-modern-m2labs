@@ -220,7 +220,7 @@ export default function AdminDashboard() {
     },
     { 
       label: 'Artist Profiles', 
-      value: artists.length.toString(), 
+      value: loading ? '...' : (stats?.artists?.totalArtists?.toString() || '0'), 
       color: 'text-orange-600' 
     },
   ];
