@@ -130,10 +130,20 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                         className="block p-3 rounded-lg hover:bg-white/5 transition-colors border border-white/10"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                            {product.images && product.images.length > 0 ? (
+                              <Image
+                                src={product.images.find((img: any) => img.isMainImage)?.url || product.images[0]?.url}
+                                alt={product.name}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                              </svg>
+                            )}
                           </div>
                           <div className="flex-1">
                             <h4 className="font-medium text-white">{product.name}</h4>
