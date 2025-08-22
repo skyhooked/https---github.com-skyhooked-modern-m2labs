@@ -38,17 +38,26 @@ interface D1ExecResult {
 
 // Get D1 database from environment bindings
 export function getDatabase(): D1Database {
+  console.log('🔍 Attempting to get D1 database...');
+  
   // @ts-ignore - Cloudflare bindings are injected at runtime
   const globalAny = globalThis as any;
   
-  // Try multiple binding locations for Cloudflare Pages
+  // For Next.js on Cloudflare Pages, try multiple binding locations
   const db = globalAny.DB || 
              globalAny.env?.DB || 
              globalAny.__env?.DB ||
              globalAny.ASSETS?.env?.DB ||
-             globalAny.context?.env?.DB;
+             globalAny.context?.env?.DB ||
+             // Try process.env for Next.js compatibility
+             (process.env as any).DB;
   
+  // Debug: Log what's available
   if (!db) {
+    console.log('🔍 Available global keys:', Object.keys(globalAny).slice(0, 20));
+    console.log('🔍 Available env keys:', Object.keys(globalAny.env || {}));
+    console.log('🔍 Process env keys with DB:', Object.keys(process.env).filter(k => k.includes('DB')));
+    
     console.warn('⚠️ D1 Database binding not found, will use fallback approach');
     console.warn('This is likely due to a Pages binding configuration issue');
     
