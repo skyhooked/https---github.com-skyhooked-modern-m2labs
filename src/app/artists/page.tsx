@@ -5,17 +5,17 @@ import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getAllArtists, loadArtistsFromServer, Artist } from '@/data/artistData';
+import { getAllArtists, Artist } from '@/libs/artists';
 
 export default function Artists() {
-  const [artists, setArtists] = useState<Artist[]>(getAllArtists());
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load artists from server on mount and refresh periodically
+  // Load artists from D1 database
   useEffect(() => {
     const loadData = async () => {
       try {
-        const serverArtists = await loadArtistsFromServer();
+        const serverArtists = await getAllArtists();
         setArtists(serverArtists);
       } catch (error) {
         console.error('Failed to load artists:', error);
@@ -24,15 +24,7 @@ export default function Artists() {
       }
     };
 
-    // Load data initially
     loadData();
-
-    // Refresh artists data periodically to catch admin changes
-    const interval = setInterval(() => {
-      setArtists(getAllArtists());
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
   }, []);
 
   // Helper function to extract handle from URL or return as-is
