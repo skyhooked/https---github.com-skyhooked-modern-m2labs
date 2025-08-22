@@ -819,7 +819,6 @@ export const initializeDatabase = async (): Promise<void> => {
   
   try {
     // Run the migration SQL to set up tables and default data
-    // Read and execute the e-commerce schema migration
     await db.exec(`
       -- Users table
       CREATE TABLE IF NOT EXISTS users (
