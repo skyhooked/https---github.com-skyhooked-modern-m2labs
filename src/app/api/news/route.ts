@@ -7,7 +7,6 @@ export const runtime = 'edge'
 // GET - Fetch all news posts
 export async function GET() {
   try {
-    await initializeDatabase();
     const newsData = await getNewsPosts();
     return NextResponse.json(newsData);
   } catch (error) {
@@ -19,7 +18,6 @@ export async function GET() {
 // POST - Create new news post
 export async function POST(request: NextRequest) {
   try {
-    await initializeDatabase();
     const body = await request.json();
 
     console.log('Creating news post:', JSON.stringify(body, null, 2));
@@ -56,7 +54,6 @@ export async function POST(request: NextRequest) {
 // PUT - Update existing news post
 export async function PUT(request: NextRequest) {
   try {
-    await initializeDatabase();
     const body = await request.json();
 
     console.log('Updating news post:', JSON.stringify(body, null, 2));
@@ -82,7 +79,6 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete news post
 export async function DELETE(request: NextRequest) {
   try {
-    await initializeDatabase();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
