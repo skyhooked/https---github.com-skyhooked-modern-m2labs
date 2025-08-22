@@ -17,12 +17,18 @@ export default function ArtistManagement() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load artists from D1 database on component mount
+  // Load artists via API on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const serverArtists = await getAllArtists();
-        setArtists(serverArtists);
+        const response = await fetch('/api/artists');
+        const data = await response.json();
+        
+        if (data.success) {
+          setArtists(data.artists);
+        } else {
+          console.error('Failed to load artists:', data.error);
+        }
       } catch (error) {
         console.error('Failed to load artists:', error);
       } finally {

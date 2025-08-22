@@ -18,19 +18,22 @@ export default function HomeClient() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
 
-  // Load data from server on mount
+  // Load data from API on mount
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
         
-        // Load fresh data directly from D1 database
-        const [freshArtists, freshNews] = await Promise.all([
-          getFeaturedArtistsFromD1(3),
+        // Load fresh data via API
+        const [artistsResponse, freshNews] = await Promise.all([
+          fetch('/api/artists?featured=true&limit=3'),
           loadNewsFromServer()
         ]);
         
-        setFeaturedArtists(freshArtists);
+        const artistsData = await artistsResponse.json();
+        if (artistsData.success) {
+          setFeaturedArtists(artistsData.artists);
+        }
         
         if (freshNews && freshNews.length > 0) {
           setLatestPosts(freshNews.slice(0, 3));

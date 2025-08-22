@@ -16,12 +16,18 @@ export default function Header() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const { user } = useAuth();
 
-  // Load artists data
+  // Load artists data via API
   useEffect(() => {
     const loadData = async () => {
       try {
-        const artistsData = await getAllArtists();
-        setArtists(artistsData);
+        const response = await fetch('/api/artists');
+        const data = await response.json();
+        
+        if (data.success) {
+          setArtists(data.artists);
+        } else {
+          console.error('Failed to load artists for header:', data.error);
+        }
       } catch (error) {
         console.error('Failed to load artists for header:', error);
       }
@@ -32,12 +38,16 @@ export default function Header() {
     // Refresh artists periodically to catch admin changes
     const interval = setInterval(async () => {
       try {
-        const freshArtists = await getAllArtists();
-        setArtists(freshArtists);
+        const response = await fetch('/api/artists');
+        const data = await response.json();
+        
+        if (data.success) {
+          setArtists(data.artists);
+        }
       } catch (error) {
         console.error('Failed to refresh artists:', error);
       }
-    }, 10000); // Check every 10 seconds
+    }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
   }, []);

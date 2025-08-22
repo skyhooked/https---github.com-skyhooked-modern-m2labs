@@ -11,12 +11,18 @@ export default function Artists() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load artists from D1 database
+  // Load artists from API
   useEffect(() => {
     const loadData = async () => {
       try {
-        const serverArtists = await getAllArtists();
-        setArtists(serverArtists);
+        const response = await fetch('/api/artists');
+        const data = await response.json();
+        
+        if (data.success) {
+          setArtists(data.artists);
+        } else {
+          console.error('Failed to load artists:', data.error);
+        }
       } catch (error) {
         console.error('Failed to load artists:', error);
       } finally {
