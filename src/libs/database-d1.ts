@@ -759,6 +759,7 @@ export const getFeaturedArtists = async (count: number = 3): Promise<Artist[]> =
   return (result.results || []).map(artist => ({
     ...artist,
     gear: JSON.parse(artist.gear || '[]'),
+    customSections: JSON.parse(artist.customSections || '[]'),
     order: artist.order_position,
   }));
 };
