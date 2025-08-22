@@ -21,6 +21,12 @@ interface CartItem {
       name: string;
       slug: string;
       basePrice: number;
+      images?: {
+        id: string;
+        url: string;
+        altText?: string;
+        isMainImage: boolean;
+      }[];
     };
   };
 }

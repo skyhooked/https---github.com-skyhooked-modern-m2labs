@@ -790,7 +790,8 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
     ORDER BY ci.addedAt ASC
   `).bind(cartId).all();
   
-  return (result.results || []).map(row => ({
+  // Get the cart items with product data
+  const cartItems = (result.results || []).map(row => ({
     id: row.id,
     cartId: row.cartId,
     variantId: row.variantId,
@@ -841,6 +842,16 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
       }
     }
   }));
+
+  // Fetch images for each product
+  for (const item of cartItems) {
+    if (item.variant?.product?.id) {
+      const images = await getProductImages(item.variant.product.id);
+      item.variant.product.images = images;
+    }
+  }
+
+  return cartItems;
 };
 
 export const addToCart = async (data: {
