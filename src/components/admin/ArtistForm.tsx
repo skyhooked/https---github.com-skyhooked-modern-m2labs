@@ -132,7 +132,7 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
 
   const handleChange =
     <K extends keyof FormValues>(key: K) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const val =
         e.target.type === 'checkbox'
           ? (e.target as HTMLInputElement).checked
