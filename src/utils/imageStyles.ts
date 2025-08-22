@@ -13,28 +13,28 @@ export const imageStyleConfigs: Record<ImageStyle, ImageStyleConfig> = {
   square: {
     aspectRatio: 'aspect-square',
     className: 'rounded-lg',
-    gridHeight: 'h-48',
+    gridHeight: 'h-64',
     detailSize: 'h-96',
     description: 'Square (1:1) - Classic profile style'
   },
   portrait: {
     aspectRatio: 'aspect-[3/4]',
     className: 'rounded-lg',
-    gridHeight: 'h-64',
+    gridHeight: 'h-72',
     detailSize: 'h-[32rem]',
     description: 'Portrait (3:4) - Vertical orientation'
   },
   landscape: {
     aspectRatio: 'aspect-[4/3]',
     className: 'rounded-lg',
-    gridHeight: 'h-40',
+    gridHeight: 'h-56',
     detailSize: 'h-80',
     description: 'Landscape (4:3) - Horizontal orientation'
   },
   circle: {
     aspectRatio: 'aspect-square',
     className: 'rounded-full',
-    gridHeight: 'h-48',
+    gridHeight: 'h-64',
     detailSize: 'h-96',
     description: 'Circle - Round profile photo'
   }
@@ -52,17 +52,17 @@ export function getImageStyleClasses(
 ): string {
   const config = imageStyleConfigs[style];
   
-  const baseClasses = `${config.aspectRatio} ${config.className} overflow-hidden bg-gray-200`;
-  
+  // For grid context, we use fixed heights to prevent layout issues
+  // but still apply the appropriate border radius for the style
   switch (context) {
     case 'grid':
-      return `w-full ${config.gridHeight} ${baseClasses}`;
+      return `w-full ${config.gridHeight} ${config.className} overflow-hidden bg-gray-200 relative`;
     case 'detail':
-      return `w-full ${config.detailSize} ${baseClasses}`;
+      return `w-full ${config.aspectRatio} ${config.className} overflow-hidden bg-gray-200 relative`;
     case 'thumbnail':
-      return `w-16 h-16 ${baseClasses}`;
+      return `w-16 h-16 ${config.className} overflow-hidden bg-gray-200 relative`;
     default:
-      return baseClasses;
+      return `${config.aspectRatio} ${config.className} overflow-hidden bg-gray-200 relative`;
   }
 }
 
