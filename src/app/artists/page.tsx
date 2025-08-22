@@ -6,6 +6,7 @@ import Hero from '@/components/Hero';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllArtists, Artist } from '@/libs/artists';
+import { getImageStyleClasses } from '@/utils/imageStyles';
 
 export default function Artists() {
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -128,23 +129,23 @@ export default function Artists() {
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="flex flex-col">
                       <div className="w-full">
-                        {(isBlobOrData || isSvg) ? (
-                          <img
-                            src={src}
-                            alt={artist.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-48 object-cover"
-                          />
-                        ) : (
-                          <Image
-                            src={src}
-                            alt={artist.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-48 object-cover"
-                          />
-                        )}
+                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                          {(isBlobOrData || isSvg) ? (
+                            <img
+                              src={src}
+                              alt={artist.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Image
+                              src={src}
+                              alt={artist.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          )}
+                        </div>
                       </div>
                       <div className="p-6 flex flex-col">
                         <div className="flex items-start justify-between mb-3">
@@ -259,23 +260,23 @@ export default function Artists() {
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="flex flex-col">
                       <div className="w-full">
-                        {(isBlobOrData || isSvg) ? (
-                          <img
-                            src={src}
-                            alt={artist.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-48 object-cover"
-                          />
-                        ) : (
-                          <Image
-                            src={src}
-                            alt={artist.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-48 object-cover"
-                          />
-                        )}
+                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                          {(isBlobOrData || isSvg) ? (
+                            <img
+                              src={src}
+                              alt={artist.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Image
+                              src={src}
+                              alt={artist.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          )}
+                        </div>
                       </div>
                       <div className="p-6 flex flex-col">
                         <div className="flex items-start justify-between mb-3">

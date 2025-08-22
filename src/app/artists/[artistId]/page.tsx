@@ -9,6 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllArtists, loadArtistsFromServer, Artist, CustomSection, GalleryConfig } from '@/data/artistData';
 import BandsinTownWidget from '@/components/BandsinTownWidget';
+import { getImageStyleClasses } from '@/utils/imageStyles';
 
 export default function ArtistProfile() {
   const params = useParams();
@@ -387,23 +388,23 @@ export default function ArtistProfile() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Artist Image */}
             <div className="order-2 lg:order-1">
-              {(isBlobOrData || isSvg) ? (
-                <img
-                  src={src}
-                  alt={artist.name}
-                  width={500}
-                  height={400}
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
-                />
-              ) : (
-                <Image
-                  src={src}
-                  alt={artist.name}
-                  width={500}
-                  height={400}
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
-                />
-              )}
+              <div className={`${getImageStyleClasses(artist.imageStyle, 'detail')} shadow-lg`}>
+                {(isBlobOrData || isSvg) ? (
+                  <img
+                    src={src}
+                    alt={artist.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={src}
+                    alt={artist.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                )}
+              </div>
             </div>
 
             {/* Artist Info */}

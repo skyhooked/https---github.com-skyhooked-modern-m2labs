@@ -574,6 +574,7 @@ export interface Artist {
   genre?: string;
   location?: string;
   image?: string;
+  imageStyle?: string;
   website?: string;
   instagram?: string;
   youtube?: string;
@@ -647,9 +648,9 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
     
     const result = await db.prepare(`
       INSERT INTO artists (
-        id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal, 
+        id, name, bio, genre, location, image, imageStyle, website, instagram, youtube, spotify, bandcamp, tidal, 
         gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       newArtist.id,
       newArtist.name,
@@ -657,6 +658,7 @@ export const createArtist = async (artistData: Omit<Artist, 'createdAt' | 'updat
       newArtist.genre || null,
       newArtist.location || null,
       newArtist.image || null,
+      newArtist.imageStyle || 'square',
       newArtist.website || null,
       newArtist.instagram || null,
       newArtist.youtube || null,
@@ -700,7 +702,7 @@ export const updateArtist = async (id: string, updates: Partial<Artist>): Promis
 
   await db.prepare(`
     UPDATE artists 
-    SET name = ?, bio = ?, genre = ?, location = ?, image = ?, website = ?, instagram = ?, youtube = ?, 
+    SET name = ?, bio = ?, genre = ?, location = ?, image = ?, imageStyle = ?, website = ?, instagram = ?, youtube = ?, 
         spotify = ?, bandcamp = ?, tidal = ?, gear = ?, testimonial = ?, featured = ?, showBandsintown = ?, 
         bandsintown_artist_name = ?, order_position = ?, updatedAt = ?
     WHERE id = ?
@@ -710,6 +712,7 @@ export const updateArtist = async (id: string, updates: Partial<Artist>): Promis
     updatedArtist.genre || null,
     updatedArtist.location || null,
     updatedArtist.image || null,
+    updatedArtist.imageStyle || 'square',
     updatedArtist.website || null,
     updatedArtist.instagram || null,
     updatedArtist.youtube || null,
@@ -850,6 +853,7 @@ export const initializeDatabase = async (): Promise<void> => {
         genre TEXT,
         location TEXT,
         image TEXT,
+        imageStyle TEXT DEFAULT 'square',
         website TEXT,
         instagram TEXT,
         youtube TEXT,
@@ -1153,9 +1157,9 @@ export const initializeDatabase = async (): Promise<void> => {
       for (const artist of initialArtists) {
         await db.prepare(`
           INSERT INTO artists (
-            id, name, bio, genre, location, image, website, instagram, youtube, spotify, bandcamp, tidal,
+            id, name, bio, genre, location, image, imageStyle, website, instagram, youtube, spotify, bandcamp, tidal,
             gear, testimonial, featured, showBandsintown, bandsintown_artist_name, order_position, createdAt, updatedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
           artist.id,
           artist.name,
@@ -1163,6 +1167,7 @@ export const initializeDatabase = async (): Promise<void> => {
           artist.genre,
           artist.location,
           artist.image,
+          'square', // default imageStyle for initial artists
           artist.website || null,
           artist.instagram || null,
           null, // youtube

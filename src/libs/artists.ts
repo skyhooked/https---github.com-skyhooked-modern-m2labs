@@ -9,6 +9,7 @@ export interface Artist {
   genre: string;
   location: string;
   image: string;
+  imageStyle?: 'square' | 'portrait' | 'landscape' | 'circle';
   website?: string;
   socialMedia: {
     instagram?: string;

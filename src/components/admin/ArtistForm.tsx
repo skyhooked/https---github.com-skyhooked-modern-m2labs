@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Artist, CustomSection, GalleryConfig } from '@/data/artistData';
+import { getImageStyleOptions, getRecommendedDimensions, type ImageStyle } from '@/utils/imageStyles';
 
 type Props = {
   artist?: Artist;
@@ -15,6 +16,7 @@ type FormValues = Omit<Artist, 'id' | 'order'>;
 const emptyValues: FormValues = {
   name: '',
   image: '',
+  imageStyle: 'square' as ImageStyle,
   genre: '',
   featured: false,
   location: '',
@@ -403,22 +405,48 @@ export default function ArtistForm({ artist, onSubmit, onCancel, isLoading }: Pr
                 JPEG, PNG, WebP, or SVG. To persist in the repo, move the file into <code>/public/images</code> and set <code>/images/your-file.ext</code>.
               </p>
             </div>
+
+            {/* Image Style Selector */}
+            <div className="mt-4">
+              <label htmlFor="imageStyle" className="block text-sm font-medium text-gray-700">
+                Image Style
+              </label>
+              <select
+                id="imageStyle"
+                name="imageStyle"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                value={values.imageStyle || 'square'}
+                onChange={handleChange('imageStyle')}
+              >
+                {getImageStyleOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} - {option.description}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Recommended size: {(() => {
+                  const dims = getRecommendedDimensions(values.imageStyle as ImageStyle || 'square');
+                  return `${dims.width}×${dims.height}px (${dims.ratio})`;
+                })()}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-start">
             <div className="border rounded-md p-2">
               <div className="text-sm text-gray-700 mb-2">Preview</div>
               {previewSrc ? (
-                <img
-                  src={previewSrc}
-                  alt="Preview image"
-                  width={120}
-                  height={120}
-                  className="w-120 h-120 object-cover rounded"
-                  onError={() => setPreviewError(true)}
-                />
+                <div className={`w-32 h-32 ${values.imageStyle === 'circle' ? 'rounded-full' : 'rounded-lg'} overflow-hidden bg-gray-100`}>
+                  <img
+                    src={previewSrc}
+                    alt="Preview image"
+                    className="w-full h-full object-cover"
+                    onError={() => setPreviewError(true)}
+                  />
+                </div>
               ) : (
-                <div className="w-30 h-22 grid place-items-center rounded bg-gray-100 text-xs text-gray-500">
+                <div className={`w-32 h-32 ${values.imageStyle === 'circle' ? 'rounded-full' : 'rounded-lg'} bg-gray-100 flex items-center justify-center text-xs text-gray-500`}>
                   No preview
                 </div>
               )}
