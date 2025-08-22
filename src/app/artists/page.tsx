@@ -129,12 +129,12 @@ export default function Artists() {
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="flex flex-col">
                       <div className="w-full">
-                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                        <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-200 relative">
                           {(isBlobOrData || isSvg) ? (
                             <img
                               src={src}
                               alt={artist.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover absolute inset-0"
                             />
                           ) : (
                             <Image
@@ -260,12 +260,12 @@ export default function Artists() {
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="flex flex-col">
                       <div className="w-full">
-                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                        <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-200 relative">
                           {(isBlobOrData || isSvg) ? (
                             <img
                               src={src}
                               alt={artist.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover absolute inset-0"
                             />
                           ) : (
                             <Image
