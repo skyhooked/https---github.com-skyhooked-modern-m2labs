@@ -817,6 +817,20 @@ export const initializeDatabase = async (): Promise<void> => {
   
   console.log('✅ Database connection successful, proceeding with initialization...');
   
+  // First, check and add missing columns to existing tables
+  try {
+    await db.exec(`
+      ALTER TABLE artists ADD COLUMN imageStyle TEXT DEFAULT 'square';
+    `);
+    console.log('✅ Added imageStyle column to artists table');
+  } catch (error: any) {
+    if (error.message?.includes('duplicate column name')) {
+      console.log('✅ imageStyle column already exists');
+    } else {
+      console.warn('Could not add imageStyle column:', error.message);
+    }
+  }
+  
   try {
     // Run the migration SQL to set up tables and default data
     await db.exec(`
