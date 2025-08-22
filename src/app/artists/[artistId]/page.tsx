@@ -7,7 +7,8 @@ import { useParams, notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllArtists, loadArtistsFromServer, Artist, CustomSection, GalleryConfig } from '@/data/artistData';
+import { Artist } from '@/libs/artists';
+import { CustomSection, GalleryConfig } from '@/data/artistData';
 import BandsinTownWidget from '@/components/BandsinTownWidget';
 import { getImageStyleClasses } from '@/utils/imageStyles';
 
@@ -20,24 +21,21 @@ export default function ArtistProfile() {
   useEffect(() => {
     const loadArtist = async () => {
       try {
-        await loadArtistsFromServer();
-        const allArtists = getAllArtists();
-        const foundArtist = allArtists.find(a => a.id === artistId);
-        if (foundArtist) {
-          setArtist(foundArtist);
+        const response = await fetch('/api/artists');
+        if (response.ok) {
+          const data = await response.json();
+          const foundArtist = data.artists.find((a: Artist) => a.id === artistId);
+          if (foundArtist) {
+            setArtist(foundArtist);
+          } else {
+            notFound();
+          }
         } else {
           notFound();
         }
       } catch (error) {
         console.error('Failed to load artist:', error);
-        // Fallback: try to find in current data
-        const allArtists = getAllArtists();
-        const foundArtist = allArtists.find(a => a.id === artistId);
-        if (foundArtist) {
-          setArtist(foundArtist);
-        } else {
-          notFound();
-        }
+        notFound();
       } finally {
         setLoading(false);
       }
