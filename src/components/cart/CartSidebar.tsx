@@ -153,7 +153,7 @@ function CartItem({ item, onUpdateQuantity, onRemove, formatPrice }: CartItemPro
       {/* Product Image */}
       <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
         {(() => {
-          const mainImage = item.variant?.product?.images?.find(img => img.isMainImage) || item.variant?.product?.images?.[0];
+          const mainImage = item.variant?.product?.images?.find((img: { id: string; url: string; altText?: string; isMainImage: boolean }) => img.isMainImage) || item.variant?.product?.images?.[0];
           return mainImage ? (
             <Image
               src={mainImage.url}
