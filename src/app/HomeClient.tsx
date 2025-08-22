@@ -31,8 +31,12 @@ export default function HomeClient() {
         ]);
         
         const artistsData = await artistsResponse.json();
+        console.log('🎨 Featured artists API response:', artistsData);
         if (artistsData.success) {
+          console.log('✅ Featured artists loaded:', artistsData.artists.length, 'artists');
           setFeaturedArtists(artistsData.artists);
+        } else {
+          console.error('❌ Featured artists API failed:', artistsData.error);
         }
         
         if (freshNews && freshNews.length > 0) {
@@ -298,7 +302,7 @@ export default function HomeClient() {
                   </div>
                 </article>
               ))
-            ) : (
+            ) : featuredArtists.length > 0 ? (
               featuredArtists.map((artist: any) => (
               <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
                 <Image
@@ -347,6 +351,11 @@ export default function HomeClient() {
                 </div>
               </article>
               ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-[#F5F5F5] text-lg">No featured artists found.</p>
+                <p className="text-[#F5F5F5]/70 text-sm mt-2">Check the database or mark some artists as featured.</p>
+              </div>
             )}
           </div>
           
