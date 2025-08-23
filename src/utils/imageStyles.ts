@@ -112,27 +112,28 @@ export function getCardLayoutConfig(
   const isHorizontalLayout = style === 'portrait';
   
   if (context === 'homepage') {
-    // Homepage featured artist cards (smaller/simpler)
+    // Homepage featured artist cards - using same layout approach as artists page
     if (isHorizontalLayout) {
       return {
-        imageContainerClass: "w-full sm:w-1/3 flex-shrink-0",
-        contentContainerClass: "flex-1 p-6",
+        imageContainerClass: "w-full sm:w-1/3 flex-shrink-0 sm:h-full",
+        contentContainerClass: "flex-1 p-4 flex flex-col",
         cardFlexDirection: "flex-col sm:flex-row",
-        imageHeight: "h-48 sm:h-56"
+        imageHeight: "h-48 sm:h-full"
       };
     } else if (style === 'landscape') {
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6",
+        contentContainerClass: "p-4 flex flex-col",
         cardFlexDirection: "flex-col",
         imageHeight: "h-40"
       };
     } else {
+      // Square and circle: same approach as artists page but shorter
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6",
+        contentContainerClass: "p-4 flex flex-col",
         cardFlexDirection: "flex-col",
-        imageHeight: "h-48"
+        imageHeight: "h-52"
       };
     }
   } else {
