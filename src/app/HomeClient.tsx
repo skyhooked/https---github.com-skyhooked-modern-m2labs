@@ -245,23 +245,25 @@ export default function HomeClient() {
               ))
             ) : (
               latestPosts.map((post: any) => (
-              <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <Image
-                  src={post.coverImage}
-                  alt={post.title}
-                  width={400}
-                  height={250}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-primary line-clamp-2">{post.title}</h3>
-                  <p className="text-secondary mb-4 line-clamp-3">{post.excerpt}</p>
-                  <div className="flex justify-between items-center text-sm text-secondary/70">
-                    <span>By {post.author}</span>
-                    <span>{formatDate(post.publishDate)}</span>
+              <Link key={post.id} href={`/news/${post.id}`}>
+                <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title}
+                    width={400}
+                    height={250}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold mb-3 text-primary line-clamp-2 hover:text-[#FF8A3D] transition-colors">{post.title}</h3>
+                    <p className="text-secondary mb-4 line-clamp-3">{post.excerpt}</p>
+                    <div className="flex justify-between items-center text-sm text-secondary/70">
+                      <span>By {post.author}</span>
+                      <span>{formatDate(post.publishDate)}</span>
+                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </Link>
               ))
             )}
           </div>
