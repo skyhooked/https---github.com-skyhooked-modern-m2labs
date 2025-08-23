@@ -307,14 +307,14 @@ export default function HomeClient() {
               featuredArtists.map((artist: any) => {
                 // Get layout configuration based on image style
                 const imageStyle = artist.imageStyle || 'square';
-                const { imageContainerClass, contentContainerClass, cardFlexDirection } = 
+                const { imageContainerClass, contentContainerClass, cardFlexDirection, imageHeight } = 
                   getCardLayoutConfig(imageStyle, 'homepage');
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
-                    <div className={`flex ${cardFlexDirection}`}>
+                    <div className={`flex ${cardFlexDirection} ${imageStyle === 'portrait' ? 'sm:h-56' : ''}`}>
                       <div className={imageContainerClass}>
-                        <div className={`${getImageStyleClasses(artist.imageStyle, 'grid').replace(/h-\d+/, 'h-full')} relative`}>
+                        <div className={`relative overflow-hidden bg-gray-200 ${imageHeight} ${artist.imageStyle === 'circle' ? 'rounded-full' : 'rounded-lg'}`}>
                           <Image
                             src={artist.image}
                             alt={artist.name}

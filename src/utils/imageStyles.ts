@@ -115,45 +115,45 @@ export function getCardLayoutConfig(
     // Homepage featured artist cards (smaller/simpler)
     if (isHorizontalLayout) {
       return {
-        imageContainerClass: "w-full sm:w-1/3 h-48 sm:h-56",
+        imageContainerClass: "w-full sm:w-1/3 flex-shrink-0",
         contentContainerClass: "flex-1 p-6",
         cardFlexDirection: "flex-col sm:flex-row",
-        imageHeight: "h-full"
+        imageHeight: "h-48 sm:h-56"
       };
     } else if (style === 'landscape') {
       return {
-        imageContainerClass: "w-full h-40",
+        imageContainerClass: "w-full flex-shrink-0",
         contentContainerClass: "p-6",
         cardFlexDirection: "flex-col",
-        imageHeight: "h-full"
+        imageHeight: "h-40"
       };
     } else {
       return {
-        imageContainerClass: "w-full h-48",
+        imageContainerClass: "w-full flex-shrink-0",
         contentContainerClass: "p-6",
         cardFlexDirection: "flex-col",
-        imageHeight: "h-full"
+        imageHeight: "h-48"
       };
     }
   } else {
     // Artists page cards (larger/more detailed)
     if (isHorizontalLayout) {
       return {
-        imageContainerClass: "w-full md:w-1/3 md:min-h-[280px]",
+        imageContainerClass: "w-full md:w-1/3 flex-shrink-0",
         contentContainerClass: "flex-1 p-6",
         cardFlexDirection: "flex-col md:flex-row",
-        imageHeight: "h-64 md:h-full"
+        imageHeight: "h-64 md:h-80"
       };
     } else if (style === 'landscape') {
       return {
-        imageContainerClass: "w-full",
+        imageContainerClass: "w-full flex-shrink-0",
         contentContainerClass: "p-6",
         cardFlexDirection: "flex-col",
-        imageHeight: "h-56"
+        imageHeight: "h-48"
       };
     } else {
       return {
-        imageContainerClass: "w-full",
+        imageContainerClass: "w-full flex-shrink-0",
         contentContainerClass: "p-6",
         cardFlexDirection: "flex-col",
         imageHeight: "h-64"
