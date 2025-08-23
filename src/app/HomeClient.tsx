@@ -329,40 +329,41 @@ export default function HomeClient() {
                         />
                       </div>
                       <div className={contentContainerClass}>
-                  <div className="mb-3">
-                    <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
-                    <div className="flex flex-wrap gap-1">
-                                              {artist.genre?.split(',').map((genre: string, index: number) => (
-                          <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
-                            {genre.trim()}
-                          </span>
-                        )) || null}
-                    </div>
-                  </div>
-                  <p className="text-secondary text-sm mb-2">📍 {artist.location}</p>
-                  <p className="text-secondary mb-4 line-clamp-3">{artist.bio}</p>
-                  {artist.testimonial && (
-                    <blockquote className="text-sm italic text-gray-600 border-l-4 border-[#FF8A3D] pl-3 mb-4">
-                      "{artist.testimonial}"
-                    </blockquote>
-                  )}
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {artist.gear?.slice(0, 2).map((item: string, index: number) => (
-                      <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {item}
-                      </span>
-                    )) || null}
-                    {artist.gear && artist.gear.length > 2 && (
-                      <span className="text-xs text-gray-500">+{artist.gear.length - 2} more</span>
-                    )}
-                  </div>
-                                    <div className="mt-auto">
-                        <Link
-                          href={`/artists/${artist.id}`}
-                          className="inline-block w-full bg-[#FF8A3D] text-black text-center px-4 py-2 rounded-md hover:bg-[#FF8A3D]/80 transition-colors font-medium text-sm"
-                        >
-                          View Full Profile
-                        </Link>
+                        <div className="mb-3">
+                          <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
+                          <div className="flex flex-wrap gap-1">
+                            {artist.genre?.split(',').map((genre: string, index: number) => (
+                              <span key={index} className="text-xs bg-[#FF8A3D] text-black px-2 py-1 rounded">
+                                {genre.trim()}
+                              </span>
+                            )) || null}
+                          </div>
+                        </div>
+                        <p className="text-secondary text-sm mb-2">📍 {artist.location}</p>
+                        <p className="text-secondary mb-4 line-clamp-3">{artist.bio}</p>
+                        {artist.testimonial && (
+                          <blockquote className="text-sm italic text-gray-600 border-l-4 border-[#FF8A3D] pl-3 mb-4">
+                            "{artist.testimonial}"
+                          </blockquote>
+                        )}
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {artist.gear?.slice(0, 2).map((item: string, index: number) => (
+                            <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                              {item}
+                            </span>
+                          )) || null}
+                          {artist.gear && artist.gear.length > 2 && (
+                            <span className="text-xs text-gray-500">+{artist.gear.length - 2} more</span>
+                          )}
+                        </div>
+                        <div className="mt-auto">
+                          <Link
+                            href={`/artists/${artist.id}`}
+                            className="inline-block w-full bg-[#FF8A3D] text-black text-center px-4 py-2 rounded-md hover:bg-[#FF8A3D]/80 transition-colors font-medium text-sm"
+                          >
+                            View Full Profile
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </article>
