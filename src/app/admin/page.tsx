@@ -19,19 +19,19 @@ interface ModuleCardProps {
 
 function ModuleCard({ title, description, icon, href, disabled, stats }: ModuleCardProps) {
   const cardContent = (
-    <div className={`rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md h-48 flex flex-col ${
-      disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#FF8A3D]'
+    <div className={`rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm transition-all hover:shadow-md h-48 flex flex-col ${
+      disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#FF8A3D] dark:hover:border-[#FF8A3D]'
     }`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <div className="text-2xl flex-shrink-0">{icon}</div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">{title}</h3>
-            <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">{title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{description}</p>
           </div>
         </div>
         {disabled && (
-          <span className="text-xs bg-gray-200 px-2 py-1 rounded flex-shrink-0">Coming Soon</span>
+          <span className="text-xs bg-gray-200 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded flex-shrink-0">Coming Soon</span>
         )}
       </div>
       
@@ -40,7 +40,7 @@ function ModuleCard({ title, description, icon, href, disabled, stats }: ModuleC
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-2xl font-bold text-[#FF8A3D]">{stat.value}</div>
-              <div className="text-xs text-gray-600">{stat.label}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -230,9 +230,9 @@ export default function AdminDashboard() {
       <AdminLayout>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-[#36454F] to-[#6C7A83] rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-r from-[#36454F] to-[#6C7A83] dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 text-white">
           <h1 className="text-3xl font-bold mb-2">Welcome to M2 Labs Admin</h1>
-          <p className="text-gray-200">
+          <p className="text-gray-200 dark:text-gray-300">
             Manage your website content, products, and business operations from this central dashboard.
           </p>
         </div>
@@ -240,9 +240,9 @@ export default function AdminDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-lg border p-6 shadow-sm h-24 flex items-center">
+            <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-24 flex items-center">
               <div className="w-full">
-                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
                 <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
 
         {/* Modules Grid */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Management Modules</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Management Modules</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {modules.map((module, index) => (
               <ModuleCard key={index} {...module} />
