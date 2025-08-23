@@ -36,17 +36,14 @@ function useDarkMode() {
   useEffect(() => {
     // Apply dark mode to document
     if (isDarkMode) {
-      console.log('Adding dark class to document');
       document.documentElement.classList.add('dark');
     } else {
-      console.log('Removing dark class from document');
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
-    console.log('Toggling dark mode from', isDarkMode, 'to', newDarkMode);
     setIsDarkMode(newDarkMode);
     localStorage.setItem('admin-dark-mode', JSON.stringify(newDarkMode));
   };
