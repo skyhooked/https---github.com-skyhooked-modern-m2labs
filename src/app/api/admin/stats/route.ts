@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupportTickets, getAllProducts, getAllDistributors } from '@/libs/database-ecommerce';
+import { getArtists } from '@/libs/database-d1';
 
 export const runtime = 'edge';
 
@@ -17,6 +18,10 @@ export async function GET(request: NextRequest) {
     // Fetch distributor stats
     const distributors = await getAllDistributors({});
     const activeDistributors = distributors.filter(d => d.status === 'active');
+    
+    // Fetch artist stats
+    const artists = await getArtists();
+    const featuredArtists = artists.filter(a => a.featured);
     
     // TODO: Add these when the functions are implemented
     // Users and warranty claims will be implemented later
@@ -40,6 +45,11 @@ export async function GET(request: NextRequest) {
       users: {
         totalUsers,
         verifiedUsers,
+      },
+      artists: {
+        totalArtists: artists.length,
+        featuredArtists: featuredArtists.length,
+        unverifiedArtists: artists.length - featuredArtists.length,
       },
       distributors: {
         totalDistributors: distributors.length,

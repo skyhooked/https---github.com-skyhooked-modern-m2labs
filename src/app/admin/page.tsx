@@ -19,24 +19,24 @@ interface ModuleCardProps {
 
 function ModuleCard({ title, description, icon, href, disabled, stats }: ModuleCardProps) {
   const cardContent = (
-    <div className={`rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md ${
+    <div className={`rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md h-48 flex flex-col ${
       disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#FF8A3D]'
     }`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="text-2xl">{icon}</div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-600">{description}</p>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="text-2xl flex-shrink-0">{icon}</div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 truncate">{title}</h3>
+            <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
           </div>
         </div>
         {disabled && (
-          <span className="text-xs bg-gray-200 px-2 py-1 rounded">Coming Soon</span>
+          <span className="text-xs bg-gray-200 px-2 py-1 rounded flex-shrink-0">Coming Soon</span>
         )}
       </div>
       
       {stats && (
-        <div className="mt-4 grid grid-cols-2 gap-4">
+        <div className="mt-auto grid grid-cols-2 gap-4">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-2xl font-bold text-[#FF8A3D]">{stat.value}</div>
@@ -240,12 +240,10 @@ export default function AdminDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-lg border p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                </div>
+            <div key={index} className="bg-white rounded-lg border p-6 shadow-sm h-24 flex items-center">
+              <div className="w-full">
+                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
               </div>
             </div>
           ))}
