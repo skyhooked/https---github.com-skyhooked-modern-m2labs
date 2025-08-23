@@ -1035,9 +1035,20 @@ export const createSupportTicket = async (data: Omit<SupportTicket, 'id' | 'tick
       assignedTo, orderId, productId, createdAt, updatedAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    ticket.id, ticket.ticketNumber, ticket.userId, ticket.email, ticket.name, ticket.subject,
-    ticket.category, ticket.priority, ticket.status, ticket.assignedTo, ticket.orderId,
-    ticket.productId, ticket.createdAt, ticket.updatedAt
+    ticket.id, 
+    ticket.ticketNumber, 
+    ticket.userId || null, 
+    ticket.email, 
+    ticket.name, 
+    ticket.subject,
+    ticket.category, 
+    ticket.priority, 
+    ticket.status, 
+    ticket.assignedTo || null, 
+    ticket.orderId || null,
+    ticket.productId || null, 
+    ticket.createdAt, 
+    ticket.updatedAt
   ).run();
   
   return ticket;
@@ -1059,8 +1070,13 @@ export const createSupportMessage = async (data: Omit<SupportMessage, 'id' | 'cr
     INSERT INTO support_messages (id, ticketId, userId, isInternal, message, attachments, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    message.id, message.ticketId, message.userId, message.isInternal, message.message,
-    JSON.stringify(message.attachments), message.createdAt
+    message.id, 
+    message.ticketId, 
+    message.userId || null, 
+    message.isInternal, 
+    message.message,
+    JSON.stringify(message.attachments), 
+    message.createdAt
   ).run();
   
   return message;
