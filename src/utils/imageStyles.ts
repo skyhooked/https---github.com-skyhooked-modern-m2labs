@@ -147,17 +147,17 @@ export function getCardLayoutConfig(
     } else if (style === 'landscape') {
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6 flex flex-col",
+        contentContainerClass: "p-4 flex flex-col", // Reduced padding for more content space
         cardFlexDirection: "flex-col",
-        imageHeight: "h-56"
+        imageHeight: "h-48" // Shorter image to leave more room for content
       };
     } else {
       // Square and circle: taller vertical layout to show full square images
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6 flex flex-col",
+        contentContainerClass: "p-4 flex flex-col", // Reduced padding for more content space
         cardFlexDirection: "flex-col",
-        imageHeight: "h-80"
+        imageHeight: "h-64" // Shorter image to leave more room for content
       };
     }
   }
