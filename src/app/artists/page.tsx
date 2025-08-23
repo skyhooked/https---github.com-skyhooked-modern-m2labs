@@ -132,7 +132,7 @@ export default function Artists() {
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div className={`flex ${cardFlexDirection} ${imageStyle === 'portrait' ? 'md:min-h-[32rem]' : 'min-h-[32rem]'}`}>
+                    <div className={`flex ${cardFlexDirection} h-[32rem]`}>
                       <div className={imageContainerClass}>
                         <div className={`relative overflow-hidden bg-gray-200 ${imageHeight} ${artist.imageStyle === 'circle' ? 'rounded-full' : 'rounded-lg'}`}>
                           {(isBlobOrData || isSvg) ? (
@@ -152,7 +152,7 @@ export default function Artists() {
                           )}
                         </div>
                       </div>
-                      <div className={`${contentContainerClass} flex flex-col justify-between min-h-0`}>
+                      <div className={`${contentContainerClass} justify-between min-h-0`}>
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-2xl font-bold text-primary">{artist.name}</h3>
                           <div className="flex flex-wrap gap-1">
@@ -269,7 +269,7 @@ export default function Artists() {
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div className={`flex ${cardFlexDirection} ${imageStyle === 'portrait' ? 'md:min-h-[32rem]' : 'min-h-[32rem]'}`}>
+                    <div className={`flex ${cardFlexDirection} h-[32rem]`}>
                       <div className={imageContainerClass}>
                         <div className={`relative overflow-hidden bg-gray-200 ${imageHeight} ${artist.imageStyle === 'circle' ? 'rounded-full' : 'rounded-lg'}`}>
                           {(isBlobOrData || isSvg) ? (
@@ -289,7 +289,7 @@ export default function Artists() {
                           )}
                         </div>
                       </div>
-                      <div className={`${contentContainerClass} flex flex-col justify-between min-h-0`}>
+                      <div className={`${contentContainerClass} justify-between min-h-0`}>
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-2xl font-bold text-primary">{artist.name}</h3>
                           <div className="flex flex-wrap gap-1">

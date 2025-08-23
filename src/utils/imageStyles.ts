@@ -139,15 +139,15 @@ export function getCardLayoutConfig(
     // Artists page cards (larger/more detailed)
     if (isHorizontalLayout) {
       return {
-        imageContainerClass: "w-full md:w-1/3 flex-shrink-0",
-        contentContainerClass: "flex-1 p-6",
+        imageContainerClass: "w-full md:w-1/3 flex-shrink-0 md:h-full",
+        contentContainerClass: "flex-1 p-6 flex flex-col",
         cardFlexDirection: "flex-col md:flex-row",
-        imageHeight: "h-64 md:h-96"
+        imageHeight: "h-64 md:h-full"
       };
     } else if (style === 'landscape') {
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6",
+        contentContainerClass: "p-6 flex flex-col",
         cardFlexDirection: "flex-col",
         imageHeight: "h-56"
       };
@@ -155,7 +155,7 @@ export function getCardLayoutConfig(
       // Square and circle: taller vertical layout to show full square images
       return {
         imageContainerClass: "w-full flex-shrink-0",
-        contentContainerClass: "p-6",
+        contentContainerClass: "p-6 flex flex-col",
         cardFlexDirection: "flex-col",
         imageHeight: "h-80"
       };
