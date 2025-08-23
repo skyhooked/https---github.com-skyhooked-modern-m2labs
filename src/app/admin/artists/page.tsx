@@ -65,8 +65,11 @@ export default function ArtistManagement() {
       }
 
       // Reload artists from database
-      const updatedArtists = await getAllArtists();
-      setArtists(updatedArtists);
+      const reloadResponse = await fetch('/api/artists');
+      const reloadData = await reloadResponse.json();
+      if (reloadData.success) {
+        setArtists(reloadData.artists);
+      }
       setShowForm(false);
       setEditingArtist(null);
       alert(editingArtist ? 'Artist updated successfully!' : 'Artist added successfully!');
@@ -97,8 +100,11 @@ export default function ArtistManagement() {
       }
 
       // Reload artists from database
-      const updatedArtists = await getAllArtists();
-      setArtists(updatedArtists);
+      const reloadResponse = await fetch('/api/artists');
+      const reloadData = await reloadResponse.json();
+      if (reloadData.success) {
+        setArtists(reloadData.artists);
+      }
       alert('Artist deleted successfully!');
     } catch (error) {
       console.error('Error deleting artist:', error);
