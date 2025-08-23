@@ -246,18 +246,20 @@ export default function HomeClient() {
             ) : (
               latestPosts.map((post: any) => (
               <Link key={post.id} href={`/news/${post.id}`}>
-                <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
-                  <Image
-                    src={post.coverImage}
-                    alt={post.title}
-                    width={400}
-                    height={250}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-6">
+                <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer h-96 flex flex-col">
+                  <div className="flex-shrink-0">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      width={400}
+                      height={250}
+                      className="w-full h-48 object-cover"
+                    />
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-xl font-semibold mb-3 text-primary line-clamp-2 hover:text-[#FF8A3D] transition-colors">{post.title}</h3>
-                    <p className="text-secondary mb-4 line-clamp-3">{post.excerpt}</p>
-                    <div className="flex justify-between items-center text-sm text-secondary/70">
+                    <p className="text-secondary mb-4 line-clamp-3 flex-1">{post.excerpt}</p>
+                    <div className="flex justify-between items-center text-sm text-secondary/70 mt-auto">
                       <span>By {post.author}</span>
                       <span>{formatDate(post.publishDate)}</span>
                     </div>

@@ -58,36 +58,38 @@ export default function News() {
           
           <div className="space-y-8">
             {posts.map((post) => (
-              <Link key={post.id} href={`/news/${post.id}`}>
-                <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
-                  <div className="md:flex">
-                    <div className="md:w-1/3">
-                      <Image
-                        src={post.coverImage}
-                        alt={post.title}
-                        width={400}
-                        height={250}
-                        className="w-full h-64 md:h-full object-cover"
-                      />
+              <div key={post.id} className="mb-8">
+                <Link href={`/news/${post.id}`}>
+                  <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
+                    <div className="md:flex">
+                      <div className="md:w-1/3">
+                        <Image
+                          src={post.coverImage}
+                          alt={post.title}
+                          width={400}
+                          height={250}
+                          className="w-full h-64 md:h-full object-cover"
+                        />
+                      </div>
+                      <div className="md:w-2/3 p-8">
+                        <h3 className="text-2xl font-bold mb-4 text-primary hover:text-[#FF8A3D] transition-colors">{post.title}</h3>
+                        <div className="text-secondary leading-relaxed mb-4">
+                          <p>{post.excerpt}</p>
+                        </div>
+                        <div className="flex justify-between items-center text-sm text-secondary/70 mb-4">
+                          <span>By {post.author} – {formatDate(post.publishDate)} – {post.readTime}</span>
+                          {post.category && <span className="bg-[#FF8A3D] text-black px-2 py-1 rounded text-xs">{post.category}</span>}
+                        </div>
+                        <div className="flex justify-end">
+                          <span className="text-[#FF8A3D] font-medium text-sm hover:text-[#FF8A3D]/80 transition-colors">
+                            Read Full Article →
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="md:w-2/3 p-8">
-                      <h3 className="text-2xl font-bold mb-4 text-primary hover:text-[#FF8A3D] transition-colors">{post.title}</h3>
-                      <div className="text-secondary leading-relaxed mb-4">
-                        <p>{post.excerpt}</p>
-                      </div>
-                      <div className="flex justify-between items-center text-sm text-secondary/70 mb-4">
-                        <span>By {post.author} – {formatDate(post.publishDate)} – {post.readTime}</span>
-                        {post.category && <span className="bg-[#FF8A3D] text-black px-2 py-1 rounded text-xs">{post.category}</span>}
-                      </div>
-                      <div className="flex justify-end">
-                        <span className="text-[#FF8A3D] font-medium text-sm hover:text-[#FF8A3D]/80 transition-colors">
-                          Read Full Article →
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Link>
+                  </article>
+                </Link>
+              </div>
             ))}
           </div>
         </div>
