@@ -5,7 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import ArtistForm from '@/components/admin/ArtistForm';
 import Image from 'next/image';
-import { getAllArtists, Artist } from '@/libs/artists';
+import { Artist } from '@/libs/artists';
 export const runtime = 'edge'
 
 export default function ArtistManagement() {
@@ -163,8 +163,11 @@ export default function ArtistManagement() {
       }
 
       // Reload from database to ensure consistency
-      const updatedArtists = await getAllArtists();
-      setArtists(updatedArtists);
+      const reloadResponse = await fetch('/api/artists');
+      const reloadData = await reloadResponse.json();
+      if (reloadData.success) {
+        setArtists(reloadData.artists);
+      }
     } catch (error) {
       console.error('Error reordering artists:', error);
       alert('Failed to reorder artists');
