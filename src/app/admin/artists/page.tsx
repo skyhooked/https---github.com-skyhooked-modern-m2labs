@@ -90,14 +90,22 @@ export default function ArtistManagement() {
     if (!confirm('Are you sure you want to delete this artist?')) return;
 
     try {
-      // Delete artist via API (we'll need to implement DELETE method)
+      console.log('🗑️ Frontend: Attempting to delete artist:', artistId);
+      
       const response = await fetch(`/api/admin/artists/${artistId}`, {
         method: 'DELETE',
       });
 
+      console.log('🔍 Frontend: Delete response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to delete artist');
+        const errorData = await response.json();
+        console.error('❌ Frontend: Delete failed with error:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete artist`);
       }
+
+      const result = await response.json();
+      console.log('✅ Frontend: Delete successful:', result);
 
       // Reload artists from database
       const reloadResponse = await fetch('/api/artists');
@@ -107,8 +115,8 @@ export default function ArtistManagement() {
       }
       alert('Artist deleted successfully!');
     } catch (error) {
-      console.error('Error deleting artist:', error);
-      alert('Failed to delete artist');
+      console.error('❌ Frontend: Error deleting artist:', error);
+      alert(`Failed to delete artist: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

@@ -9,20 +9,23 @@ export async function DELETE(
 ) {
   try {
     console.log('🗑️ Starting artist deletion...')
-    await initializeDatabase()
     
     const { id: artistId } = await params
+    console.log('🔍 Artist ID from params:', artistId)
     
     if (!artistId) {
+      console.error('❌ No artist ID provided')
       return NextResponse.json({ error: 'Artist ID is required' }, { status: 400 })
     }
     
-    console.log('Deleting artist with ID:', artistId)
+    console.log('🔗 Deleting artist with ID:', artistId)
     
     const success = await deleteArtist(artistId)
+    console.log('🎯 Delete operation result:', success)
     
     if (!success) {
-      return NextResponse.json({ error: 'Artist not found' }, { status: 404 })
+      console.error('❌ Artist not found or delete failed')
+      return NextResponse.json({ error: 'Artist not found or delete failed' }, { status: 404 })
     }
     
     console.log('✅ Artist deleted successfully:', artistId)
@@ -30,6 +33,10 @@ export async function DELETE(
     
   } catch (err: any) {
     console.error('❌ Failed to delete artist:', err)
-    return NextResponse.json({ error: String(err?.message || err) }, { status: 500 })
+    console.error('Error stack:', err.stack)
+    return NextResponse.json({ 
+      error: `Delete failed: ${err?.message || err}`,
+      details: String(err)
+    }, { status: 500 })
   }
 }
