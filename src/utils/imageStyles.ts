@@ -152,11 +152,12 @@ export function getCardLayoutConfig(
         imageHeight: "h-48"
       };
     } else {
+      // Square and circle: taller vertical layout to show full square images
       return {
         imageContainerClass: "w-full flex-shrink-0",
         contentContainerClass: "p-6",
         cardFlexDirection: "flex-col",
-        imageHeight: "h-64"
+        imageHeight: "h-80"
       };
     }
   }
