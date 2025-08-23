@@ -6,7 +6,7 @@ import Hero from '@/components/Hero';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllArtists, Artist } from '@/libs/artists';
-import { getImageStyleClasses } from '@/utils/imageStyles';
+import { getImageStyleClasses, getCardLayoutConfig } from '@/utils/imageStyles';
 
 export default function Artists() {
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -125,23 +125,16 @@ export default function Artists() {
                 const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');
                 const isSvg = src.toLowerCase().endsWith('.svg');
 
-                // Determine layout based on image style
-                const isHorizontalLayout = artist.imageStyle === 'portrait';
-                const imageContainerClass = isHorizontalLayout 
-                  ? "w-1/3 min-h-[200px]" 
-                  : "w-full";
-                const contentContainerClass = isHorizontalLayout 
-                  ? "flex-1 p-6" 
-                  : "p-6";
-                const cardFlexDirection = isHorizontalLayout 
-                  ? "flex-row" 
-                  : "flex-col";
+                // Get layout configuration based on image style
+                const imageStyle = artist.imageStyle || 'square';
+                const { imageContainerClass, contentContainerClass, cardFlexDirection, imageHeight } = 
+                  getCardLayoutConfig(imageStyle, 'artists-page');
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className={`flex ${cardFlexDirection}`}>
                       <div className={imageContainerClass}>
-                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                        <div className={`${getImageStyleClasses(artist.imageStyle, 'grid').replace(/h-\d+/, imageHeight)} relative`}>
                           {(isBlobOrData || isSvg) ? (
                             <img
                               src={src}
@@ -268,23 +261,16 @@ export default function Artists() {
                 const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');
                 const isSvg = src.toLowerCase().endsWith('.svg');
 
-                // Determine layout based on image style
-                const isHorizontalLayout = artist.imageStyle === 'portrait';
-                const imageContainerClass = isHorizontalLayout 
-                  ? "w-1/3 min-h-[200px]" 
-                  : "w-full";
-                const contentContainerClass = isHorizontalLayout 
-                  ? "flex-1 p-6" 
-                  : "p-6";
-                const cardFlexDirection = isHorizontalLayout 
-                  ? "flex-row" 
-                  : "flex-col";
+                // Get layout configuration based on image style
+                const imageStyle = artist.imageStyle || 'square';
+                const { imageContainerClass, contentContainerClass, cardFlexDirection, imageHeight } = 
+                  getCardLayoutConfig(imageStyle, 'artists-page');
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className={`flex ${cardFlexDirection}`}>
                       <div className={imageContainerClass}>
-                        <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
+                        <div className={`${getImageStyleClasses(artist.imageStyle, 'grid').replace(/h-\d+/, imageHeight)} relative`}>
                           {(isBlobOrData || isSvg) ? (
                             <img
                               src={src}

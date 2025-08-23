@@ -7,6 +7,7 @@ import SectionDivider from '@/components/SectionDivider';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getLatestPosts, formatDate, loadNewsFromServer } from '@/data/newsData';
+import { getImageStyleClasses, getCardLayoutConfig } from '@/utils/imageStyles';
 import { getFeaturedArtistsFromD1 } from '@/libs/artists';
 
 
@@ -304,29 +305,24 @@ export default function HomeClient() {
               ))
             ) : featuredArtists.length > 0 ? (
               featuredArtists.map((artist: any) => {
-                // Determine layout based on image style
-                const isHorizontalLayout = artist.imageStyle === 'portrait';
-                const imageContainerClass = isHorizontalLayout 
-                  ? "w-1/3 h-48" 
-                  : "w-full h-48";
-                const contentContainerClass = isHorizontalLayout 
-                  ? "flex-1 p-6" 
-                  : "p-6";
-                const cardFlexDirection = isHorizontalLayout 
-                  ? "flex-row" 
-                  : "flex-col";
+                // Get layout configuration based on image style
+                const imageStyle = artist.imageStyle || 'square';
+                const { imageContainerClass, contentContainerClass, cardFlexDirection } = 
+                  getCardLayoutConfig(imageStyle, 'homepage');
 
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
                     <div className={`flex ${cardFlexDirection}`}>
                       <div className={imageContainerClass}>
-                        <Image
-                          src={artist.image}
-                          alt={artist.name}
-                          width={400}
-                          height={250}
-                          className="w-full h-full object-cover"
-                        />
+                        <div className={`${getImageStyleClasses(artist.imageStyle, 'grid').replace(/h-\d+/, 'h-full')} relative`}>
+                          <Image
+                            src={artist.image}
+                            alt={artist.name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
                       </div>
                       <div className={contentContainerClass}>
                         <div className="mb-3">

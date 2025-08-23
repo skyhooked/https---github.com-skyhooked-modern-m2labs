@@ -93,3 +93,71 @@ export function getRecommendedDimensions(style: ImageStyle): { width: number; he
       return { width: 400, height: 400, ratio: '1:1' };
   }
 }
+
+/**
+ * Get card layout configuration based on image style
+ * @param style - The image style to use  
+ * @param context - Where the card is being used ('artists-page', 'homepage')
+ * @returns Layout configuration for the artist card
+ */
+export function getCardLayoutConfig(
+  style: ImageStyle = 'square', 
+  context: 'artists-page' | 'homepage' = 'artists-page'
+): {
+  imageContainerClass: string;
+  contentContainerClass: string;
+  cardFlexDirection: string;
+  imageHeight: string;
+} {
+  const isHorizontalLayout = style === 'portrait';
+  
+  if (context === 'homepage') {
+    // Homepage featured artist cards (smaller/simpler)
+    if (isHorizontalLayout) {
+      return {
+        imageContainerClass: "w-full sm:w-1/3 h-48 sm:h-56",
+        contentContainerClass: "flex-1 p-6",
+        cardFlexDirection: "flex-col sm:flex-row",
+        imageHeight: "h-full"
+      };
+    } else if (style === 'landscape') {
+      return {
+        imageContainerClass: "w-full h-40",
+        contentContainerClass: "p-6",
+        cardFlexDirection: "flex-col",
+        imageHeight: "h-full"
+      };
+    } else {
+      return {
+        imageContainerClass: "w-full h-48",
+        contentContainerClass: "p-6",
+        cardFlexDirection: "flex-col",
+        imageHeight: "h-full"
+      };
+    }
+  } else {
+    // Artists page cards (larger/more detailed)
+    if (isHorizontalLayout) {
+      return {
+        imageContainerClass: "w-full md:w-1/3 md:min-h-[280px]",
+        contentContainerClass: "flex-1 p-6",
+        cardFlexDirection: "flex-col md:flex-row",
+        imageHeight: "h-64 md:h-full"
+      };
+    } else if (style === 'landscape') {
+      return {
+        imageContainerClass: "w-full",
+        contentContainerClass: "p-6",
+        cardFlexDirection: "flex-col",
+        imageHeight: "h-56"
+      };
+    } else {
+      return {
+        imageContainerClass: "w-full",
+        contentContainerClass: "p-6",
+        cardFlexDirection: "flex-col",
+        imageHeight: "h-64"
+      };
+    }
+  }
+}
