@@ -19,27 +19,34 @@ interface AdminLayoutProps {
 
 // Dark mode hook
 function useDarkMode() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     // Load dark mode preference from localStorage
     const savedDarkMode = localStorage.getItem('admin-dark-mode');
     if (savedDarkMode !== null) {
       setIsDarkMode(JSON.parse(savedDarkMode));
+    } else {
+      // Default to dark mode for admin
+      setIsDarkMode(true);
+      localStorage.setItem('admin-dark-mode', 'true');
     }
   }, []);
 
   useEffect(() => {
     // Apply dark mode to document
     if (isDarkMode) {
+      console.log('Adding dark class to document');
       document.documentElement.classList.add('dark');
     } else {
+      console.log('Removing dark class from document');
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
+    console.log('Toggling dark mode from', isDarkMode, 'to', newDarkMode);
     setIsDarkMode(newDarkMode);
     localStorage.setItem('admin-dark-mode', JSON.stringify(newDarkMode));
   };

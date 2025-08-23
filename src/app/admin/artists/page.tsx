@@ -266,7 +266,7 @@ export default function ArtistManagement() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg border p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Artists</p>
@@ -275,7 +275,7 @@ export default function ArtistManagement() {
                 <div className="text-2xl">🎤</div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Homepage (Top 3)</p>
@@ -284,7 +284,7 @@ export default function ArtistManagement() {
                 <div className="text-2xl">🏠</div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Genres</p>
@@ -296,7 +296,7 @@ export default function ArtistManagement() {
           </div>
 
           {/* Artists List */}
-          <div className="bg-white rounded-lg border shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="p-6 border-b">
               <h2 className="text-lg font-semibold text-gray-900">Current Artists</h2>
             </div>
@@ -443,7 +443,7 @@ export default function ArtistManagement() {
           </div>
 
           {/* Usage Guide */}
-          <div className="bg-white rounded-lg border p-6 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">✅ Artist Management Features</h3>
             <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
               <div>

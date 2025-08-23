@@ -63,7 +63,7 @@ export default function UserManagement() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -71,13 +71,13 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Users</p>
-                  <p className="text-lg font-semibold text-gray-900">{stats.total}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.total}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
@@ -85,13 +85,13 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Verified</p>
-                  <p className="text-lg font-semibold text-gray-900">{stats.verified}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Verified</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.verified}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
@@ -99,13 +99,13 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Admins</p>
-                  <p className="text-lg font-semibold text-gray-900">{stats.admins}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Admins</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.admins}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
@@ -113,18 +113,18 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Customers</p>
-                  <p className="text-lg font-semibold text-gray-900">{stats.customers}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Customers</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stats.customers}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-6">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900">All Users</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">All Users</h2>
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <input
@@ -132,7 +132,7 @@ export default function UserManagement() {
                       placeholder="Search users..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-[#FF8A3D] focus:border-[#FF8A3D] sm:text-sm"
+                      className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-[#FF8A3D] focus:border-[#FF8A3D] sm:text-sm"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
                       <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
