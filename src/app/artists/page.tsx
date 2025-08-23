@@ -127,7 +127,6 @@ export default function Artists() {
 
                 // Get layout configuration based on image style
                 const imageStyle = artist.imageStyle || 'square';
-                console.log(`Artist ${artist.name} imageStyle:`, imageStyle); // Debug log
                 const { imageContainerClass, contentContainerClass, cardFlexDirection, imageHeight } = 
                   getCardLayoutConfig(imageStyle, 'artists-page');
 
@@ -162,9 +161,7 @@ export default function Artists() {
                                 {genre.trim()}
                               </span>
                             ))}
-                            <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
-                              {imageStyle}
-                            </span>
+
                           </div>
                         </div>
 
@@ -267,7 +264,6 @@ export default function Artists() {
 
                 // Get layout configuration based on image style
                 const imageStyle = artist.imageStyle || 'square';
-                console.log(`Artist ${artist.name} imageStyle:`, imageStyle); // Debug log
                 const { imageContainerClass, contentContainerClass, cardFlexDirection, imageHeight } = 
                   getCardLayoutConfig(imageStyle, 'artists-page');
 
@@ -302,9 +298,7 @@ export default function Artists() {
                                 {genre.trim()}
                               </span>
                             ))}
-                            <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
-                              {imageStyle}
-                            </span>
+
                           </div>
                         </div>
 
