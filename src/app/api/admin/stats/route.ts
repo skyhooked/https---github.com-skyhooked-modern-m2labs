@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupportTickets, getAllProducts, getAllDistributors } from '@/libs/database-ecommerce';
-import { getArtists } from '@/libs/database-d1';
+import { getArtists, getUsers } from '@/libs/database-d1';
 
 export const runtime = 'edge';
 
@@ -23,10 +23,18 @@ export async function GET(request: NextRequest) {
     const artists = await getArtists();
     const featuredArtists = artists.filter(a => a.featured);
     
-    // TODO: Add these when the functions are implemented
-    // Users and warranty claims will be implemented later
+    // Fetch user stats (with fallback in case users table doesn't exist yet)
     let totalUsers = 0;
     let verifiedUsers = 0;
+    try {
+      const users = await getUsers();
+      totalUsers = users.length;
+      verifiedUsers = users.filter(u => u.isVerified).length;
+    } catch (error) {
+      console.warn('Could not fetch user stats (users table may not exist yet):', error);
+    }
+    
+    // TODO: Add warranty claims when implemented
     let openClaims = 0;
     let processedClaims = 0;
 

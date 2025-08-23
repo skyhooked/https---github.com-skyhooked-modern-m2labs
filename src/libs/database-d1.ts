@@ -832,9 +832,9 @@ export const initializeDatabase = async (): Promise<void> => {
   }
   
   try {
-    // Run the migration SQL to set up tables and default data
-    await db.exec(`
-      -- Users table
+    // Create tables individually to avoid large SQL exec issues
+    console.log('Creating users table...');
+    await db.prepare(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
@@ -847,9 +847,12 @@ export const initializeDatabase = async (): Promise<void> => {
         isVerified BOOLEAN NOT NULL DEFAULT FALSE,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
-      );
+      )
+    `).run();
+    console.log('✅ Users table created successfully');
 
-      -- Orders table
+    console.log('Creating orders table...');
+    await db.prepare(`
       CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY,
         userId TEXT NOT NULL,
@@ -863,9 +866,12 @@ export const initializeDatabase = async (): Promise<void> => {
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
         FOREIGN KEY (userId) REFERENCES users (id)
-      );
+      )
+    `).run();
+    console.log('✅ Orders table created successfully');
 
-      -- Warranty claims table
+    console.log('Creating warranty claims table...');
+    await db.prepare(`
       CREATE TABLE IF NOT EXISTS warranty_claims (
         id TEXT PRIMARY KEY,
         userId TEXT NOT NULL,
@@ -878,156 +884,16 @@ export const initializeDatabase = async (): Promise<void> => {
         updatedAt TEXT NOT NULL,
         notes TEXT,
         FOREIGN KEY (userId) REFERENCES users (id)
-      );
-
-      -- Artists table
-      CREATE TABLE IF NOT EXISTS artists (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        bio TEXT,
-        genre TEXT,
-        location TEXT,
-        image TEXT,
-        imageStyle TEXT DEFAULT 'square',
-        website TEXT,
-        instagram TEXT,
-        youtube TEXT,
-        spotify TEXT,
-        bandcamp TEXT,
-        tidal TEXT,
-        gear TEXT, -- JSON array as string
-        testimonial TEXT,
-        featured BOOLEAN NOT NULL DEFAULT FALSE,
-        showBandsintown BOOLEAN NOT NULL DEFAULT FALSE,
-        bandsintown_artist_name TEXT,
-        order_position INTEGER NOT NULL DEFAULT 0,
-        useCustomTemplate BOOLEAN DEFAULT FALSE,
-        customTemplatePath TEXT,
-        customSections TEXT, -- JSON array as string
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL
-      );
-
-      -- News posts table
-      CREATE TABLE IF NOT EXISTS news_posts (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        excerpt TEXT,
-        fullContent TEXT NOT NULL,
-        coverImage TEXT,
-        author TEXT NOT NULL,
-        publishDate TEXT NOT NULL,
-        readTime TEXT,
-        category TEXT,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL
-      );
-
-      -- Newsletter subscribers table
-      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        firstName TEXT,
-        lastName TEXT,
-        userId TEXT, -- NULL if anonymous subscriber, links to users table if registered
-        subscriptionDate TEXT NOT NULL,
-        isActive BOOLEAN NOT NULL DEFAULT TRUE,
-        preferences TEXT, -- JSON object with subscription preferences
-        source TEXT NOT NULL DEFAULT 'website', -- 'website', 'admin', 'import', etc.
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        FOREIGN KEY (userId) REFERENCES users (id)
-      );
-
-      -- Newsletter campaigns table
-      CREATE TABLE IF NOT EXISTS newsletter_campaigns (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        subject TEXT NOT NULL,
-        previewText TEXT,
-        content TEXT NOT NULL, -- HTML content
-        templateId TEXT, -- Reference to newsletter_templates
-        status TEXT NOT NULL CHECK (status IN ('draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled')) DEFAULT 'draft',
-        scheduledAt TEXT, -- When to send (NULL for immediate)
-        sentAt TEXT, -- When actually sent
-        recipientCount INTEGER DEFAULT 0,
-        openCount INTEGER DEFAULT 0,
-        clickCount INTEGER DEFAULT 0,
-        unsubscribeCount INTEGER DEFAULT 0,
-        bounceCount INTEGER DEFAULT 0,
-        createdBy TEXT NOT NULL, -- User ID who created the campaign
-        tags TEXT, -- JSON array of tags for organization
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        FOREIGN KEY (createdBy) REFERENCES users (id),
-        FOREIGN KEY (templateId) REFERENCES newsletter_templates (id)
-      );
-
-      -- Newsletter templates table
-      CREATE TABLE IF NOT EXISTS newsletter_templates (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        thumbnail TEXT, -- Preview image URL
-        htmlContent TEXT NOT NULL,
-        isDefault BOOLEAN NOT NULL DEFAULT FALSE,
-        category TEXT, -- 'announcement', 'product', 'artist', 'custom', etc.
-        variables TEXT, -- JSON object defining template variables
-        createdBy TEXT NOT NULL,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        FOREIGN KEY (createdBy) REFERENCES users (id)
-      );
-
-      -- Newsletter analytics table (for detailed tracking)
-      CREATE TABLE IF NOT EXISTS newsletter_analytics (
-        id TEXT PRIMARY KEY,
-        campaignId TEXT NOT NULL,
-        subscriberId TEXT NOT NULL,
-        eventType TEXT NOT NULL CHECK (eventType IN ('sent', 'delivered', 'opened', 'clicked', 'unsubscribed', 'bounced')),
-        eventData TEXT, -- JSON object with event-specific data (e.g., clicked URL, bounce reason)
-        userAgent TEXT,
-        ipAddress TEXT,
-        timestamp TEXT NOT NULL,
-        FOREIGN KEY (campaignId) REFERENCES newsletter_campaigns (id),
-        FOREIGN KEY (subscriberId) REFERENCES newsletter_subscribers (id)
-      );
-
-      -- Newsletter unsubscribes table (separate from subscribers for audit trail)
-      CREATE TABLE IF NOT EXISTS newsletter_unsubscribes (
-        id TEXT PRIMARY KEY,
-        subscriberId TEXT NOT NULL,
-        campaignId TEXT, -- NULL if general unsubscribe
-        reason TEXT, -- Optional reason from user
-        unsubscribeDate TEXT NOT NULL,
-        FOREIGN KEY (subscriberId) REFERENCES newsletter_subscribers (id),
-        FOREIGN KEY (campaignId) REFERENCES newsletter_campaigns (id)
-      );
-
-      -- Create indexes for better performance
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
-      CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId);
-      CREATE INDEX IF NOT EXISTS idx_orders_ecwidOrderId ON orders (ecwidOrderId);
-      CREATE INDEX IF NOT EXISTS idx_warranty_claims_userId ON warranty_claims (userId);
-      CREATE INDEX IF NOT EXISTS idx_warranty_claims_orderId ON warranty_claims (orderId);
-      CREATE INDEX IF NOT EXISTS idx_artists_order_position ON artists (order_position);
-      CREATE INDEX IF NOT EXISTS idx_artists_featured ON artists (featured);
-      CREATE INDEX IF NOT EXISTS idx_news_posts_publishDate ON news_posts (publishDate);
-      CREATE INDEX IF NOT EXISTS idx_news_posts_category ON news_posts (category);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_email ON newsletter_subscribers (email);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_userId ON newsletter_subscribers (userId);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_isActive ON newsletter_subscribers (isActive);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_status ON newsletter_campaigns (status);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_scheduledAt ON newsletter_campaigns (scheduledAt);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_campaigns_createdBy ON newsletter_campaigns (createdBy);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_templates_category ON newsletter_templates (category);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_templates_isDefault ON newsletter_templates (isDefault);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_campaignId ON newsletter_analytics (campaignId);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_subscriberId ON newsletter_analytics (subscriberId);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_eventType ON newsletter_analytics (eventType);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_analytics_timestamp ON newsletter_analytics (timestamp);
-      CREATE INDEX IF NOT EXISTS idx_newsletter_unsubscribes_subscriberId ON newsletter_unsubscribes (subscriberId);
-    `);
+      )
+    `).run();
+    console.log('✅ Warranty claims table created successfully');
+    
+    // Create essential indexes
+    console.log('Creating indexes...');
+    await db.prepare(`CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)`).run();
+    await db.prepare(`CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId)`).run();
+    await db.prepare(`CREATE INDEX IF NOT EXISTS idx_warranty_claims_userId ON warranty_claims (userId)`).run();
+    console.log('✅ Indexes created successfully');
 
     // Insert default admin user if it doesn't exist
     const adminExists = await getUserByEmail('admin@m2labs.com');
