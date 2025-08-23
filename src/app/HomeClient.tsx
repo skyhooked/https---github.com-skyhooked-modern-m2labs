@@ -303,16 +303,32 @@ export default function HomeClient() {
                 </article>
               ))
             ) : featuredArtists.length > 0 ? (
-              featuredArtists.map((artist: any) => (
-              <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
-                <Image
-                  src={artist.image}
-                  alt={artist.name}
-                  width={400}
-                  height={250}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
+              featuredArtists.map((artist: any) => {
+                // Determine layout based on image style
+                const isHorizontalLayout = artist.imageStyle === 'portrait';
+                const imageContainerClass = isHorizontalLayout 
+                  ? "w-1/3 h-48" 
+                  : "w-full h-48";
+                const contentContainerClass = isHorizontalLayout 
+                  ? "flex-1 p-6" 
+                  : "p-6";
+                const cardFlexDirection = isHorizontalLayout 
+                  ? "flex-row" 
+                  : "flex-col";
+
+                return (
+                  <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden border">
+                    <div className={`flex ${cardFlexDirection}`}>
+                      <div className={imageContainerClass}>
+                        <Image
+                          src={artist.image}
+                          alt={artist.name}
+                          width={400}
+                          height={250}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className={contentContainerClass}>
                   <div className="mb-3">
                     <h3 className="text-xl font-semibold text-primary mb-2">{artist.name}</h3>
                     <div className="flex flex-wrap gap-1">
@@ -341,16 +357,17 @@ export default function HomeClient() {
                     )}
                   </div>
                                     <div className="mt-auto">
-                    <Link
-                      href={`/artists/${artist.id}`}
-                      className="inline-block w-full bg-[#FF8A3D] text-black text-center px-4 py-2 rounded-md hover:bg-[#FF8A3D]/80 transition-colors font-medium text-sm"
-                    >
-                      View Full Profile
-                    </Link>
-                  </div>
-                </div>
-              </article>
-              ))
+                        <Link
+                          href={`/artists/${artist.id}`}
+                          className="inline-block w-full bg-[#FF8A3D] text-black text-center px-4 py-2 rounded-md hover:bg-[#FF8A3D]/80 transition-colors font-medium text-sm"
+                        >
+                          View Full Profile
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-[#F5F5F5] text-lg">No featured artists found.</p>

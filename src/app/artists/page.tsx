@@ -125,10 +125,22 @@ export default function Artists() {
                 const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');
                 const isSvg = src.toLowerCase().endsWith('.svg');
 
+                // Determine layout based on image style
+                const isHorizontalLayout = artist.imageStyle === 'portrait';
+                const imageContainerClass = isHorizontalLayout 
+                  ? "w-1/3 min-h-[200px]" 
+                  : "w-full";
+                const contentContainerClass = isHorizontalLayout 
+                  ? "flex-1 p-6" 
+                  : "p-6";
+                const cardFlexDirection = isHorizontalLayout 
+                  ? "flex-row" 
+                  : "flex-col";
+
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div className="flex flex-col">
-                      <div className="w-full">
+                    <div className={`flex ${cardFlexDirection}`}>
+                      <div className={imageContainerClass}>
                         <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
                           {(isBlobOrData || isSvg) ? (
                             <img
@@ -147,7 +159,7 @@ export default function Artists() {
                           )}
                         </div>
                       </div>
-                      <div className="p-6 flex flex-col">
+                      <div className={`${contentContainerClass} flex flex-col`}>
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-2xl font-bold text-primary">{artist.name}</h3>
                           <div className="flex flex-wrap gap-1">
@@ -256,10 +268,22 @@ export default function Artists() {
                 const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');
                 const isSvg = src.toLowerCase().endsWith('.svg');
 
+                // Determine layout based on image style
+                const isHorizontalLayout = artist.imageStyle === 'portrait';
+                const imageContainerClass = isHorizontalLayout 
+                  ? "w-1/3 min-h-[200px]" 
+                  : "w-full";
+                const contentContainerClass = isHorizontalLayout 
+                  ? "flex-1 p-6" 
+                  : "p-6";
+                const cardFlexDirection = isHorizontalLayout 
+                  ? "flex-row" 
+                  : "flex-col";
+
                 return (
                   <article key={artist.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div className="flex flex-col">
-                      <div className="w-full">
+                    <div className={`flex ${cardFlexDirection}`}>
+                      <div className={imageContainerClass}>
                         <div className={getImageStyleClasses(artist.imageStyle, 'grid')}>
                           {(isBlobOrData || isSvg) ? (
                             <img
@@ -278,7 +302,7 @@ export default function Artists() {
                           )}
                         </div>
                       </div>
-                      <div className="p-6 flex flex-col">
+                      <div className={`${contentContainerClass} flex flex-col`}>
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-2xl font-bold text-primary">{artist.name}</h3>
                           <div className="flex flex-wrap gap-1">
