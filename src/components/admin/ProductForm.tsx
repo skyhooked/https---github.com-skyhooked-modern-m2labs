@@ -99,6 +99,15 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     categories: []
   });
 
+  // Separate state for price display values to avoid input cursor jumping
+  const [priceDisplayValues, setPriceDisplayValues] = useState({
+    basePrice: '0.00',
+    compareAtPrice: '0.00'
+  });
+  
+  // Track variant price display values separately
+  const [variantPriceDisplayValues, setVariantPriceDisplayValues] = useState<{ [key: number]: string }>({});
+
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -132,6 +141,21 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         images: product.images || [],
         categories: product.categories || []
       });
+      
+      // Set display values for prices
+      setPriceDisplayValues({
+        basePrice: formatPrice(product.basePrice || 0),
+        compareAtPrice: formatPrice(product.compareAtPrice || 0)
+      });
+      
+      // Set display values for variant prices
+      const variantDisplayValues: { [key: number]: string } = {};
+      (product.variants || []).forEach((variant, index) => {
+        if (variant.price) {
+          variantDisplayValues[index] = formatPrice(variant.price);
+        }
+      });
+      setVariantPriceDisplayValues(variantDisplayValues);
     }
   }, [product]);
 
@@ -171,7 +195,12 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         slug: generateSlug(value)
       }));
     } else if (name === 'basePrice' || name === 'compareAtPrice') {
-      const priceInCents = parseFloat(value) * 100;
+      // Update display value immediately for smooth typing
+      setPriceDisplayValues(prev => ({ ...prev, [name]: value }));
+      
+      // Convert to cents for internal storage
+      const numericValue = value === '' ? 0 : parseFloat(value) || 0;
+      const priceInCents = Math.round(numericValue * 100);
       setFormData(prev => ({ ...prev, [name]: priceInCents }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -181,7 +210,13 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
   const handleVariantChange = (index: number, field: string, value: any) => {
     const updatedVariants = [...(formData.variants || [])];
     if (field === 'price') {
-      updatedVariants[index] = { ...updatedVariants[index], [field]: parseFloat(value) * 100 };
+      // Update display value immediately
+      setVariantPriceDisplayValues(prev => ({ ...prev, [index]: value }));
+      
+      // Convert to cents for internal storage
+      const numericValue = value === '' ? 0 : parseFloat(value) || 0;
+      const priceInCents = Math.round(numericValue * 100);
+      updatedVariants[index] = { ...updatedVariants[index], [field]: priceInCents };
     } else if (field === 'quantity') {
       updatedVariants[index] = { 
         ...updatedVariants[index], 
@@ -200,15 +235,30 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
       isDefault: false,
       inventory: { quantity: 0 }
     };
+    const newVariantIndex = (formData.variants || []).length;
     setFormData(prev => ({ 
       ...prev, 
       variants: [...(prev.variants || []), newVariant] 
     }));
+    // Initialize display value for new variant
+    setVariantPriceDisplayValues(prev => ({ ...prev, [newVariantIndex]: '' }));
   };
 
   const removeVariant = (index: number) => {
     const updatedVariants = formData.variants?.filter((_, i) => i !== index) || [];
     setFormData(prev => ({ ...prev, variants: updatedVariants }));
+    
+    // Clean up display values and reindex them
+    const updatedDisplayValues: { [key: number]: string } = {};
+    Object.entries(variantPriceDisplayValues).forEach(([key, value]) => {
+      const keyIndex = parseInt(key);
+      if (keyIndex < index) {
+        updatedDisplayValues[keyIndex] = value;
+      } else if (keyIndex > index) {
+        updatedDisplayValues[keyIndex - 1] = value;
+      }
+    });
+    setVariantPriceDisplayValues(updatedDisplayValues);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -398,7 +448,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                 type="number"
                 id="basePrice"
                 name="basePrice"
-                value={formatPrice(formData.basePrice)}
+                value={priceDisplayValues.basePrice}
                 onChange={handleInputChange}
                 step="0.01"
                 min="0"
@@ -416,7 +466,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                 type="number"
                 id="compareAtPrice"
                 name="compareAtPrice"
-                value={formatPrice(formData.compareAtPrice || 0)}
+                value={priceDisplayValues.compareAtPrice}
                 onChange={handleInputChange}
                 step="0.01"
                 min="0"
@@ -615,7 +665,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                     </label>
                     <input
                       type="number"
-                      value={variant.price ? formatPrice(variant.price) : ''}
+                      value={variantPriceDisplayValues[index] || ''}
                       onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
                       step="0.01"
                       min="0"
