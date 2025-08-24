@@ -128,12 +128,12 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
     }
   };
 
-  const canEditReview = (review: Review) => {
-    return user && review.userId === user.id;
+  const canEditReview = (review: Review): boolean => {
+    return Boolean(user && review.userId === user.id);
   };
 
-  const canDeleteReview = (review: Review) => {
-    return user && (review.userId === user.id || user.role === 'admin');
+  const canDeleteReview = (review: Review): boolean => {
+    return Boolean(user && (review.userId === user.id || user.role === 'admin'));
   };
 
   const getAverageRating = () => {

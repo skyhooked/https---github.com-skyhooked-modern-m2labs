@@ -10,7 +10,7 @@ export const runtime = 'edge';
 // PUT /api/reviews/[id] - Update a review
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get user from auth token
@@ -31,7 +31,7 @@ export async function PUT(
     }
 
     const { rating, title, content } = await request.json();
-    const reviewId = params.id;
+    const { id: reviewId } = await params;
 
     // Validate rating if provided
     if (rating !== undefined && (rating < 1 || rating > 5)) {
@@ -79,7 +79,7 @@ export async function PUT(
 // DELETE /api/reviews/[id] - Delete a review
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get user from auth token
@@ -99,7 +99,7 @@ export async function DELETE(
       );
     }
 
-    const reviewId = params.id;
+    const { id: reviewId } = await params;
 
     // Check if user is admin (assuming admin flag is in token or you can check user role)
     const isAdmin = decoded.role === 'admin'; // Adjust based on your auth structure

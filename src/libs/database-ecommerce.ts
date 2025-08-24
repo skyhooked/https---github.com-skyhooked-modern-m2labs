@@ -1881,9 +1881,9 @@ export const deleteProductReview = async (reviewId: string, userId: string, isAd
   
   const result = await db.prepare(`
     DELETE FROM product_reviews WHERE id = ?${!isAdmin ? ' AND userId = ?' : ''}
-  `).bind(isAdmin ? reviewId : reviewId, ...(isAdmin ? [] : [userId])).run();
+  `).bind(reviewId, ...(isAdmin ? [] : [userId])).run();
   
-  return result.changes > 0;
+  return result.meta?.changes > 0;
 };
 
 export const getSupportTicketById = async (id: string): Promise<SupportTicket | null> => {
