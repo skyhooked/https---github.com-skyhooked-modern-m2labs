@@ -16,6 +16,10 @@ export default function MigratePage() {
   const [newsCustomSectionsMigrating, setNewsCustomSectionsMigrating] = useState(false);
   const [newsCustomSectionsResults, setNewsCustomSectionsResults] = useState<any>(null);
 
+  // Reviews and wishlist migration state
+  const [reviewsWishlistMigrating, setReviewsWishlistMigrating] = useState(false);
+  const [reviewsWishlistResults, setReviewsWishlistResults] = useState<any>(null);
+
   const runMigration = async () => {
     setMigrating(true);
     setResults(null);
@@ -57,6 +61,28 @@ export default function MigratePage() {
       });
     } finally {
       setNewsCustomSectionsMigrating(false);
+    }
+  };
+
+  const runReviewsWishlistMigration = async () => {
+    setReviewsWishlistMigrating(true);
+    setReviewsWishlistResults(null);
+
+    try {
+      const response = await fetch('/api/admin/migrate-reviews-wishlist', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      setReviewsWishlistResults(data);
+    } catch (error) {
+      setReviewsWishlistResults({
+        success: false,
+        error: 'Failed to run reviews and wishlist migration',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setReviewsWishlistMigrating(false);
     }
   };
 
@@ -242,6 +268,80 @@ export default function MigratePage() {
                   <br/>• Custom HTML content blocks
                   <br/><br/>
                   <strong>This will fix:</strong> Custom sections not appearing in published news articles.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reviews and Wishlist Migration */}
+          <div className="bg-white rounded-lg border shadow-sm">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Reviews & Wishlist Migration</h2>
+              <p className="text-gray-600 mt-1">Create required tables for product reviews and user wishlists</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="text-red-800 font-medium mb-2">⚠️ Required Migration!</div>
+                  <div className="text-red-700 text-sm">
+                    If you're getting "no such table: product_reviews" or "no such column: name" errors, 
+                    you need to run this migration to create the missing database tables.
+                  </div>
+                </div>
+
+                <div className="text-gray-600">
+                  This migration creates the following tables:
+                  <ul className="list-disc list-inside mt-2 ml-4 space-y-1">
+                    <li><strong>product_reviews</strong> - User reviews and ratings for products</li>
+                    <li><strong>wishlists</strong> - User wishlist containers</li>
+                    <li><strong>wishlist_items</strong> - Individual products saved to wishlists</li>
+                    <li><strong>Indexes</strong> - Performance indexes for all tables</li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => runReviewsWishlistMigration()}
+                  disabled={reviewsWishlistMigrating}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50"
+                >
+                  {reviewsWishlistMigrating ? 'Running Migration...' : 'Fix Reviews & Wishlist Tables'}
+                </button>
+
+                {reviewsWishlistResults && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Migration Results</h3>
+                    {reviewsWishlistResults.success ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="text-green-800 font-medium mb-2">✅ {reviewsWishlistResults.message}</div>
+                        {reviewsWishlistResults.results && (
+                          <div className="space-y-2">
+                            {reviewsWishlistResults.results.map((result: string, index: number) => (
+                              <div key={index} className="text-sm text-green-700">
+                                {result}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="text-red-800 font-medium">❌ Migration Failed</div>
+                        <div className="text-red-700 text-sm mt-1">{reviewsWishlistResults.error}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <div className="text-blue-800 font-medium mb-2">ℹ️ What this fixes:</div>
+                <div className="text-blue-700 text-sm">
+                  <strong>Product Reviews:</strong> Users will be able to submit ratings and reviews on product pages.
+                  <br/><strong>Wishlist Functionality:</strong> Users can save products to their wishlist and manage them from their account.
+                  <br/><strong>Database Errors:</strong> Fixes 500 errors when trying to submit reviews or add items to wishlist.
+                  <br/><br/>
+                  <strong>After running this migration:</strong> All review and wishlist features will work correctly on your product pages.
                 </div>
               </div>
             </div>
