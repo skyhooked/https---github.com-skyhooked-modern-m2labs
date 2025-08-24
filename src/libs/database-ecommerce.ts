@@ -361,6 +361,20 @@ export interface Wishlist {
   items?: WishlistItem[];
 }
 
+export interface WishlistProductInfo {
+  id: string;
+  name: string;
+  slug: string;
+  basePrice: number;
+  images?: ProductImage[];
+}
+
+export interface WishlistVariantInfo {
+  id: string;
+  name: string;
+  price?: number;
+}
+
 export interface WishlistItem {
   id: string;
   wishlistId: string;
@@ -368,8 +382,8 @@ export interface WishlistItem {
   variantId?: string;
   addedAt: string;
   // Populated data
-  product?: Product;
-  variant?: ProductVariant;
+  product?: WishlistProductInfo;
+  variant?: WishlistVariantInfo;
 }
 
 export interface ProductReview {
