@@ -4,10 +4,10 @@ export const runtime = 'edge'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const updates = await request.json();
     
     // Get database instance
