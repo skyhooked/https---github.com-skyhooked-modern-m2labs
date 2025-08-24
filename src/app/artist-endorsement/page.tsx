@@ -7,7 +7,7 @@ export default function ArtistEndorsement() {
     <Layout>      
       <section className="py-16 bg-[#36454F]">
         <div className="max-w-4xl mx-auto px-5">
-          <h2 className="text-3xl font-bold mb-6 text-[#F5F5F5]">Apply to Join Our Programme</h2>
+          <h2 className="text-3xl font-bold mb-6 text-[#F5F5F5]">Apply to Join Our Program</h2>
           
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <p className="text-secondary leading-relaxed mb-6">
