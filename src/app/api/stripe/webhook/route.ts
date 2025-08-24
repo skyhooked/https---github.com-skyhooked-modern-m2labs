@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent } from '@/libs/stripe';
-import { updateOrder } from '@/libs/database-ecommerce';
+import { updateOrder, clearCart, getOrderById } from '@/libs/database-ecommerce';
 import Stripe from 'stripe';
 
 export const runtime = 'edge';
@@ -109,7 +109,18 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     
     console.log(`Payment succeeded for order ${orderId} - order updated`);
     
-    // TODO: Clear user's cart if cartId is provided
+    // Clear user's cart (if cartId is provided in metadata)
+    const cartId = paymentIntent.metadata.cartId;
+    if (cartId) {
+      try {
+        await clearCart(cartId);
+        console.log(`Cart ${cartId} cleared after successful payment`);
+      } catch (error) {
+        console.error('Error clearing cart:', error);
+        // Don't fail the webhook if cart clearing fails
+      }
+    }
+    
     // TODO: Send order confirmation email
     // TODO: Update inventory quantities
     // TODO: Create warranty records for eligible products
@@ -128,8 +139,12 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       return;
     }
     
-    // TODO: Update order payment status to 'failed'
-    console.log(`Payment failed for order ${orderId}`);
+    // Update order payment status to 'failed'
+    await updateOrder(orderId, {
+      paymentStatus: 'failed'
+    });
+    
+    console.log(`Payment failed for order ${orderId} - order updated`);
     
     // TODO: Send payment failed email to customer
     // TODO: Optionally restore cart items for retry
@@ -148,8 +163,13 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent) {
       return;
     }
     
-    // TODO: Update order status to 'cancelled'
-    console.log(`Payment canceled for order ${orderId}`);
+    // Update order status to 'cancelled'
+    await updateOrder(orderId, {
+      status: 'cancelled',
+      paymentStatus: 'failed'
+    });
+    
+    console.log(`Payment canceled for order ${orderId} - order updated`);
     
     // TODO: Restore inventory if it was reserved
     

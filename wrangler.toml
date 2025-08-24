@@ -11,6 +11,10 @@ D1_DATABASE_ID = "908b575e-422b-4f0e-8436-85cf62044999"
 R2_BUCKET_NAME = "m2labs-images"
 CF_API_TOKEN = "kNermyxONWZy_n6uF5BxpHYlrhDA8S8_-ExVWRNG"
 
+# Stripe Configuration - will be added after initial push
+# STRIPE_SECRET_KEY = "your_stripe_secret_key_here"
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "your_stripe_publishable_key_here"
+
 # Cloudflare D1 Database
 [[d1_databases]]
 binding = "DB"

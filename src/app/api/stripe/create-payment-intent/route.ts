@@ -176,6 +176,18 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Get user's cart to clear it later
+    let userCart = null;
+    try {
+      if (user) {
+        userCart = await getCartByUserId(user.id);
+      } else if (sessionId) {
+        userCart = await getCartBySessionId(sessionId);
+      }
+    } catch (error) {
+      console.log('Could not retrieve cart for clearing:', error);
+    }
+    
     // Create Stripe Payment Intent
     const paymentIntent = await createPaymentIntent({
       amount: totalAmount,
@@ -190,6 +202,7 @@ export async function POST(request: NextRequest) {
         subtotal: (subtotal * 100).toString(),
         shipping: shipping.amount.toString(),
         tax: tax.toString(),
+        cartId: userCart?.id || '', // Add cartId for clearing after payment
       },
       shipping: {
         address: {

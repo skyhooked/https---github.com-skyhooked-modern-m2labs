@@ -11,6 +11,19 @@ import { useCart } from '@/components/cart/CartProvider';
 // Load Stripe outside of component to avoid recreating on every render
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
+interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  company?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
+}
+
 export default function Checkout() {
   const { cart, clearCart } = useCart();
   const { user } = useAuth();
@@ -19,6 +32,38 @@ export default function Checkout() {
   const [paymentIntentId, setPaymentIntentId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    company: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'US',
+    phone: ''
+  });
+  const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true);
+  const [billingAddress, setBillingAddress] = useState<ShippingAddress>({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    company: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'US',
+    phone: ''
+  });
+  const [showShippingForm, setShowShippingForm] = useState(true);
+  const [orderSummary, setOrderSummary] = useState({
+    subtotal: 0,
+    shipping: 0,
+    tax: 0,
+    total: 0
+  });
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -27,18 +72,36 @@ export default function Checkout() {
     }
   }, [cart.itemCount, loading, router]);
 
-  // Create payment intent when component mounts
+  // Initialize user data in forms
   useEffect(() => {
-    if (cart.itemCount > 0) {
-      createPaymentIntent();
+    if (user) {
+      setShippingAddress(prev => ({
+        ...prev,
+        firstName: user.firstName || '',
+        lastName: user.lastName || ''
+      }));
+      setBillingAddress(prev => ({
+        ...prev,
+        firstName: user.firstName || '',
+        lastName: user.lastName || ''
+      }));
     }
-  }, [cart.itemCount]);
+    setLoading(false);
+  }, [user]);
 
   const createPaymentIntent = async () => {
+    // Validate shipping address first
+    if (!isShippingAddressValid()) {
+      setError('Please complete the shipping address');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
+      const addressToUse = billingAddressSameAsShipping ? shippingAddress : billingAddress;
+      
       const response = await fetch('/api/stripe/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -56,12 +119,24 @@ export default function Checkout() {
           subtotal: cart.subtotal,
           customerEmail: user?.email,
           shippingAddress: {
-            name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Customer',
-            line1: '123 Main St', // This should come from a form
-            city: 'Atlanta',
-            state: 'GA',
-            postal_code: '30309',
-            country: 'US'
+            name: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
+            line1: shippingAddress.address1,
+            line2: shippingAddress.address2,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            postal_code: shippingAddress.postalCode,
+            country: shippingAddress.country,
+            phone: shippingAddress.phone
+          },
+          billingAddress: {
+            name: `${addressToUse.firstName} ${addressToUse.lastName}`.trim(),
+            line1: addressToUse.address1,
+            line2: addressToUse.address2,
+            city: addressToUse.city,
+            state: addressToUse.state,
+            postal_code: addressToUse.postalCode,
+            country: addressToUse.country,
+            phone: addressToUse.phone
           }
         }),
       });
@@ -70,6 +145,13 @@ export default function Checkout() {
         const data = await response.json();
         setClientSecret(data.clientSecret);
         setPaymentIntentId(data.paymentIntentId);
+        setOrderSummary({
+          subtotal: data.subtotal / 100,
+          shipping: data.shipping / 100,
+          tax: data.tax / 100,
+          total: data.total / 100
+        });
+        setShowShippingForm(false); // Hide shipping form, show payment
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to create payment intent');
@@ -80,6 +162,37 @@ export default function Checkout() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isShippingAddressValid = () => {
+    return (
+      shippingAddress.firstName.trim() &&
+      shippingAddress.lastName.trim() &&
+      shippingAddress.address1.trim() &&
+      shippingAddress.city.trim() &&
+      shippingAddress.state.trim() &&
+      shippingAddress.postalCode.trim() &&
+      shippingAddress.country.trim()
+    );
+  };
+
+  const handleShippingAddressChange = (field: keyof ShippingAddress, value: string) => {
+    setShippingAddress(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBillingAddressChange = (field: keyof ShippingAddress, value: string) => {
+    setBillingAddress(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleContinueToPayment = () => {
+    createPaymentIntent();
+  };
+
+  const handleBackToShipping = () => {
+    setShowShippingForm(true);
+    setClientSecret('');
+    setPaymentIntentId('');
+    setError('');
   };
 
   if (loading) {
@@ -153,7 +266,32 @@ export default function Checkout() {
     <Layout>
       <section className="py-16 bg-[#36454F] min-h-screen">
         <div className="max-w-6xl mx-auto px-5">
-          <h1 className="text-3xl font-bold mb-8 text-center text-[#F5F5F5]">Checkout</h1>
+          {/* Progress Indicator */}
+          <div className="mb-8">
+            <div className="flex items-center justify-center space-x-8">
+              <div className={`flex items-center ${showShippingForm ? 'text-[#FF8A3D]' : 'text-green-400'}`}>
+                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-2 ${
+                  showShippingForm ? 'border-[#FF8A3D] bg-[#FF8A3D] text-black' : 'border-green-400 bg-green-400 text-white'
+                }`}>
+                  {showShippingForm ? '1' : '✓'}
+                </div>
+                <span className="font-medium">Shipping</span>
+              </div>
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <div className={`flex items-center ${!showShippingForm ? 'text-[#FF8A3D]' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-2 ${
+                  !showShippingForm ? 'border-[#FF8A3D] bg-[#FF8A3D] text-black' : 'border-gray-300'
+                }`}>
+                  2
+                </div>
+                <span className="font-medium">Payment</span>
+              </div>
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-bold mb-8 text-center text-[#F5F5F5]">
+            {showShippingForm ? 'Shipping Information' : 'Payment Information'}
+          </h1>
           
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Order Summary */}
@@ -182,37 +320,62 @@ export default function Checkout() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${cart.subtotal.toFixed(2)}</span>
+                  <span>${orderSummary.subtotal > 0 ? orderSummary.subtotal.toFixed(2) : cart.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>Calculated at checkout</span>
+                  <span>{orderSummary.shipping > 0 ? `$${orderSummary.shipping.toFixed(2)}` : 'Calculated at checkout'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>Calculated at checkout</span>
+                  <span>{orderSummary.tax > 0 ? `$${orderSummary.tax.toFixed(2)}` : 'Calculated at checkout'}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${cart.subtotal.toFixed(2)}</span>
+                  <span>${orderSummary.total > 0 ? orderSummary.total.toFixed(2) : cart.subtotal.toFixed(2)}</span>
                 </div>
               </div>
             </div>
             
-            {/* Payment Form */}
+            {/* Dynamic Form */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
-              
-              {clientSecret && (
-                <Elements options={options} stripe={stripePromise}>
-                  <CheckoutForm 
-                    paymentIntentId={paymentIntentId}
-                    onSuccess={() => {
-                      clearCart();
-                      router.push(`/checkout/success?payment_intent=${paymentIntentId}`);
-                    }}
-                  />
-                </Elements>
+              {showShippingForm ? (
+                <ShippingForm
+                  shippingAddress={shippingAddress}
+                  onShippingAddressChange={handleShippingAddressChange}
+                  billingAddress={billingAddress}
+                  onBillingAddressChange={handleBillingAddressChange}
+                  billingAddressSameAsShipping={billingAddressSameAsShipping}
+                  onBillingAddressSameAsShippingChange={setBillingAddressSameAsShipping}
+                  onContinue={handleContinueToPayment}
+                  isLoading={loading}
+                  error={error}
+                  isValid={isShippingAddressValid()}
+                />
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Payment Information</h2>
+                    <button
+                      onClick={handleBackToShipping}
+                      className="text-[#FF8A3D] hover:text-[#FF8A3D]/80 text-sm font-medium"
+                    >
+                      ← Back to Shipping
+                    </button>
+                  </div>
+                  
+                  {clientSecret && (
+                    <Elements options={options} stripe={stripePromise}>
+                      <CheckoutForm 
+                        paymentIntentId={paymentIntentId}
+                        onSuccess={() => {
+                          clearCart();
+                          router.push(`/checkout/success?payment_intent=${paymentIntentId}`);
+                        }}
+                      />
+                    </Elements>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -275,5 +438,299 @@ function CheckoutForm({ paymentIntentId, onSuccess }: { paymentIntentId: string;
         Your payment information is secure and encrypted.
       </p>
     </form>
+  );
+}
+
+function ShippingForm({
+  shippingAddress,
+  onShippingAddressChange,
+  billingAddress,
+  onBillingAddressChange,
+  billingAddressSameAsShipping,
+  onBillingAddressSameAsShippingChange,
+  onContinue,
+  isLoading,
+  error,
+  isValid
+}: {
+  shippingAddress: ShippingAddress;
+  onShippingAddressChange: (field: keyof ShippingAddress, value: string) => void;
+  billingAddress: ShippingAddress;
+  onBillingAddressChange: (field: keyof ShippingAddress, value: string) => void;
+  billingAddressSameAsShipping: boolean;
+  onBillingAddressSameAsShippingChange: (value: boolean) => void;
+  onContinue: () => void;
+  isLoading: boolean;
+  error: string;
+  isValid: boolean;
+}) {
+  const US_STATES = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+  ];
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Shipping Address</h2>
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+            First Name *
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            value={shippingAddress.firstName}
+            onChange={(e) => onShippingAddressChange('firstName', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+            Last Name *
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            value={shippingAddress.lastName}
+            onChange={(e) => onShippingAddressChange('lastName', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+            required
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+          Company (optional)
+        </label>
+        <input
+          type="text"
+          id="company"
+          value={shippingAddress.company}
+          onChange={(e) => onShippingAddressChange('company', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+        />
+      </div>
+      
+      <div>
+        <label htmlFor="address1" className="block text-sm font-medium text-gray-700 mb-1">
+          Address *
+        </label>
+        <input
+          type="text"
+          id="address1"
+          value={shippingAddress.address1}
+          onChange={(e) => onShippingAddressChange('address1', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+          placeholder="Street address"
+          required
+        />
+      </div>
+      
+      <div>
+        <label htmlFor="address2" className="block text-sm font-medium text-gray-700 mb-1">
+          Apartment, suite, etc. (optional)
+        </label>
+        <input
+          type="text"
+          id="address2"
+          value={shippingAddress.address2}
+          onChange={(e) => onShippingAddressChange('address2', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+        />
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+            City *
+          </label>
+          <input
+            type="text"
+            id="city"
+            value={shippingAddress.city}
+            onChange={(e) => onShippingAddressChange('city', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+            State *
+          </label>
+          <select
+            id="state"
+            value={shippingAddress.state}
+            onChange={(e) => onShippingAddressChange('state', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+            required
+          >
+            <option value="">Select State</option>
+            {US_STATES.map(state => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
+            ZIP Code *
+          </label>
+          <input
+            type="text"
+            id="postalCode"
+            value={shippingAddress.postalCode}
+            onChange={(e) => onShippingAddressChange('postalCode', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+            required
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+          Phone (optional)
+        </label>
+        <input
+          type="tel"
+          id="phone"
+          value={shippingAddress.phone}
+          onChange={(e) => onShippingAddressChange('phone', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+          placeholder="(555) 123-4567"
+        />
+      </div>
+      
+      {/* Billing Address Section */}
+      <div className="border-t pt-6">
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="billingAddressSame"
+            checked={billingAddressSameAsShipping}
+            onChange={(e) => onBillingAddressSameAsShippingChange(e.target.checked)}
+            className="h-4 w-4 text-[#FF8A3D] focus:ring-[#FF8A3D] border-gray-300 rounded"
+          />
+          <label htmlFor="billingAddressSame" className="ml-2 block text-sm text-gray-700">
+            Billing address is the same as shipping address
+          </label>
+        </div>
+        
+        {!billingAddressSameAsShipping && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Billing Address</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="billingFirstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  id="billingFirstName"
+                  value={billingAddress.firstName}
+                  onChange={(e) => onBillingAddressChange('firstName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="billingLastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  id="billingLastName"
+                  value={billingAddress.lastName}
+                  onChange={(e) => onBillingAddressChange('lastName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="billingAddress1" className="block text-sm font-medium text-gray-700 mb-1">
+                Address *
+              </label>
+              <input
+                type="text"
+                id="billingAddress1"
+                value={billingAddress.address1}
+                onChange={(e) => onBillingAddressChange('address1', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                placeholder="Street address"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="billingCity" className="block text-sm font-medium text-gray-700 mb-1">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  id="billingCity"
+                  value={billingAddress.city}
+                  onChange={(e) => onBillingAddressChange('city', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="billingState" className="block text-sm font-medium text-gray-700 mb-1">
+                  State *
+                </label>
+                <select
+                  id="billingState"
+                  value={billingAddress.state}
+                  onChange={(e) => onBillingAddressChange('state', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                  required
+                >
+                  <option value="">Select State</option>
+                  {US_STATES.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="billingPostalCode" className="block text-sm font-medium text-gray-700 mb-1">
+                  ZIP Code *
+                </label>
+                <input
+                  type="text"
+                  id="billingPostalCode"
+                  value={billingAddress.postalCode}
+                  onChange={(e) => onBillingAddressChange('postalCode', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <button
+        onClick={onContinue}
+        disabled={!isValid || isLoading}
+        className="w-full bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Processing...' : 'Continue to Payment'}
+      </button>
+    </div>
   );
 }

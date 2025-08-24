@@ -1259,6 +1259,40 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
   return order;
 };
 
+export const getOrderByStripePaymentIntentId = async (paymentIntentId: string): Promise<Order | null> => {
+  const db = await getDatabase();
+  
+  const result = await db.prepare(`
+    SELECT * FROM orders_new 
+    WHERE stripePaymentIntentId = ?
+  `).bind(paymentIntentId).first();
+  
+  if (!result) return null;
+  
+  // Parse JSON fields
+  const order = {
+    ...result,
+    shippingAddress: JSON.parse(result.shippingAddress as string),
+    billingAddress: JSON.parse(result.billingAddress as string),
+  } as Order;
+  
+  // Get order items
+  const itemsResult = await db.prepare(`
+    SELECT oi.*, pv.name as variantName, pv.sku
+    FROM order_items oi
+    LEFT JOIN product_variants pv ON oi.variantId = pv.id
+    WHERE oi.orderId = ?
+    ORDER BY oi.createdAt
+  `).bind(order.id).all();
+  
+  order.items = (itemsResult.results || []).map(item => ({
+    ...item,
+    productSnapshot: JSON.parse(item.productSnapshot as string)
+  })) as OrderItem[];
+  
+  return order;
+};
+
 // ========================================
 // WISHLIST FUNCTIONS
 // ========================================
