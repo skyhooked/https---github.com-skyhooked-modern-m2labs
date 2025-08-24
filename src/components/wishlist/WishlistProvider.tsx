@@ -96,6 +96,25 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setItems(prev => [...prev, data.item]);
+        
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        notification.innerHTML = '✅ Added to wishlist!';
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+          notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+          notification.style.transform = 'translateX(full)';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 3000);
       } else {
         throw new Error('Failed to add to wishlist');
       }

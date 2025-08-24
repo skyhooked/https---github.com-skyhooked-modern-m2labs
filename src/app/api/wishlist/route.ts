@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const item = await addToWishlist(decoded.sub, productId);
+    const item = await addToWishlist(decoded.sub, productId, variantId);
 
     return NextResponse.json({
       success: true,

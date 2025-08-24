@@ -1249,7 +1249,7 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 // WISHLIST FUNCTIONS
 // ========================================
 
-export const addToWishlist = async (userId: string, productId: string): Promise<WishlistItem> => {
+export const addToWishlist = async (userId: string, productId: string, variantId?: string): Promise<WishlistItem> => {
   const db = await getDatabase();
   const now = new Date().toISOString();
   
@@ -1270,15 +1270,45 @@ export const addToWishlist = async (userId: string, productId: string): Promise<
   // Add item to wishlist
   const itemId = generateId();
   await db.prepare(`
-    INSERT OR REPLACE INTO wishlist_items (id, wishlistId, productId, addedAt)
-    VALUES (?, ?, ?, ?)
-  `).bind(itemId, wishlist.id, productId, now).run();
+    INSERT OR REPLACE INTO wishlist_items (id, wishlistId, productId, variantId, addedAt)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(itemId, wishlist.id, productId, variantId || null, now).run();
+  
+  // Get complete product data to return
+  let product = undefined;
+  let variant = undefined;
+  
+  const fullProduct = await getProductById(productId);
+  if (fullProduct) {
+    product = {
+      id: fullProduct.id,
+      name: fullProduct.name,
+      slug: fullProduct.slug,
+      basePrice: fullProduct.basePrice,
+      images: fullProduct.images || []
+    };
+    
+    // Get variant data if specified
+    if (variantId && fullProduct.variants) {
+      const foundVariant = fullProduct.variants.find(v => v.id === variantId);
+      if (foundVariant) {
+        variant = {
+          id: foundVariant.id,
+          name: foundVariant.name,
+          price: foundVariant.price
+        };
+      }
+    }
+  }
   
   return {
     id: itemId,
     wishlistId: wishlist.id,
     productId,
-    addedAt: now
+    variantId,
+    addedAt: now,
+    product,
+    variant
   };
 };
 
@@ -1308,7 +1338,7 @@ export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
   const db = await getDatabase();
   
   const result = await db.prepare(`
-    SELECT wi.*, p.name as productName, p.basePrice, p.slug
+    SELECT wi.*, p.name as productName, p.basePrice, p.slug, p.shortDescription
     FROM wishlist_items wi
     INNER JOIN wishlists w ON wi.wishlistId = w.id
     LEFT JOIN products p ON wi.productId = p.id
@@ -1316,25 +1346,49 @@ export const getWishlist = async (userId: string): Promise<WishlistItem[]> => {
     ORDER BY wi.addedAt DESC
   `).bind(userId).all();
   
-  return (result.results || []).map(row => ({
-    id: row.id,
-    wishlistId: row.wishlistId,
-    productId: row.productId,
-    variantId: row.variantId,
-    addedAt: row.addedAt,
-    product: row.productName ? {
-      id: row.productId,
-      name: row.productName,
-      slug: row.slug,
-      brandId: '', // Will be populated when needed
-      sku: '', // Will be populated when needed
-      basePrice: row.basePrice,
-      isActive: true,
-      isFeatured: false,
-      createdAt: '',
-      updatedAt: ''
-    } : undefined
+  // Fetch complete product and variant data for each wishlist item
+  const items = await Promise.all((result.results || []).map(async (row) => {
+    let product = undefined;
+    let variant = undefined;
+    
+    if (row.productId) {
+      // Get full product data including images
+      const fullProduct = await getProductById(row.productId);
+      if (fullProduct) {
+        product = {
+          id: fullProduct.id,
+          name: fullProduct.name,
+          slug: fullProduct.slug,
+          basePrice: fullProduct.basePrice,
+          images: fullProduct.images || []
+        };
+        
+        // Get variant data if specified
+        if (row.variantId && fullProduct.variants) {
+          const foundVariant = fullProduct.variants.find(v => v.id === row.variantId);
+          if (foundVariant) {
+            variant = {
+              id: foundVariant.id,
+              name: foundVariant.name,
+              price: foundVariant.price
+            };
+          }
+        }
+      }
+    }
+    
+    return {
+      id: row.id,
+      wishlistId: row.wishlistId,
+      productId: row.productId,
+      variantId: row.variantId,
+      addedAt: row.addedAt,
+      product,
+      variant
+    };
   }));
+  
+  return items;
 };
 
 // ========================================
