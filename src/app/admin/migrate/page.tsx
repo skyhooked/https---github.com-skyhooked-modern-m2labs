@@ -20,6 +20,10 @@ export default function MigratePage() {
   const [reviewsWishlistMigrating, setReviewsWishlistMigrating] = useState(false);
   const [reviewsWishlistResults, setReviewsWishlistResults] = useState<any>(null);
 
+  // Wishlist schema fix state
+  const [wishlistSchemaFixing, setWishlistSchemaFixing] = useState(false);
+  const [wishlistSchemaFixResults, setWishlistSchemaFixResults] = useState<any>(null);
+
   const runMigration = async () => {
     setMigrating(true);
     setResults(null);
@@ -83,6 +87,28 @@ export default function MigratePage() {
       });
     } finally {
       setReviewsWishlistMigrating(false);
+    }
+  };
+
+  const runWishlistSchemaFix = async () => {
+    setWishlistSchemaFixing(true);
+    setWishlistSchemaFixResults(null);
+
+    try {
+      const response = await fetch('/api/admin/fix-wishlist-schema', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      setWishlistSchemaFixResults(data);
+    } catch (error) {
+      setWishlistSchemaFixResults({
+        success: false,
+        error: 'Failed to fix wishlist schema',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setWishlistSchemaFixing(false);
     }
   };
 
@@ -342,6 +368,81 @@ export default function MigratePage() {
                   <br/><strong>Database Errors:</strong> Fixes 500 errors when trying to submit reviews or add items to wishlist.
                   <br/><br/>
                   <strong>After running this migration:</strong> All review and wishlist features will work correctly on your product pages.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Wishlist Schema Fix */}
+          <div className="bg-white rounded-lg border shadow-sm">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">🔧 Wishlist Schema Fix</h2>
+              <p className="text-gray-600 mt-1">Fix incorrect wishlist table schema (wrong columns)</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="text-orange-800 font-medium mb-2">⚠️ Schema Mismatch Detected!</div>
+                  <div className="text-orange-700 text-sm">
+                    Your wishlist table has the wrong schema. Expected columns: <code>id, userId, name, isPublic, createdAt, updatedAt</code>
+                    <br/>But found: <code>id, userId, productId, addedAt</code> (which is the wishlist_items schema!)
+                  </div>
+                </div>
+
+                <div className="text-gray-600">
+                  This fix will:
+                  <ul className="list-disc list-inside mt-2 ml-4 space-y-1">
+                    <li><strong>Drop</strong> the incorrectly created tables</li>
+                    <li><strong>Recreate</strong> them with the correct schema</li>
+                    <li><strong>Verify</strong> the columns are correct</li>
+                  </ul>
+                  <div className="mt-2 text-sm text-gray-500">
+                    <strong>Note:</strong> This will clear any existing wishlist data, but since the schema was wrong, 
+                    the existing data is unusable anyway.
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => runWishlistSchemaFix()}
+                  disabled={wishlistSchemaFixing}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {wishlistSchemaFixing ? 'Fixing Schema...' : 'Fix Wishlist Schema Now'}
+                </button>
+
+                {wishlistSchemaFixResults && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Schema Fix Results</h3>
+                    {wishlistSchemaFixResults.success ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="text-green-800 font-medium mb-2">✅ {wishlistSchemaFixResults.message}</div>
+                        {wishlistSchemaFixResults.results && (
+                          <div className="space-y-2">
+                            {wishlistSchemaFixResults.results.map((result: string, index: number) => (
+                              <div key={index} className="text-sm text-green-700">
+                                {result}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="text-red-800 font-medium">❌ Schema Fix Failed</div>
+                        <div className="text-red-700 text-sm mt-1">{wishlistSchemaFixResults.error}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <div className="text-blue-800 font-medium mb-2">ℹ️ After running this fix:</div>
+                <div className="text-blue-700 text-sm">
+                  <strong>Wishlist functionality will work correctly:</strong> Users can add/remove products from their wishlist.
+                  <br/><strong>Database errors will be fixed:</strong> No more "no such column: name" errors.
+                  <br/><strong>Account page wishlist:</strong> Users can access and manage their wishlist from their account.
                 </div>
               </div>
             </div>
