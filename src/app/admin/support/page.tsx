@@ -37,10 +37,18 @@ export default function SupportManagement() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedTicket?.messages]);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -117,19 +125,52 @@ export default function SupportManagement() {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Create the new message object with proper structure
+        const newMessageObj = {
+          id: data.data.id || `temp-${Date.now()}`,
+          message: newMessage,
+          isInternal: false,
+          userId: data.data.userId || null,
+          createdAt: data.data.createdAt || new Date().toISOString()
+        };
+        
+        // Update the selectedTicket with the new message immediately for instant feedback
         setSelectedTicket({
           ...selectedTicket,
-          messages: [...(selectedTicket.messages || []), data.data]
+          messages: [...(selectedTicket.messages || []), newMessageObj]
         });
+        
+        // Clear the input
         setNewMessage('');
+        
+        // Refresh messages from server to ensure consistency
+        setTimeout(async () => {
+          try {
+            const messagesResponse = await fetch(`/api/admin/support/tickets/${selectedTicket.id}/messages`);
+            if (messagesResponse.ok) {
+              const messagesData = await messagesResponse.json();
+              setSelectedTicket(prev => ({
+                ...prev!,
+                messages: messagesData.data || []
+              }));
+            }
+          } catch (error) {
+            console.error('Error refreshing messages:', error);
+          }
+        }, 500); // Small delay to ensure the message is saved
         
         // Update ticket status to in_progress if it was open
         if (selectedTicket.status === 'open') {
           updateTicketStatus(selectedTicket.id, 'in_progress');
         }
+      } else {
+        console.error('Failed to send message');
+        alert('Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      alert('Error sending message. Please try again.');
     } finally {
       setSendingMessage(false);
     }
@@ -229,6 +270,8 @@ export default function SupportManagement() {
                       )) || (
                         <p className="text-gray-500 text-center py-8">No messages yet</p>
                       )}
+                      {/* Scroll target for auto-scroll */}
+                      <div ref={messagesEndRef} />
                     </div>
                   </div>
 
