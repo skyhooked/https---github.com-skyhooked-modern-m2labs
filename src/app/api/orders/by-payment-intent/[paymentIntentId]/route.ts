@@ -6,11 +6,12 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { paymentIntentId: string } }
+  { params }: { params: Promise<{ paymentIntentId: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
-    const paymentIntentId = params.paymentIntentId;
+    const resolvedParams = await params;
+    const paymentIntentId = resolvedParams.paymentIntentId;
     
     if (!paymentIntentId) {
       return NextResponse.json(
