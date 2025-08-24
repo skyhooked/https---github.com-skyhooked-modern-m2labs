@@ -5,19 +5,24 @@ import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllPosts, loadNewsFromServer, formatDate } from '@/data/newsData';
+import { formatDate } from '@/data/newsData';
 import type { NewsPost } from '@/libs/database-d1';
 import { markdownToHtml, isMarkdown } from '@/utils/markdown';
 
 export default function News() {
-  const [posts, setPosts] = useState<NewsPost[]>(getAllPosts());
+  const [posts, setPosts] = useState<NewsPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const serverPosts = await loadNewsFromServer();
-        setPosts(serverPosts);
+        const response = await fetch('/api/news');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setPosts(data);
+          }
+        }
       } catch (error) {
         console.error('Failed to load news:', error);
       } finally {
