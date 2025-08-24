@@ -63,16 +63,18 @@ export default function News() {
                 <Link href={`/news/${post.id}`}>
                   <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
                     <div className="md:flex">
-                      <div className="md:w-1/3">
-                        <Image
-                          src={post.coverImage}
-                          alt={post.title}
-                          width={400}
-                          height={250}
-                          className="w-full h-64 md:h-full object-cover"
-                        />
-                      </div>
-                      <div className="md:w-2/3 p-8">
+                      {post.coverImage && (
+                        <div className="md:w-1/3">
+                          <Image
+                            src={post.coverImage}
+                            alt={post.title}
+                            width={400}
+                            height={250}
+                            className="w-full h-64 md:h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className={`p-8 ${post.coverImage ? 'md:w-2/3' : 'w-full'}`}>
                         <h3 className="text-2xl font-bold mb-4 text-primary hover:text-[#FF8A3D] transition-colors">{post.title}</h3>
                         <div className="text-secondary leading-relaxed mb-4">
                           <p>{post.excerpt}</p>

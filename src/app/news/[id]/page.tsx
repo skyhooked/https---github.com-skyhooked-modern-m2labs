@@ -101,15 +101,17 @@ export default function NewsArticle() {
           </header>
 
           {/* Cover Image */}
-          <div className="mb-8">
-            <Image
-              src={post.coverImage}
-              alt={post.title}
-              width={800}
-              height={400}
-              className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
-            />
-          </div>
+          {post.coverImage && (
+            <div className="mb-8">
+              <Image
+                src={post.coverImage}
+                alt={post.title}
+                width={800}
+                height={400}
+                className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          )}
 
           {/* Article Content */}
           <div className="bg-white rounded-lg shadow-lg p-8">
