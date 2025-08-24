@@ -71,11 +71,11 @@ export default function OurStory() {
             </p>
             <br></br>
             <div className="flex justify-center items-center gap-12">
-            <a className="block w-[320px]" href="https://www.flying-tigers.co.uk/2016/avro-lancaster-b-iii-ed888pm-m2-mike-squared-sywell-activity-new-arrivals/" target="_blank" rel="noopener">
-            <img src="/images/Mdeuce.png" alt="Describe the image" className="w-full h-auto block rounded-xl" />
+            <a className="block w-[320px] h-[240px]" href="https://www.flying-tigers.co.uk/2016/avro-lancaster-b-iii-ed888pm-m2-mike-squared-sywell-activity-new-arrivals/" target="_blank" rel="noopener">
+            <img src="/images/Mdeuce.png" alt="Avro Lancaster B Mk. III ED888 PM M2 aircraft" className="w-full h-full object-cover block rounded-xl" />
             </a>
-            <a className="block w-[320px]" href="https://www.flying-tigers.co.uk/2016/avro-lancaster-b-iii-ed888pm-m2-mike-squared-sywell-activity-new-arrivals/" target="_blank" rel="noopener">
-            <img src="/images/Mdeuce2.jpg" alt="Describe the image" className="w-full h-auto block rounded-xl" />
+            <a className="block w-[320px] h-[240px]" href="https://www.flying-tigers.co.uk/2016/avro-lancaster-b-iii-ed888pm-m2-mike-squared-sywell-activity-new-arrivals/" target="_blank" rel="noopener">
+            <img src="/images/Mdeuce2.jpg" alt="Avro Lancaster B Mk. III ED888 PM M2 aircraft" className="w-full h-full object-cover block rounded-xl" />
             </a>
             </div>
             <br></br>
