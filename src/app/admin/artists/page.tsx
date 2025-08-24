@@ -224,7 +224,7 @@ export default function ArtistManagement() {
       <AuthWrapper>
         <AdminLayout>
           <div className="flex items-center justify-center h-64">
-            <div className="text-lg text-gray-600">Loading artists...</div>
+            <div className="text-lg text-gray-600 dark:text-gray-300">Loading artists...</div>
           </div>
         </AdminLayout>
       </AuthWrapper>
@@ -253,8 +253,8 @@ export default function ArtistManagement() {
           {/* Header */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Artist Management</h1>
-              <p className="text-gray-600">Manage artist profiles and endorsements</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Artist Management</h1>
+              <p className="text-gray-600 dark:text-gray-300">Manage artist profiles and endorsements</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
@@ -269,8 +269,8 @@ export default function ArtistManagement() {
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Artists</p>
-                  <p className="text-3xl font-bold text-gray-900">{artists.length}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Artists</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{artists.length}</p>
                 </div>
                 <div className="text-2xl">🎤</div>
               </div>
@@ -278,7 +278,7 @@ export default function ArtistManagement() {
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Homepage (Top 3)</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Homepage (Top 3)</p>
                   <p className="text-3xl font-bold text-green-600">{Math.min(artists.length, 3)}</p>
                 </div>
                 <div className="text-2xl">🏠</div>
@@ -287,7 +287,7 @@ export default function ArtistManagement() {
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Genres</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Genres</p>
                   <p className="text-3xl font-bold text-blue-600">{new Set(artists.map(a => a.genre)).size}</p>
                 </div>
                 <div className="text-2xl">🎵</div>
@@ -298,7 +298,7 @@ export default function ArtistManagement() {
           {/* Artists List */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Current Artists</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Current Artists</h2>
             </div>
             
             <div className="divide-y">
@@ -368,7 +368,7 @@ export default function ArtistManagement() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900">
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {artist.name}
                               </h3>
                               <span className="bg-[#FF8A3D] text-black px-2 py-1 rounded text-xs font-medium">
@@ -380,28 +380,28 @@ export default function ArtistManagement() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">📍 {artist.location}</p>
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">📍 {artist.location}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
                               {artist.bio}
                             </p>
                             
                             {/* Gear */}
                             <div className="mb-3">
-                              <p className="text-xs font-medium text-gray-700 mb-1">Gear:</p>
+                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gear:</p>
                               <div className="flex flex-wrap gap-1">
                                 {(artist.gear || []).slice(0, 3).map((item, index) => (
-                                  <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                  <span key={index} className="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-1 rounded">
                                     {item}
                                   </span>
                                 ))}
                                 {(artist.gear || []).length > 3 && (
-                                  <span className="text-xs text-gray-500">+{(artist.gear || []).length - 3} more</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">+{(artist.gear || []).length - 3} more</span>
                                 )}
                               </div>
                             </div>
 
                             {/* Social Media */}
-                            <div className="flex space-x-4 text-xs text-gray-500">
+                            <div className="flex space-x-4 text-xs text-gray-500 dark:text-gray-400">
                               {artist.website && <span>🌐 Website</span>}
                               {artist.socialMedia?.instagram && <span>📸 Instagram</span>}
                               {artist.socialMedia?.spotify && <span>🎵 Spotify</span>}
@@ -431,7 +431,7 @@ export default function ArtistManagement() {
                     {/* Testimonial */}
                     {artist.testimonial && (
                       <div className="mt-4 ml-24">
-                        <blockquote className="text-sm italic text-gray-600 border-l-4 border-[#FF8A3D] pl-3">
+                        <blockquote className="text-sm italic text-gray-600 dark:text-gray-300 border-l-4 border-[#FF8A3D] pl-3">
                           "{artist.testimonial}"
                         </blockquote>
                       </div>
@@ -444,10 +444,10 @@ export default function ArtistManagement() {
 
           {/* Usage Guide */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">✅ Artist Management Features</h3>
-            <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">✅ Artist Management Features</h3>
+            <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600 dark:text-gray-300">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Available Now</h4>
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Available Now</h4>
                 <ul className="space-y-1">
                   <li>✅ Add/edit artist profiles</li>
                   <li>✅ Upload artist photos</li>
@@ -458,7 +458,7 @@ export default function ArtistManagement() {
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">How to Use</h4>
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">How to Use</h4>
                 <ul className="space-y-1">
                   <li>• Drag artists by the ⠿ handle to reorder</li>
                   <li>• Top 3 artists appear on homepage</li>
