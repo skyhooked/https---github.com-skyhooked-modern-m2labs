@@ -11,6 +11,10 @@ export default function MigratePage() {
   const [migrating, setMigrating] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'data' | 'schema'>('data');
+  
+  // News custom sections migration state
+  const [newsCustomSectionsMigrating, setNewsCustomSectionsMigrating] = useState(false);
+  const [newsCustomSectionsResults, setNewsCustomSectionsResults] = useState<any>(null);
 
   const runMigration = async () => {
     setMigrating(true);
@@ -31,6 +35,28 @@ export default function MigratePage() {
       });
     } finally {
       setMigrating(false);
+    }
+  };
+
+  const runNewsCustomSectionsMigration = async () => {
+    setNewsCustomSectionsMigrating(true);
+    setNewsCustomSectionsResults(null);
+
+    try {
+      const response = await fetch('/api/admin/migrate-news-custom-sections', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      setNewsCustomSectionsResults(data);
+    } catch (error) {
+      setNewsCustomSectionsResults({
+        success: false,
+        error: 'Failed to run news custom sections migration',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setNewsCustomSectionsMigrating(false);
     }
   };
 
@@ -156,6 +182,70 @@ export default function MigratePage() {
               </div>
             </div>
           )}
+
+          {/* News Custom Sections Migration */}
+          <div className="bg-white rounded-lg border shadow-sm">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">News Custom Sections Migration</h2>
+              <p className="text-gray-600 mt-1">Add support for custom sections in news articles</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="text-gray-600">
+                    Run this migration to enable custom sections functionality in news articles.
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => runNewsCustomSectionsMigration()}
+                  disabled={newsCustomSectionsMigrating}
+                  className="bg-[#FF8A3D] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#FF8A3D]/80 disabled:opacity-50"
+                >
+                  {newsCustomSectionsMigrating ? 'Running Migration...' : 'Run News Custom Sections Migration'}
+                </button>
+
+                {newsCustomSectionsResults && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Migration Results</h3>
+                    {newsCustomSectionsResults.success ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="text-green-800 font-medium mb-2">✅ {newsCustomSectionsResults.message}</div>
+                        {newsCustomSectionsResults.results && (
+                          <div className="space-y-2">
+                            {newsCustomSectionsResults.results.map((result: string, index: number) => (
+                              <div key={index} className="text-sm text-green-700">
+                                {result}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="text-red-800 font-medium">❌ Migration Failed</div>
+                        <div className="text-red-700 text-sm mt-1">{newsCustomSectionsResults.error}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <div className="text-blue-800 font-medium mb-2">ℹ️ What this enables:</div>
+                <div className="text-blue-700 text-sm">
+                  This migration adds support for custom sections in news articles, allowing you to add:
+                  <br/>• Custom text sections with rich formatting
+                  <br/>• Image galleries with multiple photos
+                  <br/>• Embedded videos (YouTube support)
+                  <br/>• Custom HTML content blocks
+                  <br/><br/>
+                  <strong>This will fix:</strong> Custom sections not appearing in published news articles.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     </AuthWrapper>

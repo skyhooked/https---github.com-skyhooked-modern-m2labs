@@ -210,7 +210,14 @@ export const getNewsPosts = async (): Promise<NewsPost[]> => {
   if (!db) throw new Error('Database not available');
   
   const result = await db.prepare('SELECT * FROM news_posts ORDER BY publishDate DESC').all();
-  return result.results || [];
+  const posts = result.results || [];
+  
+  // Parse custom sections from JSON strings
+  return posts.map((post: any) => ({
+    ...post,
+    customSections: post.customSections ? JSON.parse(post.customSections) : [],
+    useCustomTemplate: Boolean(post.useCustomTemplate)
+  }));
 };
 
 export const getNewsPostById = async (id: string): Promise<NewsPost | null> => {
@@ -218,7 +225,14 @@ export const getNewsPostById = async (id: string): Promise<NewsPost | null> => {
   if (!db) throw new Error('Database not available');
   
   const result = await db.prepare('SELECT * FROM news_posts WHERE id = ?').bind(id).first();
-  return result || null;
+  if (!result) return null;
+  
+  // Parse custom sections from JSON string
+  return {
+    ...result,
+    customSections: result.customSections ? JSON.parse(result.customSections) : [],
+    useCustomTemplate: Boolean(result.useCustomTemplate)
+  } as NewsPost;
 };
 
 export const createNewsPost = async (postData: Omit<NewsPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<NewsPost> => {
@@ -242,8 +256,9 @@ export const createNewsPost = async (postData: Omit<NewsPost, 'id' | 'createdAt'
 
   await db.prepare(`
     INSERT INTO news_posts (
-      id, title, excerpt, fullContent, coverImage, author, publishDate, readTime, category, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, title, excerpt, fullContent, coverImage, author, publishDate, readTime, category, 
+      customSections, useCustomTemplate, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     newPost.id,
     newPost.title,
@@ -254,6 +269,8 @@ export const createNewsPost = async (postData: Omit<NewsPost, 'id' | 'createdAt'
     newPost.publishDate,
     newPost.readTime || null,
     newPost.category || null,
+    JSON.stringify(newPost.customSections || []),
+    newPost.useCustomTemplate || false,
     newPost.createdAt,
     newPost.updatedAt
   ).run();
@@ -273,7 +290,8 @@ export const updateNewsPost = async (id: string, updates: Partial<NewsPost>): Pr
 
   await db.prepare(`
     UPDATE news_posts 
-    SET title = ?, excerpt = ?, fullContent = ?, coverImage = ?, author = ?, publishDate = ?, readTime = ?, category = ?, updatedAt = ?
+    SET title = ?, excerpt = ?, fullContent = ?, coverImage = ?, author = ?, publishDate = ?, readTime = ?, 
+        category = ?, customSections = ?, useCustomTemplate = ?, updatedAt = ?
     WHERE id = ?
   `).bind(
     updatedPost.title,
@@ -284,6 +302,8 @@ export const updateNewsPost = async (id: string, updates: Partial<NewsPost>): Pr
     updatedPost.publishDate,
     updatedPost.readTime || null,
     updatedPost.category || null,
+    JSON.stringify(updatedPost.customSections || []),
+    updatedPost.useCustomTemplate || false,
     updatedPost.updatedAt,
     id
   ).run();

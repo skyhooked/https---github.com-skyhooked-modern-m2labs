@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate, NewsPost } from '@/data/newsData';
 import { markdownToHtml, isMarkdown } from '@/utils/markdown';
+import NewsCustomSections from '@/components/NewsCustomSections';
 
 export default function NewsArticle() {
   const params = useParams();
@@ -120,6 +121,11 @@ export default function NewsArticle() {
               }}
             />
           </div>
+
+          {/* Custom Sections */}
+          {post.customSections && post.customSections.length > 0 && (
+            <NewsCustomSections sections={post.customSections} />
+          )}
 
           {/* Article Footer */}
           <footer className="mt-8 pt-8 border-t border-white/20">

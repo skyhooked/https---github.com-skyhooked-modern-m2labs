@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
       publishDate: body.publishDate || new Date().toISOString().split('T')[0],
       readTime: body.readTime || '',
       category: body.category || '',
+      customSections: body.customSections || [],
+      useCustomTemplate: body.useCustomTemplate || false,
     };
 
     const newPost = await createNewsPost(postData);
