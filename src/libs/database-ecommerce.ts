@@ -539,6 +539,9 @@ export const getProducts = async (params?: {
       ...row,
       dimensions: row.dimensions ? JSON.parse(row.dimensions) : undefined,
       technicalSpecs: row.technicalSpecs ? JSON.parse(row.technicalSpecs) : undefined,
+      features: row.features ? JSON.parse(row.features) : [],
+      toggleOptions: row.toggleOptions ? JSON.parse(row.toggleOptions) : {},
+      relatedProducts: row.relatedProducts ? JSON.parse(row.relatedProducts) : [],
       brand: row.brand_name ? {
         id: row.brandId,
         name: row.brand_name,
@@ -574,6 +577,9 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
     ...result,
     dimensions: result.dimensions ? JSON.parse(result.dimensions) : undefined,
     technicalSpecs: result.technicalSpecs ? JSON.parse(result.technicalSpecs) : undefined,
+    features: result.features ? JSON.parse(result.features) : [],
+    toggleOptions: result.toggleOptions ? JSON.parse(result.toggleOptions) : {},
+    relatedProducts: result.relatedProducts ? JSON.parse(result.relatedProducts) : [],
     brand: result.brand_name ? {
       id: result.brandId,
       name: result.brand_name,
