@@ -351,7 +351,12 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
         onSave();
       } else {
         const errorData = await response.json();
-        setErrors(errorData.errors || { general: 'Failed to save product' });
+        // Handle field-specific errors
+        if (errorData.field && errorData.error) {
+          setErrors({ [errorData.field]: errorData.error });
+        } else {
+          setErrors(errorData.errors || { general: errorData.error || 'Failed to save product' });
+        }
       }
     } catch (error) {
       console.error('Error saving product:', error);

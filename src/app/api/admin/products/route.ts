@@ -91,10 +91,39 @@ export async function POST(request: NextRequest) {
 
     console.log('Validation passed, creating product...');
 
+    // Generate unique slug if needed
+    let finalSlug = data.slug;
+    let counter = 1;
+    
+    while (true) {
+      const existingProduct = await db.prepare('SELECT id FROM products WHERE slug = ?').bind(finalSlug).first();
+      if (!existingProduct) {
+        break; // Slug is unique
+      }
+      
+      // Try with a number suffix
+      finalSlug = `${data.slug}-${counter}`;
+      counter++;
+      
+      // Prevent infinite loop
+      if (counter > 100) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Unable to generate unique URL slug. Please choose a different product name.',
+            field: 'slug'
+          },
+          { status: 400 }
+        );
+      }
+    }
+    
+    console.log(`Using slug: ${finalSlug}${finalSlug !== data.slug ? ` (auto-generated from ${data.slug})` : ''}`);
+
     // Create the product
     const productData = {
       name: data.name,
-      slug: data.slug,
+      slug: finalSlug,
       description: data.description,
       shortDescription: data.shortDescription,
       brandId: data.brandId || 'brand-m2labs', // Default to M2 Labs brand
@@ -155,7 +184,7 @@ export async function POST(request: NextRequest) {
       const defaultVariant = await createProductVariant({
         productId: product.id,
         name: 'Standard',
-        sku: `${data.slug.toUpperCase()}-STD`,
+        sku: `${finalSlug.toUpperCase()}-STD`,
         price: undefined,
         compareAtPrice: undefined,
         cost: undefined,
