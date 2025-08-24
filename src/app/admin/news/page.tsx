@@ -437,13 +437,19 @@ export default function NewsManagement() {
                     <div className="flex items-start space-x-4">
                       {/* Cover Image */}
                       <div className="flex-shrink-0">
-                        <Image
-                          src={post.coverImage}
-                          alt={post.title}
-                          width={80}
-                          height={60}
-                          className="w-20 h-15 object-cover rounded-md border"
-                        />
+                        {post.coverImage ? (
+                          <Image
+                            src={post.coverImage}
+                            alt={post.title}
+                            width={80}
+                            height={60}
+                            className="w-20 h-15 object-cover rounded-md border"
+                          />
+                        ) : (
+                          <div className="w-20 h-15 bg-gray-200 rounded-md border flex items-center justify-center">
+                            <span className="text-gray-400 text-xs">No Image</span>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Content */}
