@@ -73,11 +73,8 @@ export default function Header() {
 
       <header
         /* Fixed header with 40% transparency and small backdrop blur */
-        className="fixed inset-x-0 top-0 w-full h-[3.75rem] z-[9999] backdrop-blur-lg"
-        style={{ 
-          backgroundColor: 'rgba(54, 69, 79, 0.35)',
-          WebkitBackdropFilter: 'blur(16px)'
-        }}
+        className="fixed inset-x-0 top-0 w-full h-[3.75rem] z-[9999] backdrop-blur-lg mobile-backdrop-blur"
+        style={{ backgroundColor: 'rgba(54, 69, 79, 0.35)' }}
       >
         <div className="flex items-center h-full px-5 lg:px-16">
           {/* 1) Logo */}
@@ -238,10 +235,10 @@ export default function Header() {
         {/* ----- MOBILE NAVIGATION DROPDOWN ----- */}
         {isMenuOpen && (
           <div
-            className="absolute top-full left-0 w-full z-[9999] bg-[rgba(54,69,79,0.6)] backdrop-blur-sm overflow-y-auto rounded-b-md"
+            className="absolute top-full left-0 w-full z-[9999] backdrop-blur-sm mobile-backdrop-blur-sm overflow-y-auto rounded-b-md"
             style={{ 
               maxHeight: 'calc(100vh - 3.75rem)',
-              WebkitBackdropFilter: 'blur(4px)'
+              backgroundColor: 'rgba(54, 69, 79, 0.6)'
             }}
             onClick={closeMenu}
           >
