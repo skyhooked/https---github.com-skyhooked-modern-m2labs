@@ -1787,6 +1787,105 @@ export const updateReviewHelpfulVotes = async (reviewId: string): Promise<boolea
   }
 };
 
+export const updateProductReview = async (
+  reviewId: string, 
+  userId: string, 
+  data: { rating?: number; title?: string; content?: string }
+): Promise<ProductReview | null> => {
+  const db = await getDatabase();
+  const now = new Date().toISOString();
+  
+  // First verify the review belongs to the user
+  const existingReview = await db.prepare(`
+    SELECT * FROM product_reviews WHERE id = ? AND userId = ?
+  `).bind(reviewId, userId).first();
+  
+  if (!existingReview) {
+    return null; // Review not found or doesn't belong to user
+  }
+  
+  // Build update query dynamically
+  const updateFields: string[] = [];
+  const values: any[] = [];
+  
+  if (data.rating !== undefined) {
+    updateFields.push('rating = ?');
+    values.push(data.rating);
+  }
+  if (data.title !== undefined) {
+    updateFields.push('title = ?');
+    values.push(data.title);
+  }
+  if (data.content !== undefined) {
+    updateFields.push('content = ?');
+    values.push(data.content);
+  }
+  
+  if (updateFields.length === 0) {
+    return existingReview; // No updates to make
+  }
+  
+  updateFields.push('updatedAt = ?');
+  values.push(now);
+  values.push(reviewId);
+  values.push(userId);
+  
+  await db.prepare(`
+    UPDATE product_reviews SET ${updateFields.join(', ')} 
+    WHERE id = ? AND userId = ?
+  `).bind(...values).run();
+  
+  // Return updated review
+  const updatedReview = await db.prepare(`
+    SELECT pr.*, u.firstName, u.lastName 
+    FROM product_reviews pr
+    LEFT JOIN users u ON pr.userId = u.id
+    WHERE pr.id = ?
+  `).bind(reviewId).first();
+  
+  if (!updatedReview) return null;
+  
+  return {
+    id: updatedReview.id,
+    productId: updatedReview.productId,
+    userId: updatedReview.userId,
+    orderId: updatedReview.orderId,
+    rating: Number(updatedReview.rating),
+    title: updatedReview.title,
+    content: updatedReview.content,
+    isVerified: Boolean(updatedReview.isVerified),
+    isPublished: Boolean(updatedReview.isPublished),
+    helpfulVotes: Number(updatedReview.helpfulVotes || 0),
+    createdAt: updatedReview.createdAt,
+    updatedAt: updatedReview.updatedAt,
+    user: updatedReview.firstName && updatedReview.lastName ? {
+      firstName: updatedReview.firstName,
+      lastName: updatedReview.lastName
+    } : undefined
+  };
+};
+
+export const deleteProductReview = async (reviewId: string, userId: string, isAdmin = false): Promise<boolean> => {
+  const db = await getDatabase();
+  
+  // Verify permissions
+  if (!isAdmin) {
+    const existingReview = await db.prepare(`
+      SELECT id FROM product_reviews WHERE id = ? AND userId = ?
+    `).bind(reviewId, userId).first();
+    
+    if (!existingReview) {
+      return false; // Review not found or doesn't belong to user
+    }
+  }
+  
+  const result = await db.prepare(`
+    DELETE FROM product_reviews WHERE id = ?${!isAdmin ? ' AND userId = ?' : ''}
+  `).bind(isAdmin ? reviewId : reviewId, ...(isAdmin ? [] : [userId])).run();
+  
+  return result.changes > 0;
+};
+
 export const getSupportTicketById = async (id: string): Promise<SupportTicket | null> => {
   const db = await getDatabase();
   const result = await db.prepare('SELECT * FROM support_tickets WHERE id = ?').bind(id).first();

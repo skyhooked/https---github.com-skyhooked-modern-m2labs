@@ -3,9 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import ReviewCard from './ReviewCard';
 import ReviewForm from './ReviewForm';
+import EditReviewForm from './EditReviewForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Review {
   id: string;
+  userId: string;
   rating: number;
   title?: string;
   content?: string;
@@ -23,10 +26,12 @@ interface ReviewsListProps {
 }
 
 export default function ReviewsList({ productId }: ReviewsListProps) {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful'>('newest');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReviews();
@@ -68,6 +73,67 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
     } catch (error) {
       console.error('Error voting helpful:', error);
     }
+  };
+
+  const handleEditReview = (reviewId: string) => {
+    setEditingReviewId(reviewId);
+    setShowForm(false); // Close new review form if open
+  };
+
+  const handleSaveEdit = async (reviewId: string, data: { rating: number; title?: string; content: string }) => {
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setReviews(prev => prev.map(review => 
+          review.id === reviewId ? result.review : review
+        ));
+        setEditingReviewId(null);
+      } else {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to update review');
+      }
+    } catch (error) {
+      console.error('Error updating review:', error);
+      throw error; // Re-throw to be handled by the form
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setReviews(prev => prev.filter(review => review.id !== reviewId));
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Failed to delete review');
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Failed to delete review. Please try again.');
+    }
+  };
+
+  const canEditReview = (review: Review) => {
+    return user && review.userId === user.id;
+  };
+
+  const canDeleteReview = (review: Review) => {
+    return user && (review.userId === user.id || user.role === 'admin');
   };
 
   const getAverageRating = () => {
@@ -215,11 +281,24 @@ export default function ReviewsList({ productId }: ReviewsListProps) {
       ) : (
         <div className="space-y-6">
           {reviews.map(review => (
-            <ReviewCard
-              key={review.id}
-              review={review}
-              onHelpfulVote={handleHelpfulVote}
-            />
+            <div key={review.id}>
+              {editingReviewId === review.id ? (
+                <EditReviewForm
+                  review={review}
+                  onSave={handleSaveEdit}
+                  onCancel={() => setEditingReviewId(null)}
+                />
+              ) : (
+                <ReviewCard
+                  review={review}
+                  onHelpfulVote={handleHelpfulVote}
+                  onEdit={handleEditReview}
+                  onDelete={handleDeleteReview}
+                  canEdit={canEditReview(review)}
+                  canDelete={canDeleteReview(review)}
+                />
+              )}
+            </div>
           ))}
         </div>
       )}

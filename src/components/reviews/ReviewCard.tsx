@@ -19,9 +19,20 @@ interface Review {
 interface ReviewCardProps {
   review: Review;
   onHelpfulVote?: (reviewId: string) => void;
+  onEdit?: (reviewId: string) => void;
+  onDelete?: (reviewId: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export default function ReviewCard({ review, onHelpfulVote }: ReviewCardProps) {
+export default function ReviewCard({ 
+  review, 
+  onHelpfulVote, 
+  onEdit, 
+  onDelete, 
+  canEdit = false, 
+  canDelete = false 
+}: ReviewCardProps) {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <svg
@@ -91,7 +102,7 @@ export default function ReviewCard({ review, onHelpfulVote }: ReviewCardProps) {
             <p className="text-gray-700 mb-4 leading-relaxed">{review.content}</p>
           )}
 
-          {/* Helpful Votes */}
+          {/* Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
@@ -104,6 +115,34 @@ export default function ReviewCard({ review, onHelpfulVote }: ReviewCardProps) {
                 <span>Helpful ({review.helpfulVotes})</span>
               </button>
             </div>
+            
+            {/* Edit/Delete Buttons */}
+            {(canEdit || canDelete) && (
+              <div className="flex items-center space-x-2">
+                {canEdit && (
+                  <button
+                    onClick={() => onEdit?.(review.id)}
+                    className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => onDelete?.(review.id)}
+                    className="flex items-center space-x-1 text-sm text-red-600 hover:text-red-800 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Delete</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
