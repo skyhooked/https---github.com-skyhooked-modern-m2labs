@@ -21,6 +21,14 @@ interface Product {
   powerRequirements?: string;
   compatibility?: string;
   technicalSpecs?: Record<string, any>;
+  // Enhanced fields
+  youtubeVideoId?: string;
+  features?: string[];
+  toggleOptions?: Record<string, string>;
+  powerConsumption?: string;
+  relatedProducts?: string[];
+  dimensions?: string;
+  weight?: string;
   brand?: {
     id: string;
     name: string;
@@ -172,6 +180,23 @@ export default function ProductDetail() {
           </div>
 
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {/* YouTube Video Section */}
+            {product.youtubeVideoId && (
+              <div className="p-8 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Demo</h2>
+                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                    src={`https://www.youtube.com/embed/${product.youtubeVideoId}`}
+                    title={`${product.name} Demo Video`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="grid lg:grid-cols-2 gap-8 p-8">
               {/* Product Images */}
               <div className="space-y-4">
@@ -340,11 +365,30 @@ export default function ProductDetail() {
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
                   <ul className="space-y-2 text-gray-600">
-                    <li>• Transferable lifetime warranty</li>
-                    <li>• Handcrafted in the USA</li>
-                    <li>• Premium components throughout</li>
+                    {/* Product-specific features */}
+                    {product.features && product.features.length > 0 ? (
+                      product.features.map((feature, index) => (
+                        <li key={index}>• {feature}</li>
+                      ))
+                    ) : (
+                      <>
+                        <li>• Transferable lifetime warranty</li>
+                        <li>• Handcrafted in the USA</li>
+                        <li>• Premium components throughout</li>
+                      </>
+                    )}
+                    {/* Technical specifications */}
                     {product.powerRequirements && (
                       <li>• Power: {product.powerRequirements}</li>
+                    )}
+                    {product.powerConsumption && (
+                      <li>• Power consumption: {product.powerConsumption}</li>
+                    )}
+                    {product.dimensions && (
+                      <li>• Dimensions: {product.dimensions}</li>
+                    )}
+                    {product.weight && (
+                      <li>• Weight: {product.weight}</li>
                     )}
                     {product.compatibility && (
                       <li>• Compatible with: {product.compatibility}</li>
@@ -362,6 +406,21 @@ export default function ProductDetail() {
                   className="prose prose-gray max-w-none"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
+              </div>
+            )}
+
+            {/* Toggle Options & Settings */}
+            {product.toggleOptions && Object.keys(product.toggleOptions).length > 0 && (
+              <div className="border-t border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Toggle Options & Settings</h2>
+                <div className="space-y-4">
+                  {Object.entries(product.toggleOptions).map(([setting, description]) => (
+                    <div key={setting} className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2">{setting}</h3>
+                      <p className="text-gray-600">{description}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
