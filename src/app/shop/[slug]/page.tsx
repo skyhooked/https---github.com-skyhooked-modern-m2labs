@@ -128,6 +128,30 @@ export default function ProductDetail() {
     }).format(price / 100);
   };
 
+  const extractYouTubeVideoId = (input: string): string => {
+    // If it's already just an ID (no URL), return as-is
+    if (input && !input.includes('youtube') && !input.includes('youtu.be')) {
+      return input;
+    }
+    
+    // Extract from full YouTube URLs
+    const patterns = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&\n?#]+)/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^&\n?#]+)/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = input.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // If no pattern matches, return the original input
+    return input;
+  };
+
   const currentPrice = selectedVariant?.price || product?.basePrice || 0;
   const comparePrice = product?.compareAtPrice;
   const mainImages = product?.images?.sort((a, b) => a.position - b.position) || [];
@@ -180,23 +204,6 @@ export default function ProductDetail() {
           </div>
 
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            {/* YouTube Video Section */}
-            {product.youtubeVideoId && (
-              <div className="p-8 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Demo</h2>
-                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full rounded-lg"
-                    src={`https://www.youtube.com/embed/${product.youtubeVideoId}`}
-                    title={`${product.name} Demo Video`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            )}
-
             <div className="grid lg:grid-cols-2 gap-8 p-8">
               {/* Product Images */}
               <div className="space-y-4">
@@ -397,6 +404,28 @@ export default function ProductDetail() {
                 </div>
               </div>
             </div>
+
+            {/* YouTube Video Section */}
+            {product.youtubeVideoId && (
+              <div className="border-t border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Demo</h2>
+                <div className="max-w-4xl mx-auto">
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      src={`https://www.youtube.com/embed/${extractYouTubeVideoId(product.youtubeVideoId)}`}
+                      title={`${product.name} Demo Video`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2 text-center">
+                    Demo video for {product.name}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Detailed Description */}
             {product.description && (
