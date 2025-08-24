@@ -5,7 +5,8 @@ import { useParams, notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatDate, NewsPost } from '@/data/newsData';
+import { formatDate } from '@/data/newsData';
+import type { NewsPost } from '@/libs/database-d1';
 import { markdownToHtml, isMarkdown } from '@/utils/markdown';
 import NewsCustomSections from '@/components/NewsCustomSections';
 

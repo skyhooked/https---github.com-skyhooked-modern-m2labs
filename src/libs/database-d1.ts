@@ -191,6 +191,14 @@ function createMockD1Database(): D1Database {
 }
 
 // ---------- News Posts ----------
+export interface CustomSection {
+  id: string;
+  title: string;
+  type: 'text' | 'gallery' | 'video' | 'html';
+  content: string;
+  enabled: boolean;
+}
+
 export interface NewsPost {
   id: string;
   title: string;
@@ -201,6 +209,8 @@ export interface NewsPost {
   publishDate: string;
   readTime?: string;
   category?: string;
+  customSections?: CustomSection[];
+  useCustomTemplate?: boolean;
   createdAt: string;
   updatedAt: string;
 }

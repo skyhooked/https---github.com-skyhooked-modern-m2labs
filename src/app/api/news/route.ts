@@ -1,6 +1,7 @@
 // src/app/api/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeDatabase, getNewsPosts, createNewsPost, updateNewsPost, deleteNewsPost, NewsPost } from '@/libs/database-d1';
+import { initializeDatabase, getNewsPosts, createNewsPost, updateNewsPost, deleteNewsPost } from '@/libs/database-d1';
+import type { NewsPost } from '@/libs/database-d1';
 
 export const runtime = 'edge'
 

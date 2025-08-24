@@ -5,7 +5,8 @@ import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllPosts, loadNewsFromServer, formatDate, NewsPost } from '@/data/newsData';
+import { getAllPosts, loadNewsFromServer, formatDate } from '@/data/newsData';
+import type { NewsPost } from '@/libs/database-d1';
 import { markdownToHtml, isMarkdown } from '@/utils/markdown';
 
 export default function News() {

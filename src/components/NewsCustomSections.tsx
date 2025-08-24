@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { CustomSection } from '@/data/newsData';
+import type { CustomSection } from '@/libs/database-d1';
 
 interface NewsCustomSectionsProps {
   sections: CustomSection[];

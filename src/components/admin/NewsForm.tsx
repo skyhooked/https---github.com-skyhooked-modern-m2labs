@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import MarkdownEditor from '@/components/admin/MarkdownEditor';
 import Image from 'next/image';
-import { NewsPost } from '@/data/newsData';
+import type { NewsPost } from '@/libs/database-d1';
 
 interface NewsFormProps {
   post?: NewsPost;

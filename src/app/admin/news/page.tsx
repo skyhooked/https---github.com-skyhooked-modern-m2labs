@@ -4,7 +4,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AuthWrapper from '@/components/admin/AuthWrapper';
 import NewsForm from '@/components/admin/NewsForm';
 import Image from 'next/image';
-import { NewsPost } from '@/data/newsData';
+import type { NewsPost } from '@/libs/database-d1';
 export const runtime = 'edge'
 
 type CustomSectionType = 'text' | 'gallery' | 'video' | 'html';
