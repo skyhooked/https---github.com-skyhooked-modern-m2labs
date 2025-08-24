@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       // Create new cart
       cart = await createCart({
         userId: user?.id,
-        sessionId: !user ? sessionId : undefined,
+        sessionId: !user ? (sessionId || crypto.randomUUID()) : undefined,
         currency: 'USD',
       });
     }

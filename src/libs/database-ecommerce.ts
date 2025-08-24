@@ -790,7 +790,7 @@ export const createCart = async (data: {
   await db.prepare(`
     INSERT INTO shopping_carts (id, userId, sessionId, currency, createdAt, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(cart.id, cart.userId, cart.sessionId, cart.currency, cart.createdAt, cart.updatedAt).run();
+  `).bind(cart.id, cart.userId || null, cart.sessionId || null, cart.currency, cart.createdAt, cart.updatedAt).run();
   
   return cart;
 };
@@ -1711,21 +1711,23 @@ export const getProductReviews = async (
   const db = await getDatabase();
   
   let query = `
-    SELECT * FROM product_reviews 
-    WHERE productId = ? AND (isPublished = true OR isPublished = 'true')
+    SELECT pr.*, u.firstName, u.lastName 
+    FROM product_reviews pr
+    LEFT JOIN users u ON pr.userId = u.id
+    WHERE pr.productId = ? AND (pr.isPublished = true OR pr.isPublished = 'true')
   `;
   const params = [productId];
   
   // Add user filter if provided
   if (options?.userId) {
-    query += ` AND userId = ?`;
+    query += ` AND pr.userId = ?`;
     params.push(options.userId);
   }
   
   // Add sorting
   const sortBy = options?.sortBy || 'createdAt';
   const sortOrder = sortBy === 'rating' ? 'DESC' : (sortBy === 'helpfulVotes' ? 'DESC' : 'DESC');
-  query += ` ORDER BY ${sortBy} ${sortOrder}`;
+  query += ` ORDER BY pr.${sortBy} ${sortOrder}`;
   
   // Add pagination
   if (options?.limit) {
@@ -1740,9 +1742,22 @@ export const getProductReviews = async (
   
   const result = await db.prepare(query).bind(...params).all();
   return result.results?.map((review: any) => ({
-    ...review,
+    id: review.id,
+    productId: review.productId,
+    userId: review.userId,
+    orderId: review.orderId,
     rating: Number(review.rating),
-    helpfulVotes: Number(review.helpfulVotes || 0)
+    title: review.title,
+    content: review.content,
+    isVerified: Boolean(review.isVerified),
+    isPublished: Boolean(review.isPublished),
+    helpfulVotes: Number(review.helpfulVotes || 0),
+    createdAt: review.createdAt,
+    updatedAt: review.updatedAt,
+    user: review.firstName && review.lastName ? {
+      firstName: review.firstName,
+      lastName: review.lastName
+    } : undefined
   })) || [];
 };
 
