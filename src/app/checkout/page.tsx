@@ -164,8 +164,8 @@ export default function Checkout() {
     }
   };
 
-  const isShippingAddressValid = () => {
-    return (
+  const isShippingAddressValid = (): boolean => {
+    return !!(
       shippingAddress.firstName.trim() &&
       shippingAddress.lastName.trim() &&
       shippingAddress.address1.trim() &&
