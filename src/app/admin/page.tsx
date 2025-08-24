@@ -166,7 +166,7 @@ export default function AdminDashboard() {
       href: '/admin/support',
       stats: [
         { label: 'Open Tickets', value: loading ? '...' : (stats?.support?.openTickets || '0') },
-        { label: 'Resolved', value: loading ? '...' : (stats?.support?.resolvedTickets || '0') },
+        { label: 'In Progress', value: loading ? '...' : (stats?.support?.inProgressTickets || '0') },
       ],
     },
     {
