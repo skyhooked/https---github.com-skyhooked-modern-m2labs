@@ -89,6 +89,25 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Reviews and wishlist migration completed');
 
+    // Verify the tables were created by checking they exist
+    try {
+      const tables = await db.prepare(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name IN ('product_reviews', 'wishlists', 'wishlist_items')
+      `).all();
+      
+      const tableNames = tables.results?.map((row: any) => row.name) || [];
+      results.push(`🔍 Tables found: ${tableNames.join(', ')}`);
+      
+      // Check wishlists table schema specifically
+      if (tableNames.includes('wishlists')) {
+        const wishlistSchema = await db.prepare(`PRAGMA table_info(wishlists)`).all();
+        const columns = wishlistSchema.results?.map((col: any) => col.name) || [];
+        results.push(`🔍 wishlists columns: ${columns.join(', ')}`);
+      }
+    } catch (verifyError) {
+      results.push(`⚠️ Verification error: ${verifyError}`);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Reviews and wishlist tables migration completed successfully',
