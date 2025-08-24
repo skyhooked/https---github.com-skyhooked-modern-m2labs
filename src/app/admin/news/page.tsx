@@ -74,7 +74,7 @@ export default function NewsManagement() {
   }, [showForm, editingPost]);
 
   // Handle create/update post
-  const handleSubmitPost = async (postData: Omit<NewsPost, 'id'> | NewsPost) => {
+  const handleSubmitPost = async (postData: Omit<NewsPost, 'id' | 'createdAt' | 'updatedAt'> | (Omit<NewsPost, 'createdAt' | 'updatedAt'> & { id: string })) => {
     setSubmitting(true);
     try {
       const method = editingPost ? 'PUT' : 'POST';

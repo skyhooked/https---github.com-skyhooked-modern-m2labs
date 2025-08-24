@@ -5,9 +5,11 @@ import MarkdownEditor from '@/components/admin/MarkdownEditor';
 import Image from 'next/image';
 import type { NewsPost } from '@/libs/database-d1';
 
+type NewsFormData = Omit<NewsPost, 'id' | 'createdAt' | 'updatedAt'>;
+
 interface NewsFormProps {
   post?: NewsPost;
-  onSubmit: (post: Omit<NewsPost, 'id'> | NewsPost) => Promise<void>;
+  onSubmit: (post: NewsFormData | (NewsFormData & { id: string })) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
