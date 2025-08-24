@@ -653,19 +653,33 @@ export const createProduct = async (productData: Omit<Product, 'id' | 'createdAt
       createdAt, updatedAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    product.id, product.name, product.slug, product.description, product.shortDescription,
-    product.brandId, product.sku, product.basePrice, product.compareAtPrice, product.cost,
-    product.isActive, product.isFeatured, product.weight,
-    product.dimensions,
-    product.powerRequirements, product.compatibility,
+    product.id, 
+    product.name, 
+    product.slug, 
+    product.description || null, 
+    product.shortDescription || null,
+    product.brandId, 
+    product.sku, 
+    product.basePrice, 
+    product.compareAtPrice || null, 
+    product.cost || null,
+    product.isActive, 
+    product.isFeatured, 
+    product.weight || null,
+    product.dimensions || null,
+    product.powerRequirements || null, 
+    product.compatibility || null,
     product.technicalSpecs ? JSON.stringify(product.technicalSpecs) : null,
-    product.seoTitle, product.seoDescription, product.metaKeywords,
-    product.youtubeVideoId,
+    product.seoTitle || null, 
+    product.seoDescription || null, 
+    product.metaKeywords || null,
+    product.youtubeVideoId || null,
     product.features ? JSON.stringify(product.features) : null,
     product.toggleOptions ? JSON.stringify(product.toggleOptions) : null,
-    product.powerConsumption,
+    product.powerConsumption || null,
     product.relatedProducts ? JSON.stringify(product.relatedProducts) : null,
-    product.createdAt, product.updatedAt
+    product.createdAt, 
+    product.updatedAt
   ).run();
   
   return product;
