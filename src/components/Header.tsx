@@ -72,9 +72,13 @@ export default function Header() {
       <div aria-hidden className="fixed inset-0 -z-10" style={{ backgroundColor: '#36454F' }} />
 
       <header
-        /* Fixed header with 40% transparency and small backdrop blur */
-        className="fixed inset-x-0 top-0 w-full h-[3.75rem] z-[9999] backdrop-blur-lg"
-        style={{ backgroundColor: 'rgba(54, 69, 79, 0.35)' }}
+        /* Fixed header with backdrop blur and fallback for mobile */
+        className="fixed inset-x-0 top-0 w-full h-[3.75rem] z-[9999] backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-lg"
+        style={{ 
+          backgroundColor: 'rgba(54, 69, 79, 0.8)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)' 
+        }}
       >
         <div className="flex items-center h-full px-5 lg:px-16">
           {/* 1) Logo */}
@@ -128,7 +132,14 @@ export default function Header() {
               <Link href="/artists" className="text-[#F5F5F5] hover:text-[#FF8A3D] font-bold flex items-center">
                 ARTISTS <span aria-hidden="true" className="ml-1">▾</span>
               </Link>
-              <div className="absolute top-full left-0 mt-2 min-w-49 bg-[rgba(54,69,79,0.35)] backdrop-blur-lg border border-white/10 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+              <div 
+                className="absolute top-full left-0 mt-2 min-w-49 backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-lg border border-white/10 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0"
+                style={{
+                  backgroundColor: 'rgba(54, 69, 79, 0.85)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)'
+                }}
+              >
                 {artists.length > 0 ? (
                   <>
                     {artists.slice(0, 6).map((artist) => (
@@ -168,7 +179,14 @@ export default function Header() {
               <button className="text-[#F5F5F5] hover:text-[#FF8A3D] font-bold flex items-center">
                 SUPPORT ▾
               </button>
-              <div className="absolute top-full left-0 mt-2 min-w-48 bg-[rgba(54,69,79,0.6)] backdrop-blur-sm border border-white/10 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+              <div 
+                className="absolute top-full left-0 mt-2 min-w-48 backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-lg border border-white/10 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0"
+                style={{
+                  backgroundColor: 'rgba(54, 69, 79, 0.85)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)'
+                }}
+              >
                 <Link
                   href="/warranty"
                   className="block px-4 py-2 text-[#F5F5F5] text-sm hover:bg-white/5 hover:text-[#FF8A3D] font-bold transition-colors"
@@ -235,8 +253,13 @@ export default function Header() {
         {/* ----- MOBILE NAVIGATION DROPDOWN ----- */}
         {isMenuOpen && (
           <div
-            className="absolute top-full left-0 w-full z-[9999] bg-[rgba(54,69,79,0.6)] backdrop-blur-sm overflow-y-auto rounded-b-md"
-            style={{ maxHeight: 'calc(100vh - 3.75rem)' }}
+            className="absolute top-full left-0 w-full z-[9999] backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-lg overflow-y-auto rounded-b-md"
+            style={{ 
+              maxHeight: 'calc(100vh - 3.75rem)',
+              backgroundColor: 'rgba(54, 69, 79, 0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }}
             onClick={closeMenu}
           >
             <button
