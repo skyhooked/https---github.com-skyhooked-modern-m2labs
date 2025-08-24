@@ -1419,10 +1419,22 @@ export const createProductVariant = async (data: Omit<ProductVariant, 'id' | 'cr
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, data.productId, data.name, data.sku, data.price, data.compareAtPrice,
-    data.cost, data.position, data.isDefault, data.barcode, data.trackInventory,
-    data.continueSellingWhenOutOfStock, data.requiresShipping, data.taxable,
-    now, now
+    id, 
+    data.productId, 
+    data.name, 
+    data.sku, 
+    data.price || null, 
+    data.compareAtPrice || null,
+    data.cost || null, 
+    data.position || 0, 
+    data.isDefault || false, 
+    data.barcode || null, 
+    data.trackInventory !== false,
+    data.continueSellingWhenOutOfStock || false, 
+    data.requiresShipping !== false, 
+    data.taxable !== false,
+    now, 
+    now
   ).run();
   
   return {
@@ -1442,8 +1454,14 @@ export const createProductImage = async (data: Omit<ProductImage, 'id' | 'create
     INSERT INTO product_images (id, productId, variantId, url, altText, position, isMainImage, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    id, data.productId, data.variantId, data.url, data.altText || '', 
-    data.position, data.isMainImage, now
+    id, 
+    data.productId, 
+    data.variantId || null, 
+    data.url, 
+    data.altText || null, 
+    data.position || 0, 
+    data.isMainImage || false, 
+    now
   ).run();
   
   return {
