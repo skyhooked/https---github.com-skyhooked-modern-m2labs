@@ -54,13 +54,13 @@ export const useShippingRates = () => {
       parcels: [{
         items: items.map(item => ({
           description: item.description,
-          category: item.category,
           sku: item.sku,
           quantity: item.quantity,
           dimensions: { length: 0, width: 0, height: 0 }, // Individual item dims
           actual_weight: item.actual_weight,
           declared_currency: item.declared_currency,
-          declared_customs_value: item.declared_customs_value
+          declared_customs_value: item.declared_customs_value,
+          item_category_id: 1
         })),
         box: boxDimensions,
         total_actual_weight: totalWeight
