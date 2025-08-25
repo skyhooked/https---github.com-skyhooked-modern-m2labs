@@ -1,5 +1,6 @@
 // Email service utilities for M2 Labs
 // This is a foundation for email notifications - integrate with Resend, SendGrid, or similar
+import { mailerLiteService } from './mailerlite';
 
 interface EmailTemplate {
   subject: string;
@@ -206,17 +207,33 @@ export class EmailService {
     this.fromEmail = process.env.FROM_EMAIL || 'noreply@m2labs.com';
   }
 
-  async sendEmail(emailData: EmailData): Promise<boolean> {
-    try {
-      // Placeholder for email service integration
-      // Replace this with your chosen email service (Resend, SendGrid, etc.)
-      
-      console.log('📧 Email would be sent:', {
-        to: emailData.to,
-        from: emailData.from || this.fromEmail,
-        subject: emailData.subject,
-        // Don't log the full content in production
-      });
+ async sendEmail(emailData: EmailData): Promise<boolean> {
+  try {
+    // Use MailerLite for sending emails
+    await mailerLiteService.sendCampaignEmail({
+      to: emailData.to,
+      subject: emailData.subject,
+      html: emailData.html || '',
+      campaignName: `Auto: ${emailData.subject} - ${new Date().toISOString()}`
+    });
+
+    console.log('📧 Email sent via MailerLite:', {
+      to: emailData.to,
+      subject: emailData.subject,
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error sending email via MailerLite:', error);
+    // Fallback to console logging for development
+    console.log('📧 Email would be sent (fallback):', {
+      to: emailData.to,
+      from: emailData.from || this.fromEmail,
+      subject: emailData.subject,
+    });
+    return false;
+  }
+}
 
       // Example implementation for Resend:
       /*
