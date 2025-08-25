@@ -88,16 +88,17 @@ export default function Checkout() {
   const [stripeInstance, setStripeInstance] = useState<any>(null);
 
   const [selectedShippingRate, setSelectedShippingRate] = useState<any>(null);
-const [showShippingOptions, setShowShippingOptions] = useState(false);
-const { rates, loading: ratesLoading, error: ratesError, getRates } = useShippingRates();
+  const [showShippingOptions, setShowShippingOptions] = useState(false);
+  const { rates, loading: ratesLoading, error: ratesError, getRates } = useShippingRates();
 
-const originAddress = {
-  line_1: "1850 Cotillion Drive", // Replace with your actual address
-  city: "Atlanta", 
-  state: "GA",
-  postal_code: "30338",
-  country_alpha2: "US"
-};
+  const originAddress = {
+    line_1: "1850 Cotillion Drive",
+    city: "Atlanta", 
+    state: "GA",
+    postal_code: "30338",
+    country_alpha2: "US"
+  };
+
   // Redirect if not authenticated or cart is empty
   useEffect(() => {
     if (!authLoading) {
@@ -169,6 +170,13 @@ const originAddress = {
             image: (item.variant?.product as any)?.images?.[0]?.url || '/images/placeholder-product.png'
           })),
           subtotal: cart.subtotal,
+          // Include selected shipping rate
+          shippingRate: selectedShippingRate ? {
+            courier: selectedShippingRate.courier_name,
+            service: selectedShippingRate.service_name,
+            cost: selectedShippingRate.total_charge,
+            deliveryTime: `${selectedShippingRate.min_delivery_time}-${selectedShippingRate.max_delivery_time} business days`
+          } : null,
           customerEmail: user?.email,
           shippingAddress: {
             name: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
@@ -203,7 +211,8 @@ const originAddress = {
           tax: data.tax / 100,
           total: data.total / 100
         });
-        setShowShippingForm(false); // Hide shipping form, show payment
+        setShowShippingForm(false);
+        setShowShippingOptions(false);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to create payment intent');
@@ -237,39 +246,39 @@ const originAddress = {
   };
 
   const handleContinueToPayment = () => {
-  if (!showShippingOptions && isShippingAddressValid()) {
-    // First time - get shipping rates
-    const shippingItems = cart.items.map(item => ({
-      description: item.variant?.product?.name || 'Product',
-      category: 'general',
-      sku: item.variantId || 'UNKNOWN',
-      quantity: item.quantity,
-      actual_weight: 0.5, // kg - replace with actual item weight
-      declared_currency: 'USD',
-      declared_customs_value: item.unitPrice / 100 // Convert from cents
-    }));
+    if (!showShippingOptions && isShippingAddressValid()) {
+      // First time - get shipping rates
+      const shippingItems = cart.items.map(item => ({
+        description: item.variant?.product?.name || 'Product',
+        category: 'general',
+        sku: item.variantId || 'UNKNOWN',
+        quantity: item.quantity,
+        actual_weight: 0.5, // kg - replace with actual item weight
+        declared_currency: 'USD',
+        declared_customs_value: item.unitPrice / 100 // Convert from cents
+      }));
 
-    const destinationAddress = {
-      line_1: shippingAddress.address1,
-      city: shippingAddress.city,
-      state: shippingAddress.state,
-      postal_code: shippingAddress.postalCode,
-      country_alpha2: shippingAddress.country || 'US'
-    };
+      const destinationAddress = {
+        line_1: shippingAddress.address1,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        postal_code: shippingAddress.postalCode,
+        country_alpha2: shippingAddress.country || 'US'
+      };
 
-    // Estimate box dimensions - replace with your actual logic
-    const boxDims = { length: 20, width: 15, height: 10 }; // cm
-    const totalWeight = shippingItems.reduce((sum, item) => 
-      sum + (item.actual_weight * item.quantity), 0
-    );
+      // Estimate box dimensions - replace with your actual logic
+      const boxDims = { length: 20, width: 15, height: 10 }; // cm
+      const totalWeight = shippingItems.reduce((sum, item) => 
+        sum + (item.actual_weight * item.quantity), 0
+      );
 
-    getRates(originAddress, destinationAddress, shippingItems, boxDims, totalWeight);
-    setShowShippingOptions(true);
-  } else if (selectedShippingRate) {
-    // Second time - create payment intent with selected shipping
-    createPaymentIntent();
-  }
-};
+      getRates(originAddress, destinationAddress, shippingItems, boxDims, totalWeight);
+      setShowShippingOptions(true);
+    } else if (selectedShippingRate) {
+      // Second time - create payment intent with selected shipping
+      createPaymentIntent();
+    }
+  };
 
   const handleBackToShipping = () => {
     setShowShippingForm(true);
@@ -440,45 +449,46 @@ const originAddress = {
             </div>
             
             {/* Dynamic Form */}
-           {showShippingForm ? (
-  <div>
-    <ShippingForm
-      shippingAddress={shippingAddress}
-      onShippingAddressChange={handleShippingAddressChange}
-      billingAddress={billingAddress}
-      onBillingAddressChange={handleBillingAddressChange}
-      billingAddressSameAsShipping={billingAddressSameAsShipping}
-      onBillingAddressSameAsShippingChange={setBillingAddressSameAsShipping}
-      onContinue={handleContinueToPayment}
-      isLoading={loading}
-      error={error}
-      isValid={isShippingAddressValid()}
-    />
-    
-    {/* Show shipping options after address is entered */}
-    {showShippingOptions && (
-      <div className="mt-6 border-t pt-6">
-        <ShippingOptions
-          rates={rates}
-          selectedRate={selectedShippingRate}
-          onSelectRate={setSelectedShippingRate}
-          loading={ratesLoading}
-          error={ratesError}
-        />
-        
-        {selectedShippingRate && (
-          <button
-            onClick={handleContinueToPayment}
-            disabled={loading}
-            className="w-full mt-4 bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Processing...' : 'Continue to Payment'}
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-) : (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              {showShippingForm ? (
+                <div>
+                  <ShippingForm
+                    shippingAddress={shippingAddress}
+                    onShippingAddressChange={handleShippingAddressChange}
+                    billingAddress={billingAddress}
+                    onBillingAddressChange={handleBillingAddressChange}
+                    billingAddressSameAsShipping={billingAddressSameAsShipping}
+                    onBillingAddressSameAsShippingChange={setBillingAddressSameAsShipping}
+                    onContinue={handleContinueToPayment}
+                    isLoading={loading}
+                    error={error}
+                    isValid={isShippingAddressValid()}
+                  />
+                  
+                  {/* Show shipping options after address is entered */}
+                  {showShippingOptions && (
+                    <div className="mt-6 border-t pt-6">
+                      <ShippingOptions
+                        rates={rates}
+                        selectedRate={selectedShippingRate}
+                        onSelectRate={setSelectedShippingRate}
+                        loading={ratesLoading}
+                        error={ratesError}
+                      />
+                      
+                      {selectedShippingRate && (
+                        <button
+                          onClick={handleContinueToPayment}
+                          disabled={loading}
+                          className="w-full mt-4 bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? 'Processing...' : 'Continue to Payment'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold">Payment Information</h2>
