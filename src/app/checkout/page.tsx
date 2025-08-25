@@ -253,21 +253,21 @@ export default function Checkout() {
     setBillingAddress(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleContinueToPayment = () => {
-    if (!showShippingOptions && isShippingAddressValid()) {
-      // First time - get shipping rates
+  const handleContinueToGetRates = () => {
+    if (isShippingAddressValid()) {
+      // Get shipping rates
       const DEFAULT_PEDAL_HS = '854370';
-const shippingItems = cart.items.map(item => ({
-  description: item.variant?.product?.name || 'Product',
-  category: 'general',
-  sku: item.variantId || 'UNKNOWN',
-  quantity: item.quantity,
-  actual_weight: 0.5, // kg - replace with actual item weight
-  declared_currency: 'USD',
-  declared_customs_value: item.unitPrice / 100, // Convert from cents
-  hs_code: DEFAULT_HS_CODE,                     // <-- required by Easyship: hs_code or item_category_id
-  origin_country_alpha2: ORIGIN_COUNTRY_ALPHA2  // <-- recommended for accurate rates
-}));
+      const shippingItems = cart.items.map(item => ({
+        description: item.variant?.product?.name || 'Product',
+        category: 'general',
+        sku: item.variantId || 'UNKNOWN',
+        quantity: item.quantity,
+        actual_weight: 0.5, // kg - replace with actual item weight
+        declared_currency: 'USD',
+        declared_customs_value: item.unitPrice / 100, // Convert from cents
+        hs_code: DEFAULT_HS_CODE,                     // <-- required by Easyship: hs_code or item_category_id
+        origin_country_alpha2: ORIGIN_COUNTRY_ALPHA2  // <-- recommended for accurate rates
+      }));
 
       const destinationAddress = {
         line_1: shippingAddress.address1,
@@ -285,8 +285,11 @@ const shippingItems = cart.items.map(item => ({
 
       getRates(originAddress, destinationAddress, shippingItems, boxDims, totalWeight);
       setShowShippingOptions(true);
-    } else if (selectedShippingRate) {
-      // Second time - create payment intent with selected shipping
+    }
+  };
+
+  const handleContinueToPayment = () => {
+    if (selectedShippingRate) {
       createPaymentIntent();
     }
   };
@@ -294,7 +297,7 @@ const shippingItems = cart.items.map(item => ({
   const handleBackToShipping = () => {
     setShowShippingForm(true);
     setClientSecret('');
-    setPaymentIntentId('');
+    setPaymentIntentId('');1 
     setError('');
   };
 
@@ -318,7 +321,7 @@ const shippingItems = cart.items.map(item => ({
           <div className="text-center">
             <p className="text-red-400 mb-4">{error}</p>
             <button
-              onClick={createPaymentIntent}
+              onClick={ createPaymentIntent}
               className="bg-[#FF8A3D] text-black px-4 py-2 rounded-lg hover:bg-[#FF8A3D]/80"
             >
               Try again
@@ -446,15 +449,25 @@ const shippingItems = cart.items.map(item => ({
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>{orderSummary.shipping > 0 ? `$${orderSummary.shipping.toFixed(2)}` : 'Calculated at checkout'}</span>
+                  <span>
+                    {selectedShippingRate ? 
+                      (selectedShippingRate.total_charge === 0 ? 'FREE' : `$${selectedShippingRate.total_charge.toFixed(2)}`) 
+                      : (orderSummary.shipping > 0 ? `$${orderSummary.shipping.toFixed(2)}` : 'Select shipping method')
+                    }
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>{orderSummary.tax > 0 ? `$${orderSummary.tax.toFixed(2)}` : 'Calculated at checkout'}</span>
+                  <span>{orderSummary.tax > 0 ? `$${orderSummary.tax.toFixed(2)}` : 'Calculated at payment'}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${orderSummary.total > 0 ? orderSummary.total.toFixed(2) : cart.subtotal.toFixed(2)}</span>
+                  <span>
+                    ${selectedShippingRate ? 
+                      (cart.subtotal + selectedShippingRate.total_charge).toFixed(2) 
+                      : (orderSummary.total > 0 ? orderSummary.total.toFixed(2) : cart.subtotal.toFixed(2))
+                    }
+                  </span>
                 </div>
               </div>
             </div>
@@ -470,7 +483,7 @@ const shippingItems = cart.items.map(item => ({
                     onBillingAddressChange={handleBillingAddressChange}
                     billingAddressSameAsShipping={billingAddressSameAsShipping}
                     onBillingAddressSameAsShippingChange={setBillingAddressSameAsShipping}
-                    onContinue={handleContinueToPayment}
+                    onContinue={handleContinueToGetRates}
                     isLoading={loading}
                     error={error}
                     isValid={isShippingAddressValid()}
@@ -882,7 +895,7 @@ function ShippingForm({
         disabled={!isValid || isLoading}
         className="w-full bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Processing...' : 'Continue to Payment'}
+        {isLoading ? 'Processing...' : 'Get Shipping Rates'}
       </button>
     </div>
   );
