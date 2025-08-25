@@ -26,51 +26,6 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching order:', error);
-    // Send email notification if requested
-if (data.sendEmailNotification && order?.customer?.email) {
-  try {
-    const emailService = new EmailService();
-    
-    // Different email templates based on status
-    switch (data.status) {
-      case 'shipped':
-        await emailService.sendOrderShipped(order, data.trackingNumber);
-        break;
-      case 'delivered':
-        // You can create a custom delivered email template
-        await emailService.sendEmail({
-          to: order.customer.email,
-          subject: `Your M2 Labs order has been delivered! 🎸`,
-          html: `
-            <h2>Order Delivered!</h2>
-            <p>Great news! Your order #${order.orderNumber} has been delivered.</p>
-            <p>We hope you love your new gear. If you have any questions, please contact our support team.</p>
-            <p>Rock on!<br>The M2 Labs Team</p>
-          `,
-          text: `Your M2 Labs order #${order.orderNumber} has been delivered!`
-        });
-        break;
-      case 'cancelled':
-        await emailService.sendEmail({
-          to: order.customer.email,
-          subject: `Order #${order.orderNumber} has been cancelled`,
-          html: `
-            <h2>Order Cancelled</h2>
-            <p>Your order #${order.orderNumber} has been cancelled.</p>
-            <p>If you have any questions, please contact our support team.</p>
-            <p>Thanks,<br>The M2 Labs Team</p>
-          `,
-          text: `Your order #${order.orderNumber} has been cancelled.`
-        });
-        break;
-    }
-    
-    console.log(`✅ Order status email sent to ${order.customer.email} for status: ${data.status}`);
-  } catch (error) {
-    console.error('❌ Error sending order status email:', error);
-    // Don't fail the API call if email fails
-  }
-}
     return NextResponse.json(
       { success: false, error: 'Failed to fetch order' },
       { status: 500 }
@@ -93,6 +48,52 @@ export async function PATCH(
         { success: false, error: 'Order not found' },
         { status: 404 }
       );
+    }
+
+    // Send email notification if requested
+    if (data.sendEmailNotification && order?.email) {
+      try {
+        const emailService = new EmailService();
+        
+        // Different email templates based on status
+        switch (data.status) {
+          case 'shipped':
+            await emailService.sendOrderShipped(order, data.trackingNumber);
+            break;
+          case 'delivered':
+            // You can create a custom delivered email template
+            await emailService.sendEmail({
+              to: order.email,
+              subject: `Your M2 Labs order has been delivered! 🎸`,
+              html: `
+                <h2>Order Delivered!</h2>
+                <p>Great news! Your order #${order.orderNumber} has been delivered.</p>
+                <p>We hope you love your new gear. If you have any questions, please contact our support team.</p>
+                <p>Rock on!<br>The M2 Labs Team</p>
+              `,
+              text: `Your M2 Labs order #${order.orderNumber} has been delivered!`
+            });
+            break;
+          case 'cancelled':
+            await emailService.sendEmail({
+              to: order.email,
+              subject: `Order #${order.orderNumber} has been cancelled`,
+              html: `
+                <h2>Order Cancelled</h2>
+                <p>Your order #${order.orderNumber} has been cancelled.</p>
+                <p>If you have any questions, please contact our support team.</p>
+                <p>Thanks,<br>The M2 Labs Team</p>
+              `,
+              text: `Your order #${order.orderNumber} has been cancelled.`
+            });
+            break;
+        }
+        
+        console.log(`✅ Order status email sent to ${order.email} for status: ${data.status}`);
+      } catch (error) {
+        console.error('❌ Error sending order status email:', error);
+        // Don't fail the API call if email fails
+      }
     }
 
     return NextResponse.json({

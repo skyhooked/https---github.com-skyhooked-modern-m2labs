@@ -126,7 +126,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 try {
   const emailService = new EmailService();
   const order = await getOrderById(orderId);
-  if (order && order.customer?.email) {
+  if (order && order.email) {
     await emailService.sendOrderConfirmation(order);
     console.log('✅ Order confirmation email sent for order:', orderId);
   }

@@ -207,58 +207,30 @@ export class EmailService {
     this.fromEmail = process.env.FROM_EMAIL || 'noreply@m2labs.com';
   }
 
- async sendEmail(emailData: EmailData): Promise<boolean> {
-  try {
-    // Use MailerLite for sending emails
-    await mailerLiteService.sendCampaignEmail({
-      to: emailData.to,
-      subject: emailData.subject,
-      html: emailData.html || '',
-      campaignName: `Auto: ${emailData.subject} - ${new Date().toISOString()}`
-    });
-
-    console.log('📧 Email sent via MailerLite:', {
-      to: emailData.to,
-      subject: emailData.subject,
-    });
-
-    return true;
-  } catch (error) {
-    console.error('Error sending email via MailerLite:', error);
-    // Fallback to console logging for development
-    console.log('📧 Email would be sent (fallback):', {
-      to: emailData.to,
-      from: emailData.from || this.fromEmail,
-      subject: emailData.subject,
-    });
-    return false;
-  }
-}
-
-      // Example implementation for Resend:
-      /*
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: emailData.from || this.fromEmail,
-          to: emailData.to,
-          subject: emailData.subject,
-          html: emailData.html,
-          text: emailData.text,
-        }),
+  async sendEmail(emailData: EmailData): Promise<boolean> {
+    try {
+      // Use MailerLite for sending emails
+      await mailerLiteService.sendCampaignEmail({
+        to: emailData.to,
+        subject: emailData.subject,
+        html: emailData.html || '',
+        campaignName: `Auto: ${emailData.subject} - ${new Date().toISOString()}`
       });
 
-      return response.ok;
-      */
+      console.log('📧 Email sent via MailerLite:', {
+        to: emailData.to,
+        subject: emailData.subject,
+      });
 
-      // For now, return true to simulate successful sending
       return true;
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('Error sending email via MailerLite:', error);
+      // Fallback to console logging for development
+      console.log('📧 Email would be sent (fallback):', {
+        to: emailData.to,
+        from: emailData.from || this.fromEmail,
+        subject: emailData.subject,
+      });
       return false;
     }
   }
