@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
 import { createPaymentIntent, calculateTax, calculateShipping } from '@/libs/stripe';
-import { createOrder, createOrderItem, getCartByUserId, getCartBySessionId, clearCart } from '@/libs/database-ecommerce';
+import { createOrder, createOrderItem, getCartByUserId, getCartBySessionId } from '@/libs/database-ecommerce';
 
 export const runtime = 'edge';
 
@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
       customerEmail,
       shippingAddress,
       billingAddress,
-      cartId,
       sessionId
     } = body;
     
@@ -121,6 +120,21 @@ export async function POST(request: NextRequest) {
     
     const totalAmount = (subtotal * 100) + shipping.amount + tax;
     const email = customerEmail || user?.email || '';
+    
+    // Validate email
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required for order creation' },
+        { status: 400 }
+      );
+    }
+    
+    console.log('📝 Creating order with data:', {
+      userId: user?.id || null,
+      email,
+      totalAmount,
+      shippingName: shippingAddress.name
+    });
     
     // Create order in database first
     const orderData = {

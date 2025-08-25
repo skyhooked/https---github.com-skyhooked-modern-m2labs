@@ -8,16 +8,21 @@ import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 // Load Stripe with publishable key
 let stripePromise: Promise<Stripe | null>;
 
-const getStripe = (): Promise<Stripe | null> => {
+const getStripe = async (): Promise<Stripe | null> => {
   if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    
-    if (!publishableKey) {
-      console.error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set');
+    try {
+      const response = await fetch('/api/stripe/config');
+      if (response.ok) {
+        const { publishableKey } = await response.json();
+        stripePromise = loadStripe(publishableKey);
+      } else {
+        console.error('Failed to get Stripe config from API');
+        return Promise.resolve(null);
+      }
+    } catch (error) {
+      console.error('Error fetching Stripe config:', error);
       return Promise.resolve(null);
     }
-    
-    stripePromise = loadStripe(publishableKey);
   }
   
   return stripePromise;
