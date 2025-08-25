@@ -5,6 +5,7 @@ import {
   unsubscribeEmail,
   getSubscriberByEmail
 } from '@/libs/database-d1';
+import { mailerLiteService } from '@/libs/mailerlite';
 
 export const runtime = 'edge';
 
@@ -94,6 +95,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error unsubscribing:', error);
     return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
+
+    // Also remove from MailerLite
+try {
+  await mailerLiteService.removeSubscriber(email);
+} catch (error) {
+  console.error('Error removing subscriber from MailerLite:', error);
+  // Continue anyway - local unsubscribe still works
+}
   }
 }
 
