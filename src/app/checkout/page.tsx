@@ -8,8 +8,27 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/components/cart/CartProvider';
 
-// Load Stripe outside of component to avoid recreating on every render
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Load Stripe dynamically after getting publishable key
+let stripePromise: Promise<any> | null = null;
+
+const getStripePromise = async () => {
+  if (!stripePromise) {
+    try {
+      const response = await fetch('/api/stripe/config');
+      if (response.ok) {
+        const { publishableKey } = await response.json();
+        stripePromise = loadStripe(publishableKey);
+      } else {
+        console.error('Failed to get Stripe config');
+        stripePromise = Promise.resolve(null);
+      }
+    } catch (error) {
+      console.error('Error fetching Stripe config:', error);
+      stripePromise = Promise.resolve(null);
+    }
+  }
+  return stripePromise;
+};
 
 interface ShippingAddress {
   firstName: string;
@@ -64,6 +83,7 @@ export default function Checkout() {
     tax: 0,
     total: 0
   });
+  const [stripeInstance, setStripeInstance] = useState<any>(null);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -71,6 +91,15 @@ export default function Checkout() {
       router.push('/shop');
     }
   }, [cart.itemCount, loading, router]);
+
+  // Initialize Stripe
+  useEffect(() => {
+    const initStripe = async () => {
+      const stripe = await getStripePromise();
+      setStripeInstance(stripe);
+    };
+    initStripe();
+  }, []);
 
   // Initialize user data in forms
   useEffect(() => {
@@ -364,8 +393,8 @@ export default function Checkout() {
                     </button>
                   </div>
                   
-                  {clientSecret && (
-                    <Elements options={options} stripe={stripePromise}>
+                  {clientSecret && stripeInstance && (
+                    <Elements options={options} stripe={stripeInstance}>
                       <CheckoutForm 
                         paymentIntentId={paymentIntentId}
                         onSuccess={() => {
@@ -374,6 +403,12 @@ export default function Checkout() {
                         }}
                       />
                     </Elements>
+                  )}
+                  
+                  {clientSecret && !stripeInstance && (
+                    <div className="text-center text-gray-600">
+                      Loading payment form...
+                    </div>
                   )}
                 </div>
               )}
