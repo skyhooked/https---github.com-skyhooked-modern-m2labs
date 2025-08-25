@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
     
-    const resp = await fetch("https://api.easyship.com/2024-09/rates", {
+    const resp = await fetch("https://public-api.easyship.com/2024-09/rates", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.EASYSHIP_TOKEN}`,
