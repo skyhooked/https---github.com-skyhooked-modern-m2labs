@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false); // Start as false to not block UI
+  const [loading, setLoading] = useState(true); // Start as true to prevent auth flash
 
   // Check if user is authenticated on component mount
   useEffect(() => {
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Double-check: Skip auth check for admin routes
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
       console.log('AuthProvider: checkAuth() called but skipping for admin route');
+      setLoading(false);
       return;
     }
     
