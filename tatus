@@ -1,5 +1,0 @@
-[33m83d8384[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix TypeScript errors by changing null to undefined
-[33macc3ae2[m Fix TypeScript error for userId type
-[33m648c862[m Fix D1_TYPE_ERROR by providing all required order fields
-[33m8ac5b10[m Fix undefined values in order creation
-[33mea27429[m Fix Stripe client-side initialization and server validation
