@@ -2,9 +2,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
-// Defaults to avoid 422 if the client forgets to send these per item
-const DEFAULT_HS_CODE = '854370'; // effects pedals, electronic sound apparatus
-const ORIGIN_COUNTRY_ALPHA2 = 'US';
+// HS code mapping for your products
+const DEFAULT_HS_CODE = '854370'; // effects pedals / electronic sound apparatus
+const ORIGIN_COUNTRY_ALPHA2 = 'US'; // update if needed
+
+const HS_BY_SKU: Record<string, string> = {
+  'M2L-TBO': '854370', // The Bomber Overdrive
+  // add other SKUs here if you want per-SKU overrides
+};
 
 export async function POST(request: NextRequest) {
   try {
