@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     
     // Create order in database first
     const orderData = {
-      userId: user?.id,
+      userId: user?.id || null,
       email,
       status: 'pending' as const,
       paymentStatus: 'pending' as const,
@@ -150,6 +150,9 @@ export async function POST(request: NextRequest) {
       discountAmount: 0,
       total: totalAmount,
       currency: currency.toUpperCase(),
+      stripePaymentIntentId: null,
+      stripeChargeId: null,
+      paymentMethod: null,
       shippingAddress: {
         firstName: shippingAddress.name.split(' ')[0] || '',
         lastName: shippingAddress.name.split(' ').slice(1).join(' ') || '',
@@ -183,6 +186,12 @@ export async function POST(request: NextRequest) {
         phone: shippingAddress.phone || '',
       },
       shippingMethod: shipping.method,
+      trackingNumber: null,
+      shippedAt: null,
+      deliveredAt: null,
+      notes: null,
+      adminNotes: null,
+      couponCode: null,
     };
     
     const order = await createOrder(orderData);
