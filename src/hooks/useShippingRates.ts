@@ -85,9 +85,9 @@ export function useShippingRates() {
             slug: 'custom',
             length: boxDimensions.length,
             width: boxDimensions.width,
-            height: boxDimensions.height,
-            actual_weight: totalWeight
+            height: boxDimensions.height
           },
+          total_actual_weight: totalWeight,
           items: items.map(item => ({
             description: item.description || 'Guitar Effects Pedal',
             quantity: item.quantity,
