@@ -60,30 +60,30 @@ export function ShippingOptions({
       <h3 className="text-lg font-medium">Choose Shipping Method</h3>
       
       <div className="space-y-3">
-        {rates.map((rate, index) => (
-          <div
-            key={`${rate.courier_id}-${rate.service_name}-${index}`}
-            className={`border rounded-lg p-4 cursor-pointer transition-all ${
-              selectedRate && 
-              selectedRate.courier_id === rate.courier_id && 
-              selectedRate.service_name === rate.service_name
-                ? 'border-[#FF8A3D] bg-orange-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => onSelectRate(rate)}
-          >
-            <div className="flex items-center">
-              <input
-                type="radio"
-                name="shippingRate"
-                checked={
-                  !!(selectedRate && 
-                  selectedRate.courier_id === rate.courier_id && 
-                  selectedRate.service_name === rate.service_name)
-                }
-                onChange={() => onSelectRate(rate)}
-                className="h-4 w-4 text-[#FF8A3D] focus:ring-[#FF8A3D] border-gray-300"
-              />
+        {rates.map((rate, index) => {
+          const isSelected = selectedRate && 
+            selectedRate.courier_id === rate.courier_id && 
+            selectedRate.service_name === rate.service_name &&
+            selectedRate.total_charge === rate.total_charge;
+            
+          return (
+            <div
+              key={`${rate.courier_id}-${rate.service_name}-${rate.total_charge}-${index}`}
+              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                isSelected
+                  ? 'border-[#FF8A3D] bg-orange-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => onSelectRate(rate)}
+            >
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name="shippingRate"
+                  checked={!!isSelected}
+                  onChange={() => onSelectRate(rate)}
+                  className="h-4 w-4 text-[#FF8A3D] focus:ring-[#FF8A3D] border-gray-300"
+                />
               
               <div className="ml-3 flex-1">
                 <div className="flex items-center justify-between">
@@ -147,7 +147,8 @@ export function ShippingOptions({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       
       {selectedRate && (
