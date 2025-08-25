@@ -72,6 +72,7 @@ const payload = {
       contains_liquids: false,
       origin_country_alpha2: "US",
       quantity: item.quantity,
+      actual_weight: item.actual_weight,
       declared_currency: item.declared_currency,
       category: item.category, // Use string categories like "home_decor", "electronics"
       declared_customs_value: item.declared_customs_value
