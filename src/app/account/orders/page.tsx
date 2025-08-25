@@ -196,9 +196,12 @@ export default function Orders() {
                             File warranty claim
                           </Link>
                         )}
-                        <button className="text-sm font-medium text-gray-900 hover:text-gray-700">
+                        <Link
+                          href={`/account/orders/${order.id}`}
+                          className="text-sm font-medium text-gray-900 hover:text-gray-700"
+                        >
                           View details
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>

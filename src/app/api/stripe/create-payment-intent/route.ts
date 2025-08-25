@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/libs/auth';
 import { createPaymentIntent, calculateTax, calculateShipping } from '@/libs/stripe';
-import { createOrder, createOrderItem, getCartByUserId, getCartBySessionId } from '@/libs/database-ecommerce';
+import { createOrder, createOrderItem, updateOrder, getCartByUserId, getCartBySessionId } from '@/libs/database-ecommerce';
 
 export const runtime = 'edge';
 
@@ -266,7 +266,9 @@ export async function POST(request: NextRequest) {
     });
     
     // Update order with Stripe Payment Intent ID
-    // TODO: Add update order function to database-ecommerce.ts
+    await updateOrder(order.id, {
+      stripePaymentIntentId: paymentIntent.id
+    });
     
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
