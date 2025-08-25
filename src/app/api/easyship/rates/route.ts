@@ -2,12 +2,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
+// Defaults to avoid 422 if the client forgets to send these per item
+const DEFAULT_HS_CODE = '854370'; // effects pedals, electronic sound apparatus
+const ORIGIN_COUNTRY_ALPHA2 = 'US';
+
 export async function POST(request: NextRequest) {
   try {
     const incoming = await request.json();
 
+    // Build payload
+    const payload: any = { ...incoming };
+
     // v2024-09 uses "courier_settings" (migration away from "courier_selection")
-    const payload = { ...incoming };
     if (payload.courier_selection && !payload.courier_settings) {
       payload.courier_settings = payload.courier_selection;
       delete payload.courier_selection;
@@ -15,7 +21,22 @@ export async function POST(request: NextRequest) {
 
     // Be explicit about units (recommended by docs)
     payload.shipping_settings = payload.shipping_settings || {};
-    payload.shipping_settings.units = payload.shipping_settings.units || { weight: 'kg', dimensions: 'cm' };
+    payload.shipping_settings.units =
+      payload.shipping_settings.units || { weight: 'kg', dimensions: 'cm' };
+
+    // Fill missing hs_code and origin_country_alpha2 on each item to prevent 422
+    if (Array.isArray(payload?.parcels)) {
+      payload.parcels = payload.parcels.map((parcel: any) => ({
+        ...parcel,
+        items: Array.isArray(parcel?.items)
+          ? parcel.items.map((it: any) => ({
+              ...it,
+              hs_code: it?.hs_code || DEFAULT_HS_CODE,
+              origin_country_alpha2: it?.origin_country_alpha2 || ORIGIN_COUNTRY_ALPHA2,
+            }))
+          : parcel?.items,
+      }));
+    }
 
     const resp = await fetch('https://public-api.easyship.com/2024-09/rates', {
       method: 'POST',
@@ -28,19 +49,32 @@ export async function POST(request: NextRequest) {
 
     if (!resp.ok) {
       let parsed: any = null;
-      try { parsed = await resp.json(); } catch { /* fall through */ }
+      try {
+        parsed = await resp.json();
+      } catch {
+        // fall through to text if not json
+      }
       const details = parsed?.error?.details?.join('; ');
       const msg = parsed?.error?.message || parsed?.message || (await resp.text());
-      return NextResponse.json({ error: details ? `${msg} (${details})` : msg }, { status: resp.status });
+      return NextResponse.json(
+        { error: details ? `${msg} (${details})` : msg },
+        { status: resp.status }
+      );
     }
 
     const data = await resp.json();
     const rates = data.rates || [];
 
     // pick cheapest / fastest / best value
-    const cheapest = [...rates].sort((a: any, b: any) => a.total_charge - b.total_charge)[0];
-    const fastest = [...rates].sort((a: any, b: any) => a.min_delivery_time - b.min_delivery_time)[0];
-    const bestValue = [...rates].sort((a: any, b: any) => a.value_for_money_rank - b.value_for_money_rank)[0];
+    const cheapest = [...rates].sort(
+      (a: any, b: any) => (a.total_charge ?? Infinity) - (b.total_charge ?? Infinity)
+    )[0];
+    const fastest = [...rates].sort(
+      (a: any, b: any) => (a.min_delivery_time ?? Infinity) - (b.min_delivery_time ?? Infinity)
+    )[0];
+    const bestValue = [...rates].sort(
+      (a: any, b: any) => (a.value_for_money_rank ?? Infinity) - (b.value_for_money_rank ?? Infinity)
+    )[0];
 
     return NextResponse.json({ all: rates, cheapest, fastest, bestValue });
   } catch (error) {
