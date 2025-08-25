@@ -65,7 +65,7 @@ export const useShippingRates = () => {
         box: boxDimensions,
         total_actual_weight: totalWeight
       }],
-      output_currency: "USD"
+
     };
 
     try {
