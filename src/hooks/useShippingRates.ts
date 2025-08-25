@@ -68,21 +68,17 @@ export function useShippingRates() {
       const easyshipPayload = {
         origin_address: {
           line_1: originAddress.line_1,
-          line_2: originAddress.line_2 || '',
           city: originAddress.city,
           state: originAddress.state,
           postal_code: originAddress.postal_code,
-          country_alpha2: originAddress.country_alpha2,
-          phone: originAddress.phone || ''
+          country_alpha2: originAddress.country_alpha2
         },
         destination_address: {
           line_1: destinationAddress.line_1,
-          line_2: destinationAddress.line_2 || '',
           city: destinationAddress.city,
           state: destinationAddress.state,
           postal_code: destinationAddress.postal_code,
-          country_alpha2: destinationAddress.country_alpha2,
-          phone: destinationAddress.phone || ''
+          country_alpha2: destinationAddress.country_alpha2
         },
         parcels: [{
           box: {
@@ -93,15 +89,13 @@ export function useShippingRates() {
             actual_weight: totalWeight
           },
           items: items.map(item => ({
-            description: item.description,
-            category: item.category,
-            sku: item.sku,
+            description: item.description || 'Guitar Effects Pedal',
             quantity: item.quantity,
             actual_weight: item.actual_weight,
-            declared_currency: item.declared_currency,
+            declared_currency: 'USD',
             declared_customs_value: item.declared_customs_value,
-            hs_code: item.hs_code,
-            origin_country_alpha2: item.origin_country_alpha2
+            hs_code: item.hs_code || '854370',
+            origin_country_alpha2: 'US'
           }))
         }],
         shipping_settings: {
@@ -111,6 +105,8 @@ export function useShippingRates() {
           }
         }
       };
+
+      console.log('📤 Frontend sending payload:', JSON.stringify(easyshipPayload, null, 2));
 
       const response = await fetch('/api/easyship/rates', {
         method: 'POST',

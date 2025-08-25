@@ -14,6 +14,7 @@ const HS_BY_SKU: Record<string, string> = {
 export async function POST(request: NextRequest) {
   try {
     const incoming = await request.json();
+    console.log('📦 Received payload from frontend:', JSON.stringify(incoming, null, 2));
 
     // Build payload (keep your structure)
     const payload: any = { ...incoming };
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
       }));
     }
 
+    console.log('🚀 Sending to Easyship API:', JSON.stringify(payload, null, 2));
+    console.log('🔑 Token present:', !!process.env.EASYSHIP_TOKEN);
+
     const resp = await fetch('https://public-api.easyship.com/2024-09/rates', {
       method: 'POST',
       headers: {
@@ -59,11 +63,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!resp.ok) {
-      // Keep your error handling, but parse JSON if possible for cleaner messages
+      // Enhanced error handling with detailed logging
       let parsed: any = null;
-      try { parsed = await resp.json(); } catch { /* fall back to text below */ }
+      try { 
+        parsed = await resp.json(); 
+        console.error('❌ Easyship API Error Response:', JSON.stringify(parsed, null, 2));
+      } catch (parseError) { 
+        console.error('❌ Failed to parse error response:', parseError);
+      }
+      
       const details = parsed?.error?.details?.join('; ');
       const msg = parsed?.error?.message || parsed?.message || (await resp.text());
+      console.error(`❌ Easyship API ${resp.status}: ${details ? `${msg} (${details})` : msg}`);
+      
       return NextResponse.json(
         { error: details ? `${msg} (${details})` : msg },
         { status: resp.status }
