@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent } from '@/libs/stripe';
 import { updateOrder, clearCart, getOrderById } from '@/libs/database-ecommerce';
 import Stripe from 'stripe';
+import { EmailService } from '@/libs/email';
 
 export const runtime = 'edge';
 
@@ -121,7 +122,18 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       }
     }
     
-    // TODO: Send order confirmation email
+// Send order confirmation email
+try {
+  const emailService = new EmailService();
+  const order = await getOrderById(orderId);
+  if (order && order.customer?.email) {
+    await emailService.sendOrderConfirmation(order);
+    console.log('✅ Order confirmation email sent for order:', orderId);
+  }
+} catch (error) {
+  console.error('❌ Error sending order confirmation email:', error);
+  // Don't fail the webhook if email fails
+}
     // TODO: Update inventory quantities
     // TODO: Create warranty records for eligible products
     
