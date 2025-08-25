@@ -150,9 +150,9 @@ export async function POST(request: NextRequest) {
       discountAmount: 0,
       total: totalAmount,
       currency: currency.toUpperCase(),
-      stripePaymentIntentId: null,
-      stripeChargeId: null,
-      paymentMethod: null,
+      stripePaymentIntentId: undefined,
+      stripeChargeId: undefined,
+      paymentMethod: undefined,
       shippingAddress: {
         firstName: shippingAddress.name.split(' ')[0] || '',
         lastName: shippingAddress.name.split(' ').slice(1).join(' ') || '',
@@ -186,12 +186,12 @@ export async function POST(request: NextRequest) {
         phone: shippingAddress.phone || '',
       },
       shippingMethod: shipping.method,
-      trackingNumber: null,
-      shippedAt: null,
-      deliveredAt: null,
-      notes: null,
-      adminNotes: null,
-      couponCode: null,
+      trackingNumber: undefined,
+      shippedAt: undefined,
+      deliveredAt: undefined,
+      notes: undefined,
+      adminNotes: undefined,
+      couponCode: undefined,
     };
     
     const order = await createOrder(orderData);
