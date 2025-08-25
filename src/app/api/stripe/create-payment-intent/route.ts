@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     
     // Create order in database first
     const orderData = {
-      userId: user?.id || null,
+      userId: user?.id,
       email,
       status: 'pending' as const,
       paymentStatus: 'pending' as const,
