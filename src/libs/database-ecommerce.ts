@@ -1036,11 +1036,29 @@ export const getOrdersByUserId = async (userId: string): Promise<Order[]> => {
     SELECT * FROM orders_new WHERE userId = ? ORDER BY createdAt DESC
   `).bind(userId).all();
   
-  return (result.results || []).map(order => ({
+  const orders = (result.results || []).map(order => ({
     ...order,
     shippingAddress: JSON.parse(order.shippingAddress),
     billingAddress: JSON.parse(order.billingAddress)
-  }));
+  })) as Order[];
+  
+  // Get order items for each order
+  for (const order of orders) {
+    const itemsResult = await db.prepare(`
+      SELECT oi.*, pv.name as variantName, pv.sku
+      FROM order_items oi
+      LEFT JOIN product_variants pv ON oi.variantId = pv.id
+      WHERE oi.orderId = ?
+      ORDER BY oi.createdAt
+    `).bind(order.id).all();
+    
+    order.items = (itemsResult.results || []).map(item => ({
+      ...item,
+      productSnapshot: JSON.parse(item.productSnapshot as string)
+    })) as OrderItem[];
+  }
+  
+  return orders;
 };
 
 // ========================================

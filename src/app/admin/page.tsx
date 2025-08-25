@@ -153,7 +153,7 @@ export default function AdminDashboard() {
       description: 'Process and track customer orders',
       icon: '📦',
       href: '/admin/orders',
-      disabled: true,
+      disabled: false,
       stats: [
         { label: 'Total Orders', value: loading ? '...' : (stats?.orders?.totalOrders || '0') },
         { label: 'Pending', value: loading ? '...' : (stats?.orders?.pendingOrders || '0') },
