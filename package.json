@@ -42,6 +42,7 @@
     "jose": "^6.0.12",
     "jsonwebtoken": "^9.0.2",
     "lottie-react": "^2.4.1",
+    "@mailerlite/mailerlite-nodejs": "^1.1.0",
     "next": "15.4.5",
     "next-auth": "^4.24.11",
     "postcss": "^8.5.6",
