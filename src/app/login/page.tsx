@@ -17,7 +17,14 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      router.push('/account');
+      // Check for return URL from checkout
+      const returnUrl = sessionStorage.getItem('checkoutReturnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('checkoutReturnUrl');
+        router.push(returnUrl);
+      } else {
+        router.push('/account');
+      }
     }
   }, [user, router]);
 
@@ -28,7 +35,14 @@ export default function Login() {
 
     try {
       await login(email, password);
-      router.push('/account');
+      // Check for return URL from checkout
+      const returnUrl = sessionStorage.getItem('checkoutReturnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('checkoutReturnUrl');
+        router.push(returnUrl);
+      } else {
+        router.push('/account');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {
