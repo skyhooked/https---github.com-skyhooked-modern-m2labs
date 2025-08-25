@@ -17,7 +17,7 @@ let stripePromise: Promise<any> | null = null;
 const DEFAULT_HS_CODE = '854370'; // effects pedals / electronic sound apparatus
 const ORIGIN_COUNTRY_ALPHA2 = 'US'; // update if needed
 const HS_BY_SKU: Record<string, string> = {
-  M2L-TBO: '854370', // The Bomber Overdrive
+  'M2L-TBO': '854370', // The Bomber Overdrive
   // add other SKUs here if you want per-SKU overrides
 };
 
@@ -38,11 +38,6 @@ const getStripePromise = async () => {
     }
   }
   return stripePromise;
-
-  // HS code defaults for Easyship
-const DEFAULT_HS_CODE = '854370' as const;      // effects pedals / electronic sound apparatus
-const ORIGIN_COUNTRY_ALPHA2 = 'US' as const;    // change if your origin isn't US
-
 };
 
 interface ShippingAddress {
