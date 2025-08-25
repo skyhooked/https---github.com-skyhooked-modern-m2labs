@@ -996,12 +996,12 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 
       notes, adminNotes, couponCode, createdAt, updatedAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    order.id, order.orderNumber, order.userId, order.email, order.status, order.paymentStatus,
+    order.id, order.orderNumber, order.userId ?? null, order.email, order.status, order.paymentStatus,
     order.subtotal, order.taxAmount, order.shippingAmount, order.discountAmount, order.total,
-    order.currency, order.stripePaymentIntentId, order.stripeChargeId, order.paymentMethod,
+    order.currency, order.stripePaymentIntentId ?? null, order.stripeChargeId ?? null, order.paymentMethod ?? null,
     JSON.stringify(order.shippingAddress), JSON.stringify(order.billingAddress),
-    order.shippingMethod, order.trackingNumber, order.shippedAt, order.deliveredAt,
-    order.notes, order.adminNotes, order.couponCode, order.createdAt, order.updatedAt
+    order.shippingMethod ?? null, order.trackingNumber ?? null, order.shippedAt ?? null, order.deliveredAt ?? null,
+    order.notes ?? null, order.adminNotes ?? null, order.couponCode ?? null, order.createdAt, order.updatedAt
   ).run();
   
   return order;
