@@ -48,21 +48,34 @@ export const useShippingRates = () => {
     setLoading(true);
     setError(null);
 
-   const payload = {
+const payload = {
   origin_address: originAddress,
   destination_address: destinationAddress,
+  incoterms: "DDU",
+  insurance: {
+    is_insured: false
+  },
+  courier_settings: {
+    apply_shipping_rules: true
+  },
+  shipping_settings: {
+    units: {
+      weight: "kg",
+      dimensions: "cm"
+    }
+  },
   parcels: [{
+    box: boxDimensions, // Direct format: { length: 20, width: 15, height: 10 }
     items: items.map(item => ({
-      description: item.description,
-      origin_country: "US",
+      contains_battery_pi966: false,
+      contains_battery_pi967: false,
+      contains_liquids: false,
+      origin_country_alpha2: "US",
       quantity: item.quantity,
-      weight: item.actual_weight,
       declared_currency: item.declared_currency,
-      declared_customs_value: item.declared_customs_value,
-      category: "general"
-    })),
-    box: boxDimensions,
-    total_actual_weight: totalWeight
+      category: item.category, // Use string categories like "home_decor", "electronics"
+      declared_customs_value: item.declared_customs_value
+    }))
   }]
 };
 
