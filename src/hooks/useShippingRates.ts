@@ -124,6 +124,7 @@ export function useShippingRates() {
         // Success - use real Easyship rates
         const data = await response.json();
         const easyshipRates = data.all || [];
+        console.log('✅ Easyship API Success - Got real rates:', easyshipRates.length, 'options');
         
         // Convert Easyship format to our ShippingRate format
         const convertedRates: ShippingRate[] = easyshipRates.map((rate: any) => ({
@@ -143,24 +144,7 @@ export function useShippingRates() {
           signature_required: rate.signature_required || false
         }));
 
-        // Add free shipping if order qualifies and no free option exists
-        const hasFreeShipping = convertedRates.some(rate => rate.total_charge === 0);
-        if (subtotal >= 50 && !hasFreeShipping) {
-          convertedRates.unshift({
-            courier_id: 'free',
-            courier_name: 'Free Shipping',
-            service_name: 'Standard Shipping',
-            service_type: 'standard',
-            total_charge: 0,
-            currency: 'USD',
-            min_delivery_time: 3,
-            max_delivery_time: 7,
-            description: 'Free shipping on orders over $50',
-            tracking_available: true,
-            insurance_available: false,
-            signature_required: false
-          });
-        }
+        // Let Easyship handle all shipping options - no custom free shipping logic
 
         setRates(convertedRates);
       } else {
@@ -197,23 +181,7 @@ export function useShippingRates() {
           }
         ];
 
-        // Add free shipping for fallback rates too
-        if (subtotal >= 50) {
-          mockRates.unshift({
-            courier_id: 'free',
-            courier_name: 'Free Shipping',
-            service_name: 'Standard Shipping',
-            service_type: 'standard',
-            total_charge: 0,
-            currency: 'USD',
-            min_delivery_time: 3,
-            max_delivery_time: 7,
-            description: 'Free shipping on orders over $50',
-            tracking_available: true,
-            insurance_available: false,
-            signature_required: false
-          });
-        }
+        // No custom free shipping in fallback either
 
         setRates(mockRates);
       }
