@@ -83,36 +83,37 @@ export async function POST(request: NextRequest) {
       message,
     });
     
+    // Send confirmation email to customer
+    try {
+      await mailerLiteService.sendCampaignEmail({
+        to: email,
+        subject: `Support ticket created: ${subject}`,
+        html: `
+          <h2>Support Ticket Created</h2>
+          <p>Hi ${name},</p>
+          <p>We've received your support request and will get back to you as soon as possible.</p>
+          <p><strong>Ticket Details:</strong></p>
+          <ul>
+            <li><strong>Subject:</strong> ${subject}</li>
+            <li><strong>Category:</strong> ${category}</li>
+            <li><strong>Priority:</strong> ${priority}</li>
+          </ul>
+          <p>You can view and reply to this ticket in your account dashboard.</p>
+          <p>Thanks,<br>M2 Labs Support Team</p>
+        `,
+        campaignName: `Support: ${ticket.id}`
+      });
+      
+      console.log('✅ Support ticket confirmation sent to:', email);
+    } catch (error) {
+      console.error('❌ Error sending support ticket confirmation:', error);
+    }
+
     return NextResponse.json({
       ticket: {
         ...ticket,
         messages: [supportMessage]
       }
-      // Send confirmation email to customer
-try {
-  await mailerLiteService.sendCampaignEmail({
-    to: email,
-    subject: `Support ticket created: ${subject}`,
-    html: `
-      <h2>Support Ticket Created</h2>
-      <p>Hi ${name},</p>
-      <p>We've received your support request and will get back to you as soon as possible.</p>
-      <p><strong>Ticket Details:</strong></p>
-      <ul>
-        <li><strong>Subject:</strong> ${subject}</li>
-        <li><strong>Category:</strong> ${category}</li>
-        <li><strong>Priority:</strong> ${priority}</li>
-      </ul>
-      <p>You can view and reply to this ticket in your account dashboard.</p>
-      <p>Thanks,<br>M2 Labs Support Team</p>
-    `,
-    campaignName: `Support: ${ticket.id}`
-  });
-  
-  console.log('✅ Support ticket confirmation sent to:', email);
-} catch (error) {
-  console.error('❌ Error sending support ticket confirmation:', error);
-}
     });
     
   } catch (error) {
