@@ -121,6 +121,13 @@ export async function POST(request: NextRequest) {
     const totalAmount = (subtotal * 100) + shipping.amount + tax;
     const email = user.email; // User is guaranteed to exist from auth check above
     
+    if (!email) {
+      return NextResponse.json(
+        { error: 'User email is required for payment processing' },
+        { status: 400 }
+      );
+    }
+    
     // Stripe requires minimum $0.50 USD
     const minimumAmount = 50; // 50 cents
     if (totalAmount < minimumAmount) {
@@ -131,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('📝 Creating order with data:', {
-      userId: user?.id || null,
+      userId: user.id,
       email,
       totalAmount,
       shippingName: shippingAddress.name,
@@ -141,7 +148,7 @@ export async function POST(request: NextRequest) {
     
     // Create order in database first
     const orderData = {
-      userId: user?.id,
+      userId: user.id, // User is guaranteed to exist from auth check above
       email,
       status: 'pending' as const,
       paymentStatus: 'pending' as const,
@@ -236,7 +243,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,
-        userId: user?.id || 'guest',
+        userId: user.id,
         itemCount: items.length.toString(),
         subtotal: (subtotal * 100).toString(),
         shipping: shipping.amount.toString(),
