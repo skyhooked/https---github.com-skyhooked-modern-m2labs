@@ -302,7 +302,7 @@ export const calculateShipping = async (data: {
   const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0.5), 0); // Default 0.5 lbs per item
   
   // Base rates (these should be replaced with real shipping API calls)
-  let baseRate = 599; // $5.99 base rate
+  let baseRate = 0; // Free shipping for testing
   
   // International shipping
   if (shippingAddress.country !== 'US') {
@@ -314,14 +314,14 @@ export const calculateShipping = async (data: {
     };
   }
   
-  // Weight-based pricing for domestic
-  if (totalWeight > 2) {
-    baseRate += Math.ceil((totalWeight - 2) / 0.5) * 200; // $2 per additional 0.5 lbs
-  }
+  // Weight-based pricing disabled for testing
+  // if (totalWeight > 2) {
+  //   baseRate += Math.ceil((totalWeight - 2) / 0.5) * 200; // $2 per additional 0.5 lbs
+  // }
   
   return {
     amount: baseRate,
-    method: 'Standard Shipping',
+    method: 'Free Shipping (Testing)',
     estimatedDays: '3-5 business days'
   };
 };
