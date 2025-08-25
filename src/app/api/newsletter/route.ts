@@ -10,6 +10,7 @@ import {
   getUserById
 } from '@/libs/database-d1';
 import { getUserFromToken } from '@/libs/auth';
+import { mailerLiteService } from '@/libs/mailerlite';
 
 export const runtime = 'edge';
 
@@ -95,6 +96,18 @@ export async function POST(request: NextRequest) {
     };
 
     const newSubscriber = await createNewsletterSubscriber(subscriberData);
+    // Also add to MailerLite
+try {
+  await mailerLiteService.addSubscriber(
+    subscriberData.email,
+    subscriberData.firstName,
+    subscriberData.lastName,
+    ['Newsletter'] // Add to Newsletter group
+  );
+} catch (error) {
+  console.error('Error adding subscriber to MailerLite:', error);
+  // Continue anyway - local database subscription still works
+}
     
     return NextResponse.json({ 
       message: 'Successfully subscribed to newsletter',
