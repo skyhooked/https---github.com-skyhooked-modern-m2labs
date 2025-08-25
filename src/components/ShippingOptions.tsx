@@ -77,9 +77,9 @@ export function ShippingOptions({
                 type="radio"
                 name="shippingRate"
                 checked={
-                  selectedRate && 
+                  !!(selectedRate && 
                   selectedRate.courier_id === rate.courier_id && 
-                  selectedRate.service_name === rate.service_name
+                  selectedRate.service_name === rate.service_name)
                 }
                 onChange={() => onSelectRate(rate)}
                 className="h-4 w-4 text-[#FF8A3D] focus:ring-[#FF8A3D] border-gray-300"
