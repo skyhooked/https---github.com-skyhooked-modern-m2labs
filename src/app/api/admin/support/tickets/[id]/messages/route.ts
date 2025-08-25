@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupportMessage, getSupportMessages } from '@/libs/database-ecommerce';
+import { mailerLiteService } from '@/libs/mailerlite';
+import { getSupportTicketById } from '@/libs/database-ecommerce';
 
 export const runtime = 'edge';
 
@@ -44,6 +46,34 @@ export async function POST(
       message: data.message,
       isInternal: data.isInternal || false,
       userId: data.userId || null  // Handle undefined userId for admin messages
+
+      // Send email notification to customer when admin replies
+if (!data.isInternal) {
+  try {
+    const ticket = await getSupportTicketById(id);
+    if (ticket && ticket.email) {
+      await mailerLiteService.sendCampaignEmail({
+        to: ticket.email,
+        subject: `New reply to your support ticket: ${ticket.subject}`,
+        html: `
+          <h2>New Reply to Your Support Ticket</h2>
+          <p>Hi ${ticket.name},</p>
+          <p>We've replied to your support ticket. Here's the latest message:</p>
+          <div style="background: #f5f5f5; padding: 15px; margin: 10px 0; border-left: 4px solid #FF8A3D;">
+            ${data.message.replace(/\n/g, '<br>')}
+          </div>
+          <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/account/support">View Full Conversation</a></p>
+          <p>Thanks,<br>M2 Labs Support Team</p>
+        `,
+        campaignName: `Support Reply: ${ticket.id}`
+      });
+      
+      console.log('✅ Support reply notification sent to:', ticket.email);
+    }
+  } catch (error) {
+    console.error('❌ Error sending support reply notification:', error);
+  }
+}
     });
 
     return NextResponse.json({
