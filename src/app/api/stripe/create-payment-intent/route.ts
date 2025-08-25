@@ -129,6 +129,15 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Stripe requires minimum $0.50 USD
+    const minimumAmount = 50; // 50 cents
+    if (totalAmount < minimumAmount) {
+      return NextResponse.json(
+        { error: `Order total must be at least $0.50 USD. Current total: $${(totalAmount / 100).toFixed(2)}` },
+        { status: 400 }
+      );
+    }
+    
     console.log('📝 Creating order with data:', {
       userId: user?.id || null,
       email,
