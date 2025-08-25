@@ -7,6 +7,8 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/components/cart/CartProvider';
+import { useShippingRates } from '@/hooks/useShippingRates';
+import { ShippingOptions } from '@/components/ShippingOptions';
 
 // Load Stripe dynamically after getting publishable key
 let stripePromise: Promise<any> | null = null;
