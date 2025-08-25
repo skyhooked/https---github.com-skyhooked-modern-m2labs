@@ -24,7 +24,14 @@ export default function Register() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      router.push('/account');
+      // Check for stored redirect URL
+      const redirectUrl = localStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectAfterLogin');
+        router.push(redirectUrl);
+      } else {
+        router.push('/account');
+      }
     }
   }, [user, router]);
 
@@ -57,7 +64,14 @@ export default function Register() {
         phone: formData.phone || undefined,
         dateOfBirth: formData.dateOfBirth || undefined
       });
-      router.push('/account');
+      // Check for stored redirect URL
+      const redirectUrl = localStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectAfterLogin');
+        router.push(redirectUrl);
+      } else {
+        router.push('/account');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {

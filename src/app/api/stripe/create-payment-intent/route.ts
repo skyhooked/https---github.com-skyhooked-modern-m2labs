@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!customerEmail && !user) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Customer email is required for guest checkout' },
-        { status: 400 }
+        { error: 'Authentication required. Please log in to complete your purchase.' },
+        { status: 401 }
       );
     }
     
@@ -119,15 +119,7 @@ export async function POST(request: NextRequest) {
     });
     
     const totalAmount = (subtotal * 100) + shipping.amount + tax;
-    const email = customerEmail || user?.email || '';
-    
-    // Validate email
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required for order creation' },
-        { status: 400 }
-      );
-    }
+    const email = user.email; // User is guaranteed to exist from auth check above
     
     // Stripe requires minimum $0.50 USD
     const minimumAmount = 50; // 50 cents

@@ -84,24 +84,23 @@ export default function Checkout() {
     total: 0
   });
   const [stripeInstance, setStripeInstance] = useState<any>(null);
-  const [guestEmail, setGuestEmail] = useState('');
-  const [checkoutMode, setCheckoutMode] = useState<'loading' | 'choose' | 'guest' | 'authenticated'>('loading');
 
-  // Authentication and cart validation
+  // Redirect if not authenticated or cart is empty
   useEffect(() => {
     if (!authLoading) {
+      if (!user) {
+        // Store the current URL to redirect back after login
+        localStorage.setItem('redirectAfterLogin', '/checkout');
+        router.push('/login');
+        return;
+      }
+      
       if (cart.itemCount === 0) {
         router.push('/shop');
         return;
       }
-      
-      if (user) {
-        setCheckoutMode('authenticated');
-      } else {
-        setCheckoutMode('choose');
-      }
     }
-  }, [authLoading, user, cart.itemCount, router]);
+  }, [user, authLoading, cart.itemCount, router]);
 
   // Initialize Stripe
   useEffect(() => {
@@ -157,7 +156,7 @@ export default function Checkout() {
             image: (item.variant?.product as any)?.images?.[0]?.url || '/images/placeholder-product.png'
           })),
           subtotal: cart.subtotal,
-          customerEmail: checkoutMode === 'guest' ? guestEmail : user?.email,
+          customerEmail: user?.email,
           shippingAddress: {
             name: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
             line1: shippingAddress.address1,
@@ -302,136 +301,23 @@ export default function Checkout() {
     appearance,
   };
 
-  // Loading state
-  if (authLoading || checkoutMode === 'loading') {
+  // Show loading while checking authentication
+  if (authLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-[#36454F] flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF8A3D]"></div>
-            <p className="mt-4 text-[#F5F5F5]">Loading checkout...</p>
+            <p className="mt-4 text-[#F5F5F5]">Loading...</p>
           </div>
         </div>
       </Layout>
     );
   }
 
-  // Authentication choice screen
-  if (checkoutMode === 'choose') {
-    return (
-      <Layout>
-        <section className="py-16 bg-[#36454F] min-h-screen">
-          <div className="max-w-md mx-auto px-5">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h1 className="text-2xl font-bold text-center mb-6">Complete Your Order</h1>
-              <p className="text-gray-600 text-center mb-8">
-                Please sign in to your account or continue as a guest to complete your purchase.
-              </p>
-              
-              <div className="space-y-4">
-                <button
-                  onClick={() => {
-                    // Store current URL for redirect after login
-                    sessionStorage.setItem('checkoutReturnUrl', window.location.pathname);
-                    router.push('/login');
-                  }}
-                  className="w-full bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80"
-                >
-                  Sign In to Your Account
-                </button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Or</span>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setCheckoutMode('guest')}
-                  className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50"
-                >
-                  Continue as Guest
-                </button>
-              </div>
-              
-              <p className="text-xs text-gray-500 text-center mt-6">
-                Creating an account allows you to track orders and access warranty services.
-              </p>
-            </div>
-          </div>
-        </section>
-      </Layout>
-    );
-  }
-
-  // Guest email input screen
-  if (checkoutMode === 'guest' && !guestEmail) {
-    return (
-      <Layout>
-        <section className="py-16 bg-[#36454F] min-h-screen">
-          <div className="max-w-md mx-auto px-5">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <button
-                onClick={() => setCheckoutMode('choose')}
-                className="flex items-center text-gray-600 hover:text-gray-800 mb-4"
-              >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
-              </button>
-              
-              <h1 className="text-2xl font-bold text-center mb-6">Guest Checkout</h1>
-              <p className="text-gray-600 text-center mb-8">
-                Enter your email address to continue with your order.
-              </p>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                if (guestEmail && guestEmail.includes('@')) {
-                  setCheckoutMode('guest');
-                } else {
-                  setError('Please enter a valid email address');
-                }
-              }}>
-                <div className="mb-6">
-                  <label htmlFor="guestEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="guestEmail"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF8A3D] focus:border-transparent"
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-                
-                {error && (
-                  <div className="mb-4 text-red-600 text-sm">{error}</div>
-                )}
-                
-                <button
-                  type="submit"
-                  className="w-full bg-[#FF8A3D] text-black py-3 px-4 rounded-lg font-medium hover:bg-[#FF8A3D]/80"
-                >
-                  Continue to Shipping
-                </button>
-              </form>
-              
-              <p className="text-xs text-gray-500 text-center mt-6">
-                We'll send your order confirmation to this email address.
-              </p>
-            </div>
-          </div>
-        </section>
-      </Layout>
-    );
+  // Don't render if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
   }
 
   return (
