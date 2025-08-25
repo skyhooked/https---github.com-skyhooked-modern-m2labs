@@ -2,43 +2,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
-// HS code mapping for your products
-const DEFAULT_HS_CODE = '854370'; // effects pedals / electronic sound apparatus
-const ORIGIN_COUNTRY_ALPHA2 = 'US'; // update if needed
+// Defaults for Easyship item classification
+const DEFAULT_HS_CODE = '854370';         // effects pedals / electronic sound apparatus
+const ORIGIN_COUNTRY_ALPHA2 = 'US';       // change if your ship-from country differs
 
+// Optional per-SKU HS overrides (kept simple, add more as needed)
 const HS_BY_SKU: Record<string, string> = {
   'M2L-TBO': '854370', // The Bomber Overdrive
-  // add other SKUs here if you want per-SKU overrides
 };
 
 export async function POST(request: NextRequest) {
   try {
     const incoming = await request.json();
 
-    // Build payload
+    // Build payload (keep your structure)
     const payload: any = { ...incoming };
 
-    // v2024-09 uses "courier_settings" (migration away from "courier_selection")
+    // v2024-09 uses "courier_settings" (compat for any legacy "courier_selection")
     if (payload.courier_selection && !payload.courier_settings) {
       payload.courier_settings = payload.courier_selection;
       delete payload.courier_selection;
     }
 
-    // Be explicit about units (recommended by docs)
+    // Be explicit about units (kept from your version)
     payload.shipping_settings = payload.shipping_settings || {};
     payload.shipping_settings.units =
       payload.shipping_settings.units || { weight: 'kg', dimensions: 'cm' };
 
-    // Fill missing hs_code and origin_country_alpha2 on each item to prevent 422
+    // ADD: ensure each item has hs_code or item_category_id, and origin country
     if (Array.isArray(payload?.parcels)) {
       payload.parcels = payload.parcels.map((parcel: any) => ({
         ...parcel,
         items: Array.isArray(parcel?.items)
-          ? parcel.items.map((it: any) => ({
-              ...it,
-              hs_code: it?.hs_code || DEFAULT_HS_CODE,
-              origin_country_alpha2: it?.origin_country_alpha2 || ORIGIN_COUNTRY_ALPHA2,
-            }))
+          ? parcel.items.map((it: any) => {
+              // If neither is present, try to fill hs_code from SKU, else default
+              const hasClassification = !!it?.hs_code || !!it?.item_category_id;
+              const hsFromSku = it?.sku ? HS_BY_SKU[it.sku] : undefined;
+              return {
+                ...it,
+                hs_code: hasClassification ? it.hs_code : (hsFromSku || DEFAULT_HS_CODE),
+                origin_country_alpha2: it?.origin_country_alpha2 || ORIGIN_COUNTRY_ALPHA2,
+              };
+            })
           : parcel?.items,
       }));
     }
@@ -48,17 +53,15 @@ export async function POST(request: NextRequest) {
       headers: {
         Authorization: `Bearer ${process.env.EASYSHIP_TOKEN}`,
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify(payload),
     });
 
     if (!resp.ok) {
+      // Keep your error handling, but parse JSON if possible for cleaner messages
       let parsed: any = null;
-      try {
-        parsed = await resp.json();
-      } catch {
-        // fall through to text if not json
-      }
+      try { parsed = await resp.json(); } catch { /* fall back to text below */ }
       const details = parsed?.error?.details?.join('; ');
       const msg = parsed?.error?.message || parsed?.message || (await resp.text());
       return NextResponse.json(
@@ -70,16 +73,10 @@ export async function POST(request: NextRequest) {
     const data = await resp.json();
     const rates = data.rates || [];
 
-    // pick cheapest / fastest / best value
-    const cheapest = [...rates].sort(
-      (a: any, b: any) => (a.total_charge ?? Infinity) - (b.total_charge ?? Infinity)
-    )[0];
-    const fastest = [...rates].sort(
-      (a: any, b: any) => (a.min_delivery_time ?? Infinity) - (b.min_delivery_time ?? Infinity)
-    )[0];
-    const bestValue = [...rates].sort(
-      (a: any, b: any) => (a.value_for_money_rank ?? Infinity) - (b.value_for_money_rank ?? Infinity)
-    )[0];
+    // Keep your sorting logic
+    const cheapest = [...rates].sort((a: any, b: any) => a.total_charge - b.total_charge)[0];
+    const fastest = [...rates].sort((a: any, b: any) => a.min_delivery_time - b.min_delivery_time)[0];
+    const bestValue = [...rates].sort((a: any, b: any) => a.value_for_money_rank - b.value_for_money_rank)[0];
 
     return NextResponse.json({ all: rates, cheapest, fastest, bestValue });
   } catch (error) {
