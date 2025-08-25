@@ -48,25 +48,23 @@ export const useShippingRates = () => {
     setLoading(true);
     setError(null);
 
-    const payload = {
-      origin_address: originAddress,
-      destination_address: destinationAddress,
-      parcels: [{
-        items: items.map(item => ({
-          description: item.description,
-          sku: item.sku,
-          quantity: item.quantity,
-          dimensions: { length: 0, width: 0, height: 0 }, // Individual item dims
-          actual_weight: item.actual_weight,
-          declared_currency: item.declared_currency,
-          declared_customs_value: item.declared_customs_value,
-          item_category_id: 1
-        })),
-        box: boxDimensions,
-        total_actual_weight: totalWeight
-      }],
-
-    };
+   const payload = {
+  origin_address: originAddress,
+  destination_address: destinationAddress,
+  parcels: [{
+    items: items.map(item => ({
+      description: item.description,
+      origin_country: "US",
+      quantity: item.quantity,
+      weight: item.actual_weight,
+      declared_currency: item.declared_currency,
+      declared_customs_value: item.declared_customs_value,
+      category: "general"
+    })),
+    box: boxDimensions,
+    total_actual_weight: totalWeight
+  }]
+};
 
     try {
       const response = await fetch('/api/easyship/rates', {
