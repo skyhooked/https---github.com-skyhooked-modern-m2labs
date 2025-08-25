@@ -248,6 +248,7 @@ export default function Checkout() {
   const handleContinueToPayment = () => {
     if (!showShippingOptions && isShippingAddressValid()) {
       // First time - get shipping rates
+      const DEFAULT_PEDAL_HS = '854370';
       const shippingItems = cart.items.map(item => ({
         description: item.variant?.product?.name || 'Product',
         category: 'general',
@@ -255,7 +256,10 @@ export default function Checkout() {
         quantity: item.quantity,
         actual_weight: 0.5, // kg - replace with actual item weight
         declared_currency: 'USD',
-        declared_customs_value: item.unitPrice / 100 // Convert from cents
+        declared_customs_value: item.unitPrice / 100, // Convert from cents
+         // NEW: fields Easyship needs for rates
+        hs_code: DEFAULT_PEDAL_HS,
+        origin_country_alpha2: 'US'
       }));
 
       const destinationAddress = {
