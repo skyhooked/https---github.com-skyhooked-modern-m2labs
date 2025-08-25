@@ -75,28 +75,37 @@ export default function OrderManagement() {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
-    try {
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
+const updateOrderStatus = async (orderId: string, status: string) => {
+  try {
+    const response = await fetch(`/api/admin/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        status,
+        sendEmailNotification: true // Request email notification
+      }),
+    });
 
-      if (response.ok) {
-        setOrders(orders.map(order => 
-          order.id === orderId ? { ...order, status: status as any } : order
-        ));
-        if (selectedOrder?.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, status: status as any });
-        }
+    if (response.ok) {
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: status as any } : order
+      ));
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: status as any });
       }
-    } catch (error) {
-      console.error('Error updating order status:', error);
+      
+      // Show success message
+      alert(`Order status updated to ${status}. Customer notification email sent.`);
+    } else {
+      alert('Failed to update order status');
     }
-  };
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('Error updating order status');
+  }
+};
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
