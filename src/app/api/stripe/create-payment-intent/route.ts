@@ -46,6 +46,18 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromRequest(request);
     const body: CreatePaymentIntentRequest = await request.json();
     
+    // Check for Stripe secret key
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    console.log('🔑 Stripe Secret Key available:', !!stripeSecretKey);
+    
+    if (!stripeSecretKey) {
+      console.error('❌ STRIPE_SECRET_KEY not found in environment');
+      return NextResponse.json(
+        { error: 'Stripe configuration error' },
+        { status: 500 }
+      );
+    }
+    
     const {
       items,
       subtotal,
@@ -194,6 +206,7 @@ export async function POST(request: NextRequest) {
       currency,
       orderId: order.id,
       customerEmail: email,
+      secretKey: stripeSecretKey,
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,

@@ -4,14 +4,14 @@
 import Stripe from 'stripe';
 
 // Initialize Stripe with secret key (server-side only)
-function getStripe(): Stripe {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+function getStripe(secretKey?: string): Stripe {
+  const key = secretKey || process.env.STRIPE_SECRET_KEY;
   
-  if (!secretKey) {
+  if (!key) {
     throw new Error('STRIPE_SECRET_KEY environment variable is required');
   }
   
-  return new Stripe(secretKey, {
+  return new Stripe(key, {
     apiVersion: '2025-07-30.basil',
     typescript: true,
   });
@@ -42,8 +42,8 @@ export interface CreatePaymentIntentParams {
   };
 }
 
-export const createPaymentIntent = async (params: CreatePaymentIntentParams): Promise<Stripe.PaymentIntent> => {
-  const stripe = getStripe();
+export const createPaymentIntent = async (params: CreatePaymentIntentParams & { secretKey?: string }): Promise<Stripe.PaymentIntent> => {
+  const stripe = getStripe(params.secretKey);
   
   const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
     amount: params.amount,
