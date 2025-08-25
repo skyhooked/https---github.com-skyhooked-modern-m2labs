@@ -13,6 +13,14 @@ import { ShippingOptions } from '@/components/ShippingOptions';
 // Load Stripe dynamically after getting publishable key
 let stripePromise: Promise<any> | null = null;
 
+// HS code mapping for your products
+const DEFAULT_HS_CODE = '854370'; // effects pedals / electronic sound apparatus
+const ORIGIN_COUNTRY_ALPHA2 = 'US'; // update if needed
+const HS_BY_SKU: Record<string, string> = {
+  M2L-TBO: '854370', // The Bomber Overdrive
+  // add other SKUs here if you want per-SKU overrides
+};
+
 const getStripePromise = async () => {
   if (!stripePromise) {
     try {
@@ -249,18 +257,17 @@ export default function Checkout() {
     if (!showShippingOptions && isShippingAddressValid()) {
       // First time - get shipping rates
       const DEFAULT_PEDAL_HS = '854370';
-      const shippingItems = cart.items.map(item => ({
-        description: item.variant?.product?.name || 'Product',
-        category: 'general',
-        sku: item.variantId || 'UNKNOWN',
-        quantity: item.quantity,
-        actual_weight: 0.5, // kg - replace with actual item weight
-        declared_currency: 'USD',
-        declared_customs_value: item.unitPrice / 100, // Convert from cents
-         // NEW: fields Easyship needs for rates
-        hs_code: DEFAULT_PEDAL_HS,
-        origin_country_alpha2: 'US'
-      }));
+ const shippingItems = cart.items.map(item => ({
+  description: item.variant?.product?.name || 'Product',
+  sku: item.variantId || 'UNKNOWN',
+  quantity: item.quantity,
+  actual_weight: 0.5, // kg - replace with per-SKU weight if you have it
+  declared_currency: 'USD',
+  declared_customs_value: item.unitPrice / 100, // cents -> dollars
+  // Required by Easyship to classify the item
+  hs_code: HS_BY_SKU[item.variantId ?? ''] ?? DEFAULT_HS_CODE,
+  origin_country_alpha2: ORIGIN_COUNTRY_ALPHA2
+}));
 
       const destinationAddress = {
         line_1: shippingAddress.address1,
