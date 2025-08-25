@@ -72,7 +72,7 @@ export const createPaymentIntent = async (params: CreatePaymentIntentParams & { 
   // Enable automatic payment methods for better conversion
   paymentIntentParams.automatic_payment_methods = {
     enabled: true,
-    allow_redirects: 'never', // Keep on-site for better UX
+    allow_redirects: 'always', // Allow redirects for PayPal, Klarna, etc.
   };
   
   const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
