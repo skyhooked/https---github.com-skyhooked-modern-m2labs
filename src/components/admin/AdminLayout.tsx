@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Artist Management', href: '/admin/artists', icon: '🎤' },
     { name: 'Product Management', href: '/admin/products', icon: '🎸' },
     { name: 'Newsletter', href: '/admin/newsletter', icon: '📧' },
-    { name: 'Order Management', href: '/admin/orders', icon: '📦', disabled: true },
+    { name: 'Order Management', href: '/admin/orders', icon: '📦', disabled: false },
     { name: 'Support Management', href: '/admin/support', icon: '💬' },
     { name: 'Coupon Management', href: '/admin/coupons', icon: '🎫', disabled: true },
     { name: 'Analytics & Reports', href: '/admin/analytics', icon: '📈' },

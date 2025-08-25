@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupportTickets, getAllProducts, getAllDistributors } from '@/libs/database-ecommerce';
+import { getSupportTickets, getAllProducts, getAllDistributors, getAllOrders } from '@/libs/database-ecommerce';
 import { getArtists, getUsers } from '@/libs/database-d1';
 
 export const runtime = 'edge';
@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.warn('Could not fetch user stats (users table may not exist yet):', error);
     }
+    
+    // Fetch order stats
+    const orders = await getAllOrders({});
+    const pendingOrders = orders.filter(o => o.status === 'pending');
     
     // TODO: Add warranty claims when implemented
     let openClaims = 0;
@@ -70,8 +74,8 @@ export async function GET(request: NextRequest) {
         processedClaims,
       },
       orders: {
-        totalOrders: 0, // TODO: Implement when orders system is ready
-        pendingOrders: 0,
+        totalOrders: orders.length,
+        pendingOrders: pendingOrders.length,
       },
       newsletter: {
         subscribers: 0, // TODO: Implement newsletter stats
