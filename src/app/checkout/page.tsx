@@ -289,7 +289,6 @@ export default function Checkout() {
   const options = {
     clientSecret,
     appearance,
-    paymentMethodTypes: ['card', 'apple_pay', 'google_pay', 'paypal', 'klarna', 'cashapp', 'amazon_pay'],
   };
 
   return (
