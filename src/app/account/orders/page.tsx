@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Order } from '@/libs/auth';
+import { Order } from '@/libs/database-ecommerce';
 import Link from 'next/link';
 export const runtime = 'edge'
 
@@ -136,7 +136,7 @@ export default function Orders() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">
-                          Order #{order.id}
+                          Order #{order.orderNumber}
                         </h3>
                         <p className="text-sm text-gray-500">
                           Placed on {new Date(order.createdAt).toLocaleDateString()}
@@ -147,7 +147,7 @@ export default function Orders() {
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
                         <div className="text-lg font-medium text-gray-900">
-                          ${order.total.toFixed(2)}
+                          ${(order.total / 100).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -155,22 +155,26 @@ export default function Orders() {
                   
                   <div className="px-6 py-4">
                     <div className="space-y-4">
-                      {order.items.map((item) => (
+                      {order.items?.map((item) => (
                         <div key={item.id} className="flex items-center justify-between">
                           <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
-                            {item.sku && (
-                              <p className="text-xs text-gray-500">SKU: {item.sku}</p>
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {item.variant?.product?.name || item.productSnapshot?.name || 'Product'}
+                            </h4>
+                            {item.variant?.sku && (
+                              <p className="text-xs text-gray-500">SKU: {item.variant.sku}</p>
                             )}
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <span>Qty: {item.quantity}</span>
                             <span className="font-medium text-gray-900">
-                              ${item.price.toFixed(2)}
+                              ${(item.totalPrice / 100).toFixed(2)}
                             </span>
                           </div>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-gray-500">No items found</div>
+                      )}
                     </div>
                   </div>
 

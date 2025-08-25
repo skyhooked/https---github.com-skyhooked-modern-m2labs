@@ -29,6 +29,7 @@ export default function CheckoutSuccess() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (paymentIntentId) {
@@ -44,6 +45,14 @@ export default function CheckoutSuccess() {
       if (response.ok) {
         const data = await response.json();
         setOrder(data.order);
+      } else if (response.status === 404 && retryCount < 3) {
+        // Order might not be updated by webhook yet, retry after a delay
+        console.log(`Order not found, retrying in 2 seconds... (attempt ${retryCount + 1}/3)`);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => {
+          fetchOrderDetails();
+        }, 2000);
+        return; // Don't set loading to false yet
       } else {
         console.error('Failed to fetch order details');
         setError('Could not load order details');
