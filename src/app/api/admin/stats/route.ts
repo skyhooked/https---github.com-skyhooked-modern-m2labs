@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
     // Fetch order stats
     const orders = await getAllOrders({});
     const pendingOrders = orders.filter(o => o.status === 'pending');
+    const completedOrders = orders.filter(o => !['cancelled', 'refunded'].includes(o.status));
+    const totalRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
     
     // TODO: Add warranty claims when implemented
     let openClaims = 0;
@@ -76,6 +78,7 @@ export async function GET(request: NextRequest) {
       orders: {
         totalOrders: orders.length,
         pendingOrders: pendingOrders.length,
+        totalRevenue: totalRevenue,
       },
       newsletter: {
         subscribers: 0, // TODO: Implement newsletter stats

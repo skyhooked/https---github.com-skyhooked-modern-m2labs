@@ -309,7 +309,10 @@ export default function OrderManagement() {
             </div>
             <div className="bg-white rounded-lg p-6 border shadow-sm">
               <div className="text-2xl font-bold text-purple-600">
-                {formatPrice(orders.reduce((sum, order) => sum + order.total, 0))}
+                {formatPrice(orders
+                  .filter(order => !['cancelled', 'refunded'].includes(order.status))
+                  .reduce((sum, order) => sum + order.total, 0)
+                )}
               </div>
               <div className="text-sm text-gray-600">Total Revenue</div>
             </div>

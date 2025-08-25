@@ -196,7 +196,7 @@ export default function AdminDashboard() {
       icon: '📈',
       href: '/admin/analytics',
       stats: [
-        { label: 'Total Revenue', value: '$0' },
+        { label: 'Total Revenue', value: loading ? '...' : `$${((stats?.orders?.totalRevenue || 0) / 100).toFixed(2)}` },
         { label: 'Orders', value: loading ? '...' : (stats?.orders?.totalOrders || '0') },
       ],
     },
