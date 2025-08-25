@@ -62,7 +62,7 @@ export const useShippingRates = () => {
           declared_currency: item.declared_currency,
           declared_customs_value: item.declared_customs_value
         })),
-        box: { custom: boxDimensions },
+        box: boxDimensions,
         total_actual_weight: totalWeight
       }],
       output_currency: "USD"
