@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser, initializeDatabase } from '@/libs/database-d1';
 import { validateEmail, validatePassword, signToken } from '@/libs/auth';
+import { mailerLiteService } from '@/libs/mailerlite';
 
 export const runtime = 'edge'
 
@@ -58,6 +59,40 @@ export async function POST(request: NextRequest) {
             role: user.role,
           },
         },
+        // Add user to MailerLite and send welcome email
+try {
+  await mailerLiteService.addSubscriber(
+    user.email,
+    user.firstName,
+    user.lastName,
+    ['Customers'] // Add to Customers group
+  );
+  
+  // Send welcome email
+  await mailerLiteService.sendCampaignEmail({
+    to: user.email,
+    subject: 'Welcome to M2 Labs! 🎸',
+    html: `
+      <h2>Welcome to M2 Labs, ${user.firstName}!</h2>
+      <p>Thanks for joining the M2 Labs family. We're excited to have you!</p>
+      <p>You now have access to:</p>
+      <ul>
+        <li>Exclusive product updates</li>
+        <li>Special member discounts</li>
+        <li>Order tracking and history</li>
+        <li>Priority customer support</li>
+      </ul>
+      <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/shop">Shop Now</a></p>
+      <p>Rock on!<br>The M2 Labs Team</p>
+    `,
+    campaignName: `Welcome: ${user.email}`
+  });
+  
+  console.log('✅ Welcome email sent to new user:', user.email);
+} catch (error) {
+  console.error('❌ Error sending welcome email:', error);
+  // Don't fail registration if email fails
+}
         { status: 201 }
       );
 
