@@ -38,6 +38,11 @@ const getStripePromise = async () => {
     }
   }
   return stripePromise;
+
+  // HS code defaults for Easyship
+const DEFAULT_HS_CODE = '854370' as const;      // effects pedals / electronic sound apparatus
+const ORIGIN_COUNTRY_ALPHA2 = 'US' as const;    // change if your origin isn't US
+
 };
 
 interface ShippingAddress {
@@ -257,16 +262,16 @@ export default function Checkout() {
     if (!showShippingOptions && isShippingAddressValid()) {
       // First time - get shipping rates
       const DEFAULT_PEDAL_HS = '854370';
- const shippingItems = cart.items.map(item => ({
+const shippingItems = cart.items.map(item => ({
   description: item.variant?.product?.name || 'Product',
+  category: 'general',
   sku: item.variantId || 'UNKNOWN',
   quantity: item.quantity,
-  actual_weight: 0.5, // kg - replace with per-SKU weight if you have it
+  actual_weight: 0.5, // kg - replace with actual item weight
   declared_currency: 'USD',
-  declared_customs_value: item.unitPrice / 100, // cents -> dollars
-  // Required by Easyship to classify the item
-  hs_code: HS_BY_SKU[item.variantId ?? ''] ?? DEFAULT_HS_CODE,
-  origin_country_alpha2: ORIGIN_COUNTRY_ALPHA2
+  declared_customs_value: item.unitPrice / 100, // Convert from cents
+  hs_code: DEFAULT_HS_CODE,                     // <-- required by Easyship: hs_code or item_category_id
+  origin_country_alpha2: ORIGIN_COUNTRY_ALPHA2  // <-- recommended for accurate rates
 }));
 
       const destinationAddress = {
