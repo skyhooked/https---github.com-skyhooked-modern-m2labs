@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             user.email,
             user.firstName,
             user.lastName,
-            [] // Groups will be managed in MailerLite dashboard - API requires group IDs, not names
+            ["163751569503814829"] // Customers group
           );
           
           // Send welcome email

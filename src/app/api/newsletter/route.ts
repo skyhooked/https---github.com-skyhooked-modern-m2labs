@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         subscriberData.email,
         subscriberData.firstName,
         subscriberData.lastName,
-        [] // Groups will be managed in MailerLite dashboard - API requires group IDs, not names
+        ["163751555789489349"] // Newsletter group
       );
     } catch (error) {
       console.error('Error adding subscriber to MailerLite:', error);
